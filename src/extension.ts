@@ -20,9 +20,9 @@ import {
     getHistory,
     clearHistory
 } from './storage';
-import { initPomodoro, togglePomodoro } from './pomodoro';
+import { initPomodoro, togglePomodoro, getPomodoroStats } from './pomodoro';
 import { computeAchievements } from './achievements';
-import { computeXpStateFromHistory } from './xp';
+import { computeXpState } from './xp';
 
 async function updateAll() {
     refreshStatusBar();
@@ -30,9 +30,9 @@ async function updateAll() {
     const statsArray = getStatsArray();
     await updateHistoryFromStats(statsArray);
 
-    // Histórico completo para XP
     const fullHistory = getHistory();
-    const xp = computeXpStateFromHistory(fullHistory);
+    const pomodoroStats = getPomodoroStats();
+    const xp = computeXpState(fullHistory, pomodoroStats);
 
     const history7 = getLastDays(7);
     const streak = getStreakDays();
@@ -40,7 +40,8 @@ async function updateAll() {
         streak,
         history7,
         statsArray as FocusSummary[],
-        xp
+        xp,
+        pomodoroStats
     );
 
     updateDashboard({
@@ -48,7 +49,8 @@ async function updateAll() {
         history7,
         streak,
         achievements,
-        xp
+        xp,
+        pomodoroStats
     });
 }
 

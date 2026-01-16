@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { getCurrentStats, computeFocusScore, formatMinutes } from './focusTracker';
 import { isStatusBarEnabled } from './config';
 import { getHistory } from './storage';
-import { computeXpStateFromHistory } from './xp';
+import { computeXpState } from './xp';
+import { getPomodoroStats } from './pomodoro';
 
 let statusBarItem: vscode.StatusBarItem;
 
@@ -36,17 +37,17 @@ export function refreshStatusBar() {
 
     const stats = getCurrentStats();
 
-    // XP / nivel global calculado a partir del histórico
     let level = 1;
     let totalXp = 0;
 
     try {
         const history = getHistory();
-        const xpState = computeXpStateFromHistory(history);
+        const pomodoroStats = getPomodoroStats();
+        const xpState = computeXpState(history, pomodoroStats);
         level = xpState.level;
         totalXp = xpState.totalXp;
     } catch {
-        // si todavía no está inicializado el storage, usamos valores por defecto
+        // ignoramos fallos de inicialización
     }
 
     statusBarItem.show();

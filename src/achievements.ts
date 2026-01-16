@@ -1,6 +1,6 @@
 import type { HistoryDay } from './storage';
 import type { FocusSummary } from './focusTracker';
-import type { XpState } from './xp';
+import type { XpState, PomodoroStats } from './xp';
 
 export interface Achievement {
     id: string;
@@ -12,7 +12,8 @@ export function computeAchievements(
     streakDays: number,
     history: HistoryDay[],
     todayStats: FocusSummary[],
-    xp?: XpState
+    xp?: XpState,
+    pomodoroStats?: PomodoroStats
 ): Achievement[] {
     const list: Achievement[] = [];
 
@@ -111,6 +112,42 @@ export function computeAchievements(
                 id: 'level-10',
                 title: 'Leyenda del foco',
                 description: 'Nivel 10 o más. Tu disciplina es seria.'
+            });
+        }
+    }
+
+    // --- Logros específicos de Pomodoro ---
+
+    if (pomodoroStats) {
+        if (pomodoroStats.today >= 1) {
+            list.push({
+                id: 'pomo-first',
+                title: 'Primer pomodoro',
+                description: 'Has completado un bloque de trabajo con el temporizador hoy.'
+            });
+        }
+
+        if (pomodoroStats.today >= 4) {
+            list.push({
+                id: 'pomo-4-today',
+                title: 'Cuatro bloques',
+                description: 'Has completado 4 pomodoros en un solo día.'
+            });
+        }
+
+        if (pomodoroStats.total >= 20) {
+            list.push({
+                id: 'pomo-20-total',
+                title: 'Acumulador de bloques',
+                description: 'Has completado 20 pomodoros en total.'
+            });
+        }
+
+        if (pomodoroStats.total >= 50) {
+            list.push({
+                id: 'pomo-50-total',
+                title: 'Máquina de pomodoros',
+                description: 'Has completado 50 pomodoros en total.'
             });
         }
     }

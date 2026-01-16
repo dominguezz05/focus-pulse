@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import type { FocusSummary } from './focusTracker';
 import type { HistoryDay } from './storage';
 import type { Achievement } from './achievements';
-import type { XpState } from './xp';
+import type { XpState, PomodoroStats } from './xp';
 
 interface DashboardData {
     stats: FocusSummary[];
@@ -10,6 +10,7 @@ interface DashboardData {
     streak: number;
     achievements: Achievement[];
     xp: XpState;
+    pomodoroStats?: PomodoroStats;
 }
 
 let currentPanel: vscode.WebviewPanel | undefined;
@@ -49,7 +50,7 @@ function getHtml(): string {
             </div>
         </header>
 
-        <section class="grid gap-3 md:grid-cols-3">
+        <section class="grid gap-3 md:grid-cols-4">
             <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
                 <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Racha</div>
                 <div class="text-2xl font-semibold" id="streak-value">0 días</div>
@@ -74,6 +75,18 @@ function getHtml(): string {
                 <div class="text-2xl font-semibold" id="files-today">0</div>
                 <p class="text-xs text-slate-400 mt-1">
                     Archivos con foco en esta sesión de VS Code.
+                </p>
+            </div>
+            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+                <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Pomodoros</div>
+                <div class="text-sm text-slate-200">
+                    Hoy: <span id="pomodoro-today" class="font-semibold">0</span>
+                </div>
+                <div class="text-sm text-slate-200">
+                    Total: <span id="pomodoro-total" class="font-semibold">0</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">
+                    Bloques de trabajo completados con el temporizador.
                 </p>
             </div>
         </section>
@@ -135,6 +148,9 @@ function getHtml(): string {
         const xpBarInnerEl = document.getElementById('xp-bar-inner');
         const xpLabelEl = document.getElementById('xp-label');
 
+        const pomodoroTodayEl = document.getElementById('pomodoro-today');
+        const pomodoroTotalEl = document.getElementById('pomodoro-total');
+
         function scoreColor(score) {
             if (score >= 80) return 'bg-emerald-500';
             if (score >= 50) return 'bg-amber-400';
@@ -169,6 +185,7 @@ function getHtml(): string {
                 xpInLevel: 0,
                 xpToNext: 100
             };
+            const pomodoroStats = data.pomodoroStats || { today: 0, total: 0 };
 
             // XP / nivel
             if (xpLevelEl && xpBarInnerEl && xpLabelEl) {
@@ -179,6 +196,12 @@ function getHtml(): string {
                         : 0;
                 xpBarInnerEl.style.width = pct.toFixed(1) + '%';
                 xpLabelEl.textContent = Math.round(xp.totalXp) + ' XP total';
+            }
+
+            // Pomodoros
+            if (pomodoroTodayEl && pomodoroTotalEl) {
+                pomodoroTodayEl.textContent = String(pomodoroStats.today || 0);
+                pomodoroTotalEl.textContent = String(pomodoroStats.total || 0);
             }
 
             // Racha
@@ -235,7 +258,6 @@ function getHtml(): string {
             summaryLabelEl.textContent =
                 stats.length + (stats.length === 1 ? ' archivo' : ' archivos');
 
-            // limpiar tarjetas previas (menos el placeholder ya oculto)
             const cardChildren = Array.from(cardsEl.children).filter(
                 el => el !== noDataCardEl
             );

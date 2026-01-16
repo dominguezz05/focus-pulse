@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import type { PomodoroStats } from './xp';
 
 let statusItem: vscode.StatusBarItem;
 let timer: NodeJS.Timeout | undefined;
@@ -7,6 +8,57 @@ type Mode = 'idle' | 'work' | 'break';
 
 let mode: Mode = 'idle';
 let remainingSeconds = 0;
+
+let contextRef: vscode.ExtensionContext | undefined;
+
+const TOTAL_KEY = 'focusPulse.pomodoro.totalCount';
+const TODAY_KEY = 'focusPulse.pomodoro.todayCount';
+const DATE_KEY = 'focusPulse.pomodoro.lastDate';
+
+function getTodayStr(): string {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function ensureTodayInitialized() {
+    if (!contextRef) return;
+    const store = contextRef.globalState;
+    const today = getTodayStr();
+    const lastDate = store.get<string>(DATE_KEY, '');
+
+    if (lastDate !== today) {
+        store.update(DATE_KEY, today);
+        store.update(TODAY_KEY, 0);
+    }
+}
+
+function registerPomodoroCompleted(): void {
+    if (!contextRef) return;
+    ensureTodayInitialized();
+    const store = contextRef.globalState;
+
+    const today = (store.get<number>(TODAY_KEY, 0) || 0) + 1;
+    const total = (store.get<number>(TOTAL_KEY, 0) || 0) + 1;
+    const todayStr = getTodayStr();
+
+    store.update(TODAY_KEY, today);
+    store.update(TOTAL_KEY, total);
+    store.update(DATE_KEY, todayStr);
+}
+
+export function getPomodoroStats(): PomodoroStats {
+    if (!contextRef) {
+        return { today: 0, total: 0 };
+    }
+    ensureTodayInitialized();
+    const store = contextRef.globalState;
+    const today = store.get<number>(TODAY_KEY, 0) || 0;
+    const total = store.get<number>(TOTAL_KEY, 0) || 0;
+    return { today, total };
+}
 
 function getConfig() {
     const cfg = vscode.workspace.getConfiguration('focusPulse');
@@ -18,6 +70,9 @@ function getConfig() {
 }
 
 export function initPomodoro(context: vscode.ExtensionContext) {
+    contextRef = context;
+    ensureTodayInitialized();
+
     const cfg = getConfig();
 
     statusItem = vscode.window.createStatusBarItem(
@@ -74,6 +129,8 @@ function startTimer(durationMinutes: number, newMode: Mode) {
         remainingSeconds -= 1;
         if (remainingSeconds <= 0) {
             if (mode === 'work') {
+                // AQUÍ: pomodoro completado
+                registerPomodoroCompleted();
                 vscode.window.showInformationMessage(
                     'Focus Pulse: fin de bloque de trabajo. ¡Descanso!'
                 );
