@@ -32,6 +32,10 @@ function saveHistory(history: HistoryDay[]) {
     return getStore().update(HISTORY_KEY, history);
 }
 
+export async function clearHistory() {
+    await saveHistory([]);
+}
+
 function todayStr(): string {
     const now = new Date();
     const y = now.getFullYear();
@@ -101,7 +105,6 @@ export function getStreakDays(): number {
     const dayMs = 24 * 60 * 60 * 1000;
     let cursor = new Date();
 
-    // desde hoy hacia atrás hasta que falte un día
     while (true) {
         const y = cursor.getFullYear();
         const m = String(cursor.getMonth() + 1).padStart(2, '0');
@@ -116,7 +119,6 @@ export function getStreakDays(): number {
     return streak;
 }
 
-// Últimos N días para métricas
 export function getLastDays(n: number): HistoryDay[] {
     const history = getHistory().slice().sort((a, b) => a.date.localeCompare(b.date));
     return history.slice(-n);

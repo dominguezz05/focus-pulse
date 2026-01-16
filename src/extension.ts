@@ -8,7 +8,8 @@ import {
     computeFocusScore,
     formatMinutes,
     getStatsArray,
-    FocusSummary
+    FocusSummary,
+    resetFocusStats
 } from './focusTracker';
 import { openDashboard, updateDashboard } from './dashboard';
 import {
@@ -16,7 +17,8 @@ import {
     updateHistoryFromStats,
     getLastDays,
     getStreakDays,
-    getHistory
+    getHistory,
+    clearHistory
 } from './storage';
 import { initPomodoro, togglePomodoro } from './pomodoro';
 import { computeAchievements } from './achievements';
@@ -32,7 +34,6 @@ async function updateAll() {
     const streak = getStreakDays();
     const achievements = computeAchievements(streak, history7, statsArray as FocusSummary[]);
 
-    // XP a partir de TODO el histórico
     const fullHistory = getHistory();
     const xp = computeXpStateFromHistory(fullHistory);
 
@@ -96,7 +97,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     const commandOpenDashboard = vscode.commands.registerCommand('focusPulse.openDashboard', () => {
         openDashboard(context);
-        // forzar datos actuales al abrir
         updateAll();
     });
     context.subscriptions.push(commandOpenDashboard);
@@ -105,6 +105,24 @@ export function activate(context: vscode.ExtensionContext) {
         togglePomodoro();
     });
     context.subscriptions.push(commandPomodoroToggle);
+
+    const commandResetData = vscode.commands.registerCommand('focusPulse.resetData', async () => {
+        const answer = await vscode.window.showWarningMessage(
+            'Esto borrará el histórico de días, racha y XP calculada. ¿Seguro?',
+            'Sí, resetear',
+            'Cancelar'
+        );
+        if (answer !== 'Sí, resetear') {
+            return;
+        }
+
+        resetFocusStats();
+        await clearHistory();
+        await updateAll();
+
+        vscode.window.showInformationMessage('Focus Pulse: histórico y XP reseteados.');
+    });
+    context.subscriptions.push(commandResetData);
 }
 
 export function deactivate() {

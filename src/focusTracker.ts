@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getMinMinutesForScore } from './config';
+import { getMinMinutesForScore, getScoreWeights } from './config';
 
 export interface FocusStats {
     uri: string;
@@ -48,7 +48,14 @@ export function computeFocusScore(s: FocusStats): number {
     const editsPerMin = s.edits / minutes;
     const switchesPerMin = s.switches / Math.max(minutes, 0.1);
 
-    let score = editsPerMin * 8 - switchesPerMin * 15;
+    const weights = getScoreWeights();
+
+    // Fórmula configurable:
+    // score_raw = (tiempo * w_tiempo) + (edits/min * w_edits) - (switches/min * penalización)
+    let score =
+        minutes * weights.timeWeight +
+        editsPerMin * weights.editsWeight -
+        switchesPerMin * weights.switchPenalty;
 
     if (score < 0) score = 0;
     if (score > 100) score = 100;
@@ -118,4 +125,10 @@ export function getStatsArray(): FocusSummary[] {
 
     arr.sort((a, b) => b.score - a.score);
     return arr;
+}
+
+export function resetFocusStats(): void {
+    statsByDoc.clear();
+    currentUri = undefined;
+    lastSwitchTime = Date.now();
 }

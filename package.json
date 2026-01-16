@@ -1,8 +1,8 @@
 {
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
-  "description": "Mide tu nivel de foco por archivo, con barra de estado, puntuación y dashboard visual.",
-  "version": "0.4.0",
+  "description": "Mide tu nivel de foco por archivo, con Pomodoro, XP, logros y dashboard en tiempo real.",
+  "version": "0.3.0",
   "publisher": "tu-nombre",
   "engines": {
     "vscode": "^1.90.0"
@@ -14,7 +14,8 @@
     "onStartupFinished",
     "onCommand:focusPulse.showStats",
     "onCommand:focusPulse.openDashboard",
-    "onCommand:focusPulse.pomodoroToggle"
+    "onCommand:focusPulse.pomodoroToggle",
+    "onCommand:focusPulse.resetData"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -30,6 +31,10 @@
       {
         "command": "focusPulse.pomodoroToggle",
         "title": "Focus Pulse: Iniciar/Parar Pomodoro"
+      },
+      {
+        "command": "focusPulse.resetData",
+        "title": "Focus Pulse: Resetear histórico y XP"
       }
     ],
     "configuration": {
@@ -46,6 +51,24 @@
           "default": 1,
           "minimum": 0.1,
           "description": "Minutos mínimos de trabajo para que la puntuación de foco sea estable."
+        },
+        "focusPulse.score.timeWeight": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0,
+          "description": "Peso del tiempo (minutos de trabajo) en el cálculo del Focus Score."
+        },
+        "focusPulse.score.editsWeight": {
+          "type": "number",
+          "default": 8,
+          "minimum": 0,
+          "description": "Peso de las ediciones por minuto en el cálculo del Focus Score."
+        },
+        "focusPulse.score.switchPenalty": {
+          "type": "number",
+          "default": 15,
+          "minimum": 0,
+          "description": "Penalización por cambios de archivo (switches por minuto)."
         },
         "focusPulse.enablePomodoro": {
           "type": "boolean",
