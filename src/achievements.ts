@@ -1,5 +1,6 @@
 import type { HistoryDay } from './storage';
 import type { FocusSummary } from './focusTracker';
+import type { XpState } from './xp';
 
 export interface Achievement {
     id: string;
@@ -10,9 +11,12 @@ export interface Achievement {
 export function computeAchievements(
     streakDays: number,
     history: HistoryDay[],
-    todayStats: FocusSummary[]
+    todayStats: FocusSummary[],
+    xp?: XpState
 ): Achievement[] {
     const list: Achievement[] = [];
+
+    // --- Logros básicos por sesión de hoy ---
 
     if (todayStats.length > 0) {
         list.push({
@@ -43,6 +47,8 @@ export function computeAchievements(
         });
     }
 
+    // --- Logros por racha ---
+
     if (streakDays >= 3) {
         list.push({
             id: 'streak-3',
@@ -59,10 +65,11 @@ export function computeAchievements(
         });
     }
 
+    // --- Logros por consistencia (últimos días) ---
+
     const last7 = history.slice(-7);
     const avgScore7 =
-        last7.reduce((a, h) => a + h.avgScore, 0) /
-        (last7.length || 1);
+        last7.reduce((a, h) => a + h.avgScore, 0) / (last7.length || 1);
 
     if (last7.length >= 3 && avgScore7 >= 60) {
         list.push({
@@ -70,6 +77,42 @@ export function computeAchievements(
             title: 'Constante',
             description: 'Media de foco ≥ 60/100 en los últimos días.'
         });
+    }
+
+    // --- Logros por XP / nivel ---
+
+    if (xp) {
+        if (xp.totalXp >= 300) {
+            list.push({
+                id: 'xp-300',
+                title: 'En marcha',
+                description: 'Has acumulado al menos 300 XP de foco.'
+            });
+        }
+
+        if (xp.level >= 3) {
+            list.push({
+                id: 'level-3',
+                title: 'Nivel 3 alcanzado',
+                description: 'Has subido hasta el nivel 3 de Focus Pulse.'
+            });
+        }
+
+        if (xp.level >= 5) {
+            list.push({
+                id: 'level-5',
+                title: 'Dev disciplinado',
+                description: 'Nivel 5 o superior. Llevas varias sesiones sólidas.'
+            });
+        }
+
+        if (xp.level >= 10) {
+            list.push({
+                id: 'level-10',
+                title: 'Leyenda del foco',
+                description: 'Nivel 10 o más. Tu disciplina es seria.'
+            });
+        }
     }
 
     return list;

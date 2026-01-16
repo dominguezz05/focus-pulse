@@ -30,12 +30,18 @@ async function updateAll() {
     const statsArray = getStatsArray();
     await updateHistoryFromStats(statsArray);
 
-    const history7 = getLastDays(7);
-    const streak = getStreakDays();
-    const achievements = computeAchievements(streak, history7, statsArray as FocusSummary[]);
-
+    // Histórico completo para XP
     const fullHistory = getHistory();
     const xp = computeXpStateFromHistory(fullHistory);
+
+    const history7 = getLastDays(7);
+    const streak = getStreakDays();
+    const achievements = computeAchievements(
+        streak,
+        history7,
+        statsArray as FocusSummary[],
+        xp
+    );
 
     updateDashboard({
         stats: statsArray,
