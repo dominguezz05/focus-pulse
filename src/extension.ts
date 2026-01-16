@@ -7,16 +7,31 @@ import {
     getCurrentStats,
     computeFocusScore,
     formatMinutes,
-    getStatsArray
+    getStatsArray,
+    FocusSummary
 } from './focusTracker';
-import { openDashboard } from './dashboard';
-import { initStorage, updateHistoryFromStats } from './storage';
+import { openDashboard, updateDashboard } from './dashboard';
+import { initStorage, updateHistoryFromStats, getLastDays, getStreakDays } from './storage';
 import { initPomodoro, togglePomodoro } from './pomodoro';
+import { computeAchievements } from './achievements';
 
 async function updateAll() {
     refreshStatusBar();
+
     const statsArray = getStatsArray();
     await updateHistoryFromStats(statsArray);
+
+    // Datos para el dashboard vivo
+    const history7 = getLastDays(7);
+    const streak = getStreakDays();
+    const achievements = computeAchievements(streak, history7, statsArray as FocusSummary[]);
+
+    updateDashboard({
+        stats: statsArray,
+        history7,
+        streak,
+        achievements
+    });
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -69,7 +84,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(commandShowStats);
 
     const commandOpenDashboard = vscode.commands.registerCommand('focusPulse.openDashboard', () => {
-        openDashboard();
+        openDashboard(context);
+        // Forzar que nada más abrir reciba datos actuales
+        updateAll();
     });
     context.subscriptions.push(commandOpenDashboard);
 

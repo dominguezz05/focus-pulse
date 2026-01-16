@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Mide tu nivel de foco por archivo, con barra de estado, puntuación y dashboard visual.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "tu-nombre",
   "engines": {
     "vscode": "^1.90.0"

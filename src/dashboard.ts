@@ -1,20 +1,18 @@
 import * as vscode from 'vscode';
-import { getStatsArray } from './focusTracker';
-import { getHistory, getLastDays, getStreakDays } from './storage';
-import { computeAchievements } from './achievements';
+import type { FocusSummary } from './focusTracker';
+import type { HistoryDay } from './storage';
+import type { Achievement } from './achievements';
 
-function getDashboardHtml() {
-    const data = getStatsArray();
-    const history = getHistory();
-    const last7 = getLastDays(7);
-    const streak = getStreakDays();
-    const achievements = computeAchievements(streak, history, data);
+interface DashboardData {
+    stats: FocusSummary[];
+    history7: HistoryDay[];
+    streak: number;
+    achievements: Achievement[];
+}
 
-    const dataJson = JSON.stringify(data);
-    const historyJson = JSON.stringify(last7);
-    const achievementsJson = JSON.stringify(achievements);
-    const streakJson = JSON.stringify(streak);
+let currentPanel: vscode.WebviewPanel | undefined;
 
+function getHtml(): string {
     return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -47,7 +45,7 @@ function getDashboardHtml() {
             <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
                 <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Últimos 7 días</div>
                 <div class="text-sm text-slate-200">
-                    <span id="last7-time" class="font-semibold">-</span> de trabajo
+                    <span id="last7-time" class="font-semibold">0s</span> de trabajo
                 </div>
                 <div class="text-sm text-slate-200">
                     Media de foco: <span id="last7-score" class="font-semibold">-</span>/100
@@ -68,17 +66,26 @@ function getDashboardHtml() {
         <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
             <div class="flex items-center justify-between mb-2">
                 <h2 class="text-sm font-medium text-slate-200">Logros de hoy</h2>
-                <span class="text-xs text-slate-400" id="achievements-count"></span>
+                <span class="text-xs text-slate-400" id="achievements-count">0 logros</span>
             </div>
-            <div id="achievements" class="flex flex-wrap gap-2 text-xs"></div>
+            <div id="achievements" class="flex flex-wrap gap-2 text-xs">
+                <span class="text-slate-400 text-xs">Sin datos todavía.</span>
+            </div>
         </section>
 
-        <section id="cards" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></section>
+        <section id="cards" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="col-span-full bg-slate-800/60 rounded-xl border border-dashed border-slate-700/70 p-4" id="no-data-card">
+                <p class="text-sm font-medium text-slate-200">Sin datos todavía</p>
+                <p class="text-xs text-slate-400 mt-1">
+                    Empieza a trabajar en uno o más archivos y vuelve a abrir el dashboard.
+                </p>
+            </div>
+        </section>
 
         <section class="bg-slate-800/60 rounded-xl border border-slate-700/60 overflow-hidden">
             <div class="px-4 py-2 border-b border-slate-700/70 flex items-center justify-between">
                 <h2 class="text-sm font-medium text-slate-200">Detalle por archivo</h2>
-                <span class="text-xs text-slate-400" id="summary-label"></span>
+                <span class="text-xs text-slate-400" id="summary-label">0 archivos registrados</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
@@ -98,10 +105,16 @@ function getDashboardHtml() {
     </div>
 
     <script>
-        const data = ${dataJson};
-        const history7 = ${historyJson};
-        const achievements = ${achievementsJson};
-        const streak = ${streakJson};
+        const cardsEl = document.getElementById('cards');
+        const noDataCardEl = document.getElementById('no-data-card');
+        const tableBodyEl = document.getElementById('table-body');
+        const summaryLabelEl = document.getElementById('summary-label');
+        const streakEl = document.getElementById('streak-value');
+        const last7TimeEl = document.getElementById('last7-time');
+        const last7ScoreEl = document.getElementById('last7-score');
+        const filesTodayEl = document.getElementById('files-today');
+        const achievementsEl = document.getElementById('achievements');
+        const achievementsCountEl = document.getElementById('achievements-count');
 
         function scoreColor(score) {
             if (score >= 80) return 'bg-emerald-500';
@@ -122,71 +135,74 @@ function getDashboardHtml() {
             return m + 'm ' + s + 's';
         }
 
-        const cardsEl = document.getElementById('cards');
-        const tableBodyEl = document.getElementById('table-body');
-        const summaryLabelEl = document.getElementById('summary-label');
-        const streakEl = document.getElementById('streak-value');
-        const last7TimeEl = document.getElementById('last7-time');
-        const last7ScoreEl = document.getElementById('last7-score');
-        const filesTodayEl = document.getElementById('files-today');
-        const achievementsEl = document.getElementById('achievements');
-        const achievementsCountEl = document.getElementById('achievements-count');
-
-        // Racha
-        streakEl.textContent = streak + (streak === 1 ? ' día' : ' días');
-
-        // Últimos 7 días
-        if (!history7 || history7.length === 0) {
-            last7TimeEl.textContent = '0s';
-            last7ScoreEl.textContent = '-';
-        } else {
-            const totalMs = history7.reduce((a, h) => a + h.totalTimeMs, 0);
-            const avgScore =
-                history7.reduce((a, h) => a + h.avgScore, 0) / history7.length;
-            last7TimeEl.textContent = formatMs(totalMs);
-            last7ScoreEl.textContent = Math.round(avgScore);
+        function clearChildren(el) {
+            while (el.firstChild) el.removeChild(el.firstChild);
         }
 
-        // Archivos de hoy
-        filesTodayEl.textContent = data ? data.length : 0;
+        function render(data) {
+            const stats = data.stats || [];
+            const history7 = data.history7 || [];
+            const streak = data.streak || 0;
+            const achievements = data.achievements || [];
 
-        // Logros
-        if (!achievements || achievements.length === 0) {
-            achievementsEl.innerHTML =
-                '<span class="text-slate-400 text-xs">Sin logros todavía. Trabaja un poco más y vuelve a abrir el panel.</span>';
-            achievementsCountEl.textContent = '0 logros';
-        } else {
-            achievementsCountEl.textContent =
-                achievements.length + (achievements.length === 1 ? ' logro' : ' logros');
-            achievements.forEach(a => {
-                const span = document.createElement('span');
-                span.className =
-                    'inline-flex flex-col gap-0.5 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-2 py-1';
-                span.innerHTML =
-                    '<span class="text-[11px] font-semibold text-emerald-300">' +
-                    a.title +
-                    '</span><span class="text-[10px] text-emerald-200/80">' +
-                    a.description +
-                    '</span>';
-                achievementsEl.appendChild(span);
-            });
-        }
+            // Racha
+            streakEl.textContent = streak + (streak === 1 ? ' día' : ' días');
 
-        if (!data || data.length === 0) {
-            cardsEl.innerHTML = \`
-                <div class="col-span-full bg-slate-800/60 rounded-xl border border-dashed border-slate-700/70 p-4">
-                    <p class="text-sm font-medium text-slate-200">Sin datos todavía</p>
-                    <p class="text-xs text-slate-400 mt-1">
-                        Empieza a trabajar en uno o más archivos y vuelve a abrir el dashboard.
-                    </p>
-                </div>
-            \`;
-            summaryLabelEl.textContent = '0 archivos registrados';
-        } else {
+            // Últimos 7 días
+            if (!history7.length) {
+                last7TimeEl.textContent = '0s';
+                last7ScoreEl.textContent = '-';
+            } else {
+                const totalMs = history7.reduce((a, h) => a + h.totalTimeMs, 0);
+                const avgScore = history7.reduce((a, h) => a + h.avgScore, 0) / history7.length;
+                last7TimeEl.textContent = formatMs(totalMs);
+                last7ScoreEl.textContent = Math.round(avgScore);
+            }
+
+            // Archivos de hoy
+            filesTodayEl.textContent = stats.length;
+
+            // Logros
+            clearChildren(achievementsEl);
+            if (!achievements.length) {
+                achievementsEl.innerHTML =
+                    '<span class="text-slate-400 text-xs">Sin logros todavía. Trabaja un poco más y sigue revisando.</span>';
+                achievementsCountEl.textContent = '0 logros';
+            } else {
+                achievementsCountEl.textContent =
+                    achievements.length + (achievements.length === 1 ? ' logro' : ' logros');
+                achievements.forEach(a => {
+                    const span = document.createElement('span');
+                    span.className =
+                        'inline-flex flex-col gap-0.5 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-2 py-1';
+                    span.innerHTML =
+                        '<span class="text-[11px] font-semibold text-emerald-300">' +
+                        a.title +
+                        '</span><span class="text-[10px] text-emerald-200/80">' +
+                        a.description +
+                        '</span>';
+                    achievementsEl.appendChild(span);
+                });
+            }
+
+            // Tarjetas y tabla
+            clearChildren(tableBodyEl);
+            if (!stats.length) {
+                if (noDataCardEl) noDataCardEl.classList.remove('hidden');
+                summaryLabelEl.textContent = '0 archivos registrados';
+                return;
+            }
+
+            if (noDataCardEl) noDataCardEl.classList.add('hidden');
             summaryLabelEl.textContent =
-                data.length + (data.length === 1 ? ' archivo' : ' archivos');
+                stats.length + (stats.length === 1 ? ' archivo' : ' archivos');
 
-            const top = data.slice(0, 3);
+            // Top 3
+            // Primero borramos todas las tarjetas menos el placeholder (que ya está oculto)
+            const cardChildren = Array.from(cardsEl.children).filter(el => el !== noDataCardEl);
+            cardChildren.forEach(el => cardsEl.removeChild(el));
+
+            const top = stats.slice(0, 3);
             top.forEach((item, index) => {
                 const color = scoreColor(item.score);
                 const badgeClasses = scoreBadgeClasses(item.score);
@@ -221,7 +237,8 @@ function getDashboardHtml() {
                 cardsEl.appendChild(div);
             });
 
-            data.forEach(item => {
+            // Tabla
+            stats.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-800/80 transition-colors';
 
@@ -245,17 +262,41 @@ function getDashboardHtml() {
                 tableBodyEl.appendChild(tr);
             });
         }
+
+        window.addEventListener('message', (event) => {
+            const msg = event.data;
+            if (!msg || msg.type !== 'stats:update') return;
+            render(msg.payload || {});
+        });
     </script>
 </body>
 </html>`;
 }
 
-export function openDashboard() {
-    const panel = vscode.window.createWebviewPanel(
+export function openDashboard(context: vscode.ExtensionContext) {
+    if (currentPanel) {
+        currentPanel.reveal(vscode.ViewColumn.One);
+        return;
+    }
+
+    currentPanel = vscode.window.createWebviewPanel(
         'focusPulseDashboard',
         'Focus Pulse Dashboard',
         vscode.ViewColumn.One,
         { enableScripts: true }
     );
-    panel.webview.html = getDashboardHtml();
+
+    currentPanel.webview.html = getHtml();
+
+    currentPanel.onDidDispose(() => {
+        currentPanel = undefined;
+    }, null, context.subscriptions);
+}
+
+export function updateDashboard(data: DashboardData) {
+    if (!currentPanel) return;
+    currentPanel.webview.postMessage({
+        type: 'stats:update',
+        payload: data
+    });
 }
