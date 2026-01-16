@@ -1,0 +1,60 @@
+{
+  "name": "focus-pulse",
+  "displayName": "Focus Pulse",
+  "description": "Mide tu nivel de foco por archivo, con barra de estado, puntuación y dashboard visual.",
+  "version": "0.1.0",
+  "publisher": "tu-nombre",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:focusPulse.showStats",
+    "onCommand:focusPulse.openDashboard"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "focusPulse.showStats",
+          "title": "Focus Pulse: Mostrar estadísticas del archivo actual"
+      },
+      {
+        "command": "focusPulse.openDashboard",
+        "title": "Focus Pulse: Abrir dashboard"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Focus Pulse",
+      "properties": {
+        "focusPulse.enableStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mostrar el indicador de Focus Pulse en la barra de estado."
+        },
+        "focusPulse.minMinutesForScore": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0.1,
+          "description": "Minutos mínimos de trabajo para que la puntuación de foco sea estable."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "echo \"No lint configured\"",
+    "test": "echo \"No tests\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.5.0"
+  }
+}
