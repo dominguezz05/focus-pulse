@@ -2,12 +2,14 @@ import * as vscode from 'vscode';
 import type { FocusSummary } from './focusTracker';
 import type { HistoryDay } from './storage';
 import type { Achievement } from './achievements';
+import type { XpState } from './xp';
 
 interface DashboardData {
     stats: FocusSummary[];
     history7: HistoryDay[];
     streak: number;
     achievements: Achievement[];
+    xp: XpState;
 }
 
 let currentPanel: vscode.WebviewPanel | undefined;
@@ -22,16 +24,29 @@ function getHtml(): string {
 </head>
 <body class="bg-slate-900 text-slate-100">
     <div class="max-w-6xl mx-auto p-4 space-y-4">
-        <header class="flex flex-col gap-1">
-            <h1 class="text-2xl font-semibold flex items-center gap-2">
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                    &#9889;
-                </span>
-                Focus Pulse Dashboard
-            </h1>
-            <p class="text-sm text-slate-400">
-                Resumen de foco por archivo en esta sesión y métricas de productividad.
-            </p>
+        <header class="flex flex-col gap-2">
+            <div>
+                <h1 class="text-2xl font-semibold flex items-center gap-2">
+                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                        &#9889;
+                    </span>
+                    Focus Pulse Dashboard
+                </h1>
+                <p class="text-sm text-slate-400">
+                    Resumen de foco por archivo en esta sesión, productividad reciente y progreso de nivel.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs text-slate-400">
+                <div class="flex items-center gap-1">
+                    <span class="uppercase tracking-wide">Nivel</span>
+                    <span id="xp-level" class="text-sm font-semibold text-emerald-300">1</span>
+                </div>
+                <div class="flex-1 h-2 rounded-full bg-slate-700 overflow-hidden">
+                    <div id="xp-bar-inner" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%;"></div>
+                </div>
+                <span id="xp-label" class="text-[11px] text-slate-400">0 XP total</span>
+            </div>
         </header>
 
         <section class="grid gap-3 md:grid-cols-3">
@@ -77,7 +92,7 @@ function getHtml(): string {
             <div class="col-span-full bg-slate-800/60 rounded-xl border border-dashed border-slate-700/70 p-4" id="no-data-card">
                 <p class="text-sm font-medium text-slate-200">Sin datos todavía</p>
                 <p class="text-xs text-slate-400 mt-1">
-                    Empieza a trabajar en uno o más archivos y vuelve a abrir el dashboard.
+                    Empieza a trabajar en uno o más archivos y sigue editando para ver estadísticas en tiempo real.
                 </p>
             </div>
         </section>
@@ -116,6 +131,10 @@ function getHtml(): string {
         const achievementsEl = document.getElementById('achievements');
         const achievementsCountEl = document.getElementById('achievements-count');
 
+        const xpLevelEl = document.getElementById('xp-level');
+        const xpBarInnerEl = document.getElementById('xp-bar-inner');
+        const xpLabelEl = document.getElementById('xp-label');
+
         function scoreColor(score) {
             if (score >= 80) return 'bg-emerald-500';
             if (score >= 50) return 'bg-amber-400';
@@ -144,6 +163,23 @@ function getHtml(): string {
             const history7 = data.history7 || [];
             const streak = data.streak || 0;
             const achievements = data.achievements || [];
+            const xp = data.xp || {
+                totalXp: 0,
+                level: 1,
+                xpInLevel: 0,
+                xpToNext: 100
+            };
+
+            // XP / nivel
+            if (xpLevelEl && xpBarInnerEl && xpLabelEl) {
+                xpLevelEl.textContent = String(xp.level);
+                const pct =
+                    xp.xpToNext > 0
+                        ? Math.max(0, Math.min(100, (xp.xpInLevel / xp.xpToNext) * 100))
+                        : 0;
+                xpBarInnerEl.style.width = pct.toFixed(1) + '%';
+                xpLabelEl.textContent = Math.round(xp.totalXp) + ' XP total';
+            }
 
             // Racha
             streakEl.textContent = streak + (streak === 1 ? ' día' : ' días');
@@ -154,7 +190,8 @@ function getHtml(): string {
                 last7ScoreEl.textContent = '-';
             } else {
                 const totalMs = history7.reduce((a, h) => a + h.totalTimeMs, 0);
-                const avgScore = history7.reduce((a, h) => a + h.avgScore, 0) / history7.length;
+                const avgScore =
+                    history7.reduce((a, h) => a + h.avgScore, 0) / history7.length;
                 last7TimeEl.textContent = formatMs(totalMs);
                 last7ScoreEl.textContent = Math.round(avgScore);
             }
@@ -185,8 +222,9 @@ function getHtml(): string {
                 });
             }
 
-            // Tarjetas y tabla
+            // Tabla y tarjetas
             clearChildren(tableBodyEl);
+
             if (!stats.length) {
                 if (noDataCardEl) noDataCardEl.classList.remove('hidden');
                 summaryLabelEl.textContent = '0 archivos registrados';
@@ -197,9 +235,10 @@ function getHtml(): string {
             summaryLabelEl.textContent =
                 stats.length + (stats.length === 1 ? ' archivo' : ' archivos');
 
-            // Top 3
-            // Primero borramos todas las tarjetas menos el placeholder (que ya está oculto)
-            const cardChildren = Array.from(cardsEl.children).filter(el => el !== noDataCardEl);
+            // limpiar tarjetas previas (menos el placeholder ya oculto)
+            const cardChildren = Array.from(cardsEl.children).filter(
+                el => el !== noDataCardEl
+            );
             cardChildren.forEach(el => cardsEl.removeChild(el));
 
             const top = stats.slice(0, 3);
@@ -237,7 +276,6 @@ function getHtml(): string {
                 cardsEl.appendChild(div);
             });
 
-            // Tabla
             stats.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-800/80 transition-colors';
@@ -288,9 +326,13 @@ export function openDashboard(context: vscode.ExtensionContext) {
 
     currentPanel.webview.html = getHtml();
 
-    currentPanel.onDidDispose(() => {
-        currentPanel = undefined;
-    }, null, context.subscriptions);
+    currentPanel.onDidDispose(
+        () => {
+            currentPanel = undefined;
+        },
+        null,
+        context.subscriptions
+    );
 }
 
 export function updateDashboard(data: DashboardData) {
