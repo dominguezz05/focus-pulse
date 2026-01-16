@@ -6,34 +6,45 @@ import {
     handleTextDocumentChange,
     getCurrentStats,
     computeFocusScore,
-    formatMinutes
+    formatMinutes,
+    getStatsArray
 } from './focusTracker';
 import { openDashboard } from './dashboard';
+import { initStorage, updateHistoryFromStats } from './storage';
+import { initPomodoro, togglePomodoro } from './pomodoro';
+
+async function updateAll() {
+    refreshStatusBar();
+    const statsArray = getStatsArray();
+    await updateHistoryFromStats(statsArray);
+}
 
 export function activate(context: vscode.ExtensionContext) {
     reloadConfig();
+    initStorage(context);
     initStatusBar(context);
+    initPomodoro(context);
 
     handleEditorChange(vscode.window.activeTextEditor);
-    refreshStatusBar();
+    updateAll();
 
     const configDisposable = vscode.workspace.onDidChangeConfiguration(e => {
         if (e.affectsConfiguration('focusPulse')) {
             reloadConfig();
-            refreshStatusBar();
+            updateAll();
         }
     });
     context.subscriptions.push(configDisposable);
 
     const editorChangeDisposable = vscode.window.onDidChangeActiveTextEditor(editor => {
         handleEditorChange(editor);
-        refreshStatusBar();
+        updateAll();
     });
     context.subscriptions.push(editorChangeDisposable);
 
     const editDisposable = vscode.workspace.onDidChangeTextDocument(event => {
         handleTextDocumentChange(event);
-        refreshStatusBar();
+        updateAll();
     });
     context.subscriptions.push(editDisposable);
 
@@ -61,6 +72,11 @@ export function activate(context: vscode.ExtensionContext) {
         openDashboard();
     });
     context.subscriptions.push(commandOpenDashboard);
+
+    const commandPomodoroToggle = vscode.commands.registerCommand('focusPulse.pomodoroToggle', () => {
+        togglePomodoro();
+    });
+    context.subscriptions.push(commandPomodoroToggle);
 }
 
 export function deactivate() {

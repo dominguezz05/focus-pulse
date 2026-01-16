@@ -1,31 +1,77 @@
 import * as vscode from 'vscode';
 import { getStatsArray } from './focusTracker';
+import { getHistory, getLastDays, getStreakDays } from './storage';
+import { computeAchievements } from './achievements';
 
 function getDashboardHtml() {
     const data = getStatsArray();
+    const history = getHistory();
+    const last7 = getLastDays(7);
+    const streak = getStreakDays();
+    const achievements = computeAchievements(streak, history, data);
+
     const dataJson = JSON.stringify(data);
+    const historyJson = JSON.stringify(last7);
+    const achievementsJson = JSON.stringify(achievements);
+    const streakJson = JSON.stringify(streak);
 
     return `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Focus Pulse Dashboard</title>
-    <!-- Tailwind CDN (simple y rápido para el webview) -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100">
-    <div class="max-w-5xl mx-auto p-4 space-y-4">
-        <header>
+    <div class="max-w-6xl mx-auto p-4 space-y-4">
+        <header class="flex flex-col gap-1">
             <h1 class="text-2xl font-semibold flex items-center gap-2">
                 <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
                     &#9889;
                 </span>
                 Focus Pulse Dashboard
             </h1>
-            <p class="text-sm text-slate-400 mt-1">
-                Resumen de foco por archivo en esta sesión de VS Code.
+            <p class="text-sm text-slate-400">
+                Resumen de foco por archivo en esta sesión y métricas de productividad.
             </p>
         </header>
+
+        <section class="grid gap-3 md:grid-cols-3">
+            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+                <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Racha</div>
+                <div class="text-2xl font-semibold" id="streak-value">0 días</div>
+                <p class="text-xs text-slate-400 mt-1">
+                    Días consecutivos con tiempo de foco registrado.
+                </p>
+            </div>
+            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+                <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Últimos 7 días</div>
+                <div class="text-sm text-slate-200">
+                    <span id="last7-time" class="font-semibold">-</span> de trabajo
+                </div>
+                <div class="text-sm text-slate-200">
+                    Media de foco: <span id="last7-score" class="font-semibold">-</span>/100
+                </div>
+                <p class="text-xs text-slate-400 mt-1">
+                    Basado en sesiones registradas con Focus Pulse.
+                </p>
+            </div>
+            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+                <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Archivos hoy</div>
+                <div class="text-2xl font-semibold" id="files-today">0</div>
+                <p class="text-xs text-slate-400 mt-1">
+                    Archivos con foco en esta sesión de VS Code.
+                </p>
+            </div>
+        </section>
+
+        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-sm font-medium text-slate-200">Logros de hoy</h2>
+                <span class="text-xs text-slate-400" id="achievements-count"></span>
+            </div>
+            <div id="achievements" class="flex flex-wrap gap-2 text-xs"></div>
+        </section>
 
         <section id="cards" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></section>
 
@@ -53,6 +99,9 @@ function getDashboardHtml() {
 
     <script>
         const data = ${dataJson};
+        const history7 = ${historyJson};
+        const achievements = ${achievementsJson};
+        const streak = ${streakJson};
 
         function scoreColor(score) {
             if (score >= 80) return 'bg-emerald-500';
@@ -66,9 +115,62 @@ function getDashboardHtml() {
             return 'bg-rose-500/20 text-rose-300 border border-rose-500/40';
         }
 
+        function formatMs(ms) {
+            const m = Math.floor(ms / 60000);
+            const s = Math.floor((ms % 60000) / 1000);
+            if (m === 0) return s + 's';
+            return m + 'm ' + s + 's';
+        }
+
         const cardsEl = document.getElementById('cards');
         const tableBodyEl = document.getElementById('table-body');
         const summaryLabelEl = document.getElementById('summary-label');
+        const streakEl = document.getElementById('streak-value');
+        const last7TimeEl = document.getElementById('last7-time');
+        const last7ScoreEl = document.getElementById('last7-score');
+        const filesTodayEl = document.getElementById('files-today');
+        const achievementsEl = document.getElementById('achievements');
+        const achievementsCountEl = document.getElementById('achievements-count');
+
+        // Racha
+        streakEl.textContent = streak + (streak === 1 ? ' día' : ' días');
+
+        // Últimos 7 días
+        if (!history7 || history7.length === 0) {
+            last7TimeEl.textContent = '0s';
+            last7ScoreEl.textContent = '-';
+        } else {
+            const totalMs = history7.reduce((a, h) => a + h.totalTimeMs, 0);
+            const avgScore =
+                history7.reduce((a, h) => a + h.avgScore, 0) / history7.length;
+            last7TimeEl.textContent = formatMs(totalMs);
+            last7ScoreEl.textContent = Math.round(avgScore);
+        }
+
+        // Archivos de hoy
+        filesTodayEl.textContent = data ? data.length : 0;
+
+        // Logros
+        if (!achievements || achievements.length === 0) {
+            achievementsEl.innerHTML =
+                '<span class="text-slate-400 text-xs">Sin logros todavía. Trabaja un poco más y vuelve a abrir el panel.</span>';
+            achievementsCountEl.textContent = '0 logros';
+        } else {
+            achievementsCountEl.textContent =
+                achievements.length + (achievements.length === 1 ? ' logro' : ' logros');
+            achievements.forEach(a => {
+                const span = document.createElement('span');
+                span.className =
+                    'inline-flex flex-col gap-0.5 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-2 py-1';
+                span.innerHTML =
+                    '<span class="text-[11px] font-semibold text-emerald-300">' +
+                    a.title +
+                    '</span><span class="text-[10px] text-emerald-200/80">' +
+                    a.description +
+                    '</span>';
+                achievementsEl.appendChild(span);
+            });
+        }
 
         if (!data || data.length === 0) {
             cardsEl.innerHTML = \`
@@ -81,9 +183,9 @@ function getDashboardHtml() {
             \`;
             summaryLabelEl.textContent = '0 archivos registrados';
         } else {
-            summaryLabelEl.textContent = data.length + (data.length === 1 ? ' archivo' : ' archivos');
+            summaryLabelEl.textContent =
+                data.length + (data.length === 1 ? ' archivo' : ' archivos');
 
-            // Tarjetas: top 3 por puntuación
             const top = data.slice(0, 3);
             top.forEach((item, index) => {
                 const color = scoreColor(item.score);
@@ -91,15 +193,16 @@ function getDashboardHtml() {
                 const rank = index + 1;
 
                 const div = document.createElement('div');
-                div.className = 'bg-slate-800/70 rounded-xl border border-slate-700/70 p-3 flex flex-col gap-2 shadow-sm';
+                div.className =
+                    'bg-slate-800/70 rounded-xl border border-slate-700/70 p-3 flex flex-col gap-2 shadow-sm';
 
                 div.innerHTML = \`
                     <div class="flex items-start justify-between gap-2">
                         <div>
-                            <div class="text-xs uppercase tracking-wide text-slate-400">Top \${rank}</div>
+                            <div class="text-[10px] uppercase tracking-wide text-slate-400">Top \${rank}</div>
                             <div class="text-sm font-medium text-slate-100 truncate">\${item.fileName}</div>
                         </div>
-                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold \${badgeClasses}">
+                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold \${badgeClasses}">
                             \${item.score}/100
                         </span>
                     </div>
@@ -118,7 +221,6 @@ function getDashboardHtml() {
                 cardsEl.appendChild(div);
             });
 
-            // Tabla completa
             data.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-800/80 transition-colors';
@@ -155,6 +257,5 @@ export function openDashboard() {
         vscode.ViewColumn.One,
         { enableScripts: true }
     );
-
     panel.webview.html = getDashboardHtml();
 }
