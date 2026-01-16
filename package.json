@@ -8,6 +8,10 @@
   "engines": {
     "vscode": "^1.90.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dominguezz05/focus-pulse.git"
+  },
   "categories": [
     "Other"
   ],
