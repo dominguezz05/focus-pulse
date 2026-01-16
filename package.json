@@ -4,6 +4,7 @@
   "description": "Mide tu nivel de foco por archivo, con Pomodoro, XP, logros y dashboard en tiempo real.",
   "version": "1.0.0",
   "publisher": "dominguezz05",
+  "license": "MIT"
   "engines": {
     "vscode": "^1.90.0"
   },
