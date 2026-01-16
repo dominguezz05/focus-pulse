@@ -1,5 +1,11 @@
 # ⚡ Focus Pulse
 
+[![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
+![Version](https://img.shields.io/badge/version-0.4.0-informational)
+![License](https://img.shields.io/badge/license-MIT-green)
+![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
+![Status](https://img.shields.io/badge/status-Experimental-orange)
+
 **Focus Pulse** es una extensión de VS Code que mide tu **foco real al programar**, combinando:
 
 - Análisis en tiempo real por archivo
@@ -119,13 +125,21 @@ Ejemplo de logros:
 
 ## ⚙ Configuración
 
-Desde Settings:
+Desde Settings (Focus Pulse):
 
-- Peso del tiempo en el score
-- Peso de ediciones
-- Penalización por cambios
-- Duración Pomodoro
-- Activar/desactivar status bar
+- minMinutesForScore — minutos mínimos para estabilizar el score
+
+- focusPulse.score.timeWeight — peso del tiempo
+
+- focusPulse.score.editsWeight — peso de las ediciones por minuto
+
+- focusPulse.score.switchPenalty — penalización por cambio de archivo
+
+- focusPulse.enablePomodoro — activar/desactivar Pomodoro
+
+- focusPulse.pomodoro.workMinutes — duración de trabajo
+
+- focusPulse.pomodoro.breakMinutes — duración de descanso
 
 ---
 
@@ -156,10 +170,17 @@ Desde Settings:
 vsce package
 ```
 
-Luego instalar desde:
+Instalar en VS Code:
+
+Extensions → Install from VSIX…
+
+Seleccionar focus-pulse-x.y.z.vsix
+
+Reiniciar VS Code si lo pide
 
 Extensions → Install from VSIX…
 
 ---
 
 Copyright (c) 2026 Iker
+
