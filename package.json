@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Mide tu nivel de foco por archivo, con Pomodoro, XP, logros y dashboard en tiempo real.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -49,6 +49,10 @@
       {
         "command": "focusPulse.resetData",
         "title": "Focus Pulse: Resetear histórico y XP"
+      },
+      {
+        "command": "focusPulse.exportData",
+        "title": "Focus Pulse: Exportar histórico (interno)"
       }
     ],
     "configuration": {

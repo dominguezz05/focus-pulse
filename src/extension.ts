@@ -1,138 +1,196 @@
-import * as vscode from 'vscode';
-import { reloadConfig } from './config';
-import { initStatusBar, refreshStatusBar } from './statusBar';
+import * as vscode from "vscode";
+import { reloadConfig } from "./config";
+import { initStatusBar, refreshStatusBar } from "./statusBar";
 import {
-    handleEditorChange,
-    handleTextDocumentChange,
-    getCurrentStats,
-    computeFocusScore,
-    formatMinutes,
-    getStatsArray,
-    FocusSummary,
-    resetFocusStats
-} from './focusTracker';
-import { openDashboard, updateDashboard } from './dashboard';
+  handleEditorChange,
+  handleTextDocumentChange,
+  getCurrentStats,
+  computeFocusScore,
+  formatMinutes,
+  getStatsArray,
+  FocusSummary,
+  resetFocusStats,
+} from "./focusTracker";
+import { openDashboard, updateDashboard } from "./dashboard";
 import {
-    initStorage,
-    updateHistoryFromStats,
-    getLastDays,
-    getStreakDays,
-    getHistory,
-    clearHistory
-} from './storage';
-import { initPomodoro, togglePomodoro, getPomodoroStats } from './pomodoro';
-import { computeAchievements } from './achievements';
-import { computeXpState } from './xp';
+  initStorage,
+  updateHistoryFromStats,
+  getLastDays,
+  getStreakDays,
+  getHistory,
+  clearHistory,
+} from "./storage";
+import { initPomodoro, togglePomodoro, getPomodoroStats } from "./pomodoro";
+import { computeAchievements } from "./achievements";
+import { computeXpState } from "./xp";
+
+import * as fs from "fs";
 
 async function updateAll() {
-    refreshStatusBar();
+  refreshStatusBar();
 
-    const statsArray = getStatsArray();
-    await updateHistoryFromStats(statsArray);
+  const statsArray = getStatsArray();
+  await updateHistoryFromStats(statsArray);
 
-    const fullHistory = getHistory();
-    const pomodoroStats = getPomodoroStats();
-    const xp = computeXpState(fullHistory, pomodoroStats);
+  const fullHistory = getHistory();
+  const pomodoroStats = getPomodoroStats();
+  const xp = computeXpState(fullHistory, pomodoroStats);
 
-    const history7 = getLastDays(7);
-    const streak = getStreakDays();
-    const achievements = computeAchievements(
-        streak,
-        history7,
-        statsArray as FocusSummary[],
-        xp,
-        pomodoroStats
+  const history7 = getLastDays(7);
+  const streak = getStreakDays();
+  const achievements = computeAchievements(
+    streak,
+    history7,
+    statsArray as FocusSummary[],
+    xp,
+    pomodoroStats,
+  );
+
+  updateDashboard({
+    stats: statsArray,
+    history7,
+    streak,
+    achievements,
+    xp,
+    pomodoroStats,
+    historyAll: fullHistory,
+  });
+}
+async function exportHistory(format: "json" | "csv", target: vscode.Uri) {
+  const history = getHistory();
+  if (!history.length) {
+    vscode.window.showInformationMessage(
+      "Focus Pulse: no hay histórico para exportar.",
     );
+    return;
+  }
 
-    updateDashboard({
-        stats: statsArray,
-        history7,
-        streak,
-        achievements,
-        xp,
-        pomodoroStats
+  if (format === "json") {
+    const json = JSON.stringify(history, null, 2);
+    await fs.promises.writeFile(target.fsPath, json, "utf8");
+  } else {
+    const header =
+      "date,totalTimeMs,totalMinutes,totalEdits,avgScore,sessions\n";
+    const rows = history.map((h) => {
+      const minutes = h.totalTimeMs / 60000;
+      return `${h.date},${h.totalTimeMs},${minutes.toFixed(1)},${h.totalEdits},${h.avgScore.toFixed(2)},${h.sessions}`;
     });
+    const csv = header + rows.join("\n");
+    await fs.promises.writeFile(target.fsPath, csv, "utf8");
+  }
+
+  vscode.window.showInformationMessage(
+    `Focus Pulse: histórico exportado como ${format.toUpperCase()}.`,
+  );
 }
 
 export function activate(context: vscode.ExtensionContext) {
-    reloadConfig();
-    initStorage(context);
-    initStatusBar(context);
-    initPomodoro(context);
+  reloadConfig();
+  initStorage(context);
+  initStatusBar(context);
+  initPomodoro(context);
 
-    handleEditorChange(vscode.window.activeTextEditor);
+  handleEditorChange(vscode.window.activeTextEditor);
+  updateAll();
+
+  const configDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("focusPulse")) {
+      reloadConfig();
+      updateAll();
+    }
+  });
+  context.subscriptions.push(configDisposable);
+
+  const editorChangeDisposable = vscode.window.onDidChangeActiveTextEditor(
+    (editor) => {
+      handleEditorChange(editor);
+      updateAll();
+    },
+  );
+  context.subscriptions.push(editorChangeDisposable);
+  const commandExportData = vscode.commands.registerCommand(
+    "focusPulse.exportData",
+    async (args: any) => {
+      if (!args || !args.format || !args.target) return;
+      const format = args.format === "csv" ? "csv" : "json";
+      const uri = args.target as vscode.Uri;
+      await exportHistory(format, uri);
+    },
+  );
+  context.subscriptions.push(commandExportData);
+
+  const editDisposable = vscode.workspace.onDidChangeTextDocument((event) => {
+    handleTextDocumentChange(event);
     updateAll();
+  });
+  context.subscriptions.push(editDisposable);
 
-    const configDisposable = vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration('focusPulse')) {
-            reloadConfig();
-            updateAll();
-        }
-    });
-    context.subscriptions.push(configDisposable);
-
-    const editorChangeDisposable = vscode.window.onDidChangeActiveTextEditor(editor => {
-        handleEditorChange(editor);
-        updateAll();
-    });
-    context.subscriptions.push(editorChangeDisposable);
-
-    const editDisposable = vscode.workspace.onDidChangeTextDocument(event => {
-        handleTextDocumentChange(event);
-        updateAll();
-    });
-    context.subscriptions.push(editDisposable);
-
-    const commandShowStats = vscode.commands.registerCommand('focusPulse.showStats', () => {
-        const stats = getCurrentStats();
-        if (!stats) {
-            vscode.window.showInformationMessage('Focus Pulse: no hay estadísticas para el archivo actual.');
-            return;
-        }
-
-        const score = computeFocusScore(stats);
-        const message =
-            `Focus Pulse\n\n` +
-            `Archivo: ${stats.fileName}\n` +
-            `Puntuación de foco: ${score}/100\n` +
-            `Tiempo total: ${formatMinutes(stats.timeMs)}\n` +
-            `Ediciones: ${stats.edits}\n` +
-            `Cambios de fichero: ${stats.switches}`;
-
-        vscode.window.showInformationMessage(message, { modal: true });
-    });
-    context.subscriptions.push(commandShowStats);
-
-    const commandOpenDashboard = vscode.commands.registerCommand('focusPulse.openDashboard', () => {
-        openDashboard(context);
-        updateAll();
-    });
-    context.subscriptions.push(commandOpenDashboard);
-
-    const commandPomodoroToggle = vscode.commands.registerCommand('focusPulse.pomodoroToggle', () => {
-        togglePomodoro();
-    });
-    context.subscriptions.push(commandPomodoroToggle);
-
-    const commandResetData = vscode.commands.registerCommand('focusPulse.resetData', async () => {
-        const answer = await vscode.window.showWarningMessage(
-            'Esto borrará el histórico de días, racha y XP calculada. ¿Seguro?',
-            'Sí, resetear',
-            'Cancelar'
+  const commandShowStats = vscode.commands.registerCommand(
+    "focusPulse.showStats",
+    () => {
+      const stats = getCurrentStats();
+      if (!stats) {
+        vscode.window.showInformationMessage(
+          "Focus Pulse: no hay estadísticas para el archivo actual.",
         );
-        if (answer !== 'Sí, resetear') {
-            return;
-        }
+        return;
+      }
 
-        resetFocusStats();
-        await clearHistory();
-        await updateAll();
+      const score = computeFocusScore(stats);
+      const message =
+        `Focus Pulse\n\n` +
+        `Archivo: ${stats.fileName}\n` +
+        `Puntuación de foco: ${score}/100\n` +
+        `Tiempo total: ${formatMinutes(stats.timeMs)}\n` +
+        `Ediciones: ${stats.edits}\n` +
+        `Cambios de fichero: ${stats.switches}`;
 
-        vscode.window.showInformationMessage('Focus Pulse: histórico y XP reseteados.');
-    });
-    context.subscriptions.push(commandResetData);
+      vscode.window.showInformationMessage(message, { modal: true });
+    },
+  );
+  context.subscriptions.push(commandShowStats);
+
+  const commandOpenDashboard = vscode.commands.registerCommand(
+    "focusPulse.openDashboard",
+    () => {
+      openDashboard(context);
+      updateAll();
+    },
+  );
+  context.subscriptions.push(commandOpenDashboard);
+
+  const commandPomodoroToggle = vscode.commands.registerCommand(
+    "focusPulse.pomodoroToggle",
+    () => {
+      togglePomodoro();
+    },
+  );
+  context.subscriptions.push(commandPomodoroToggle);
+
+  const commandResetData = vscode.commands.registerCommand(
+    "focusPulse.resetData",
+    async () => {
+      const answer = await vscode.window.showWarningMessage(
+        "Esto borrará el histórico de días, racha y XP calculada. ¿Seguro?",
+        "Sí, resetear",
+        "Cancelar",
+      );
+      if (answer !== "Sí, resetear") {
+        return;
+      }
+
+      resetFocusStats();
+      await clearHistory();
+      await updateAll();
+
+      vscode.window.showInformationMessage(
+        "Focus Pulse: histórico y XP reseteados.",
+      );
+    },
+  );
+  context.subscriptions.push(commandResetData);
 }
 
 export function deactivate() {
-    // nada especial
+  // nada especial
 }

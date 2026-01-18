@@ -11,6 +11,7 @@ interface DashboardData {
     achievements: Achievement[];
     xp: XpState;
     pomodoroStats?: PomodoroStats;
+    historyAll?: HistoryDay[]; // para heatmap + insights
 }
 
 let currentPanel: vscode.WebviewPanel | undefined;
@@ -21,6 +22,9 @@ function getHtml(): string {
 <head>
     <meta charset="UTF-8">
     <title>Focus Pulse Dashboard</title>
+    <script>
+      const vscode = acquireVsCodeApi();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100">
@@ -50,6 +54,7 @@ function getHtml(): string {
             </div>
         </header>
 
+        <!-- Bloque métricas rápidas + insights + export -->
         <section class="grid gap-3 md:grid-cols-4">
             <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
                 <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Racha</div>
@@ -77,18 +82,49 @@ function getHtml(): string {
                     Archivos con foco en esta sesión de VS Code.
                 </p>
             </div>
-            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
-                <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Pomodoros</div>
-                <div class="text-sm text-slate-200">
-                    Hoy: <span id="pomodoro-today" class="font-semibold">0</span>
+            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3 flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Pomodoros</div>
+                        <div class="text-sm text-slate-200">
+                            Hoy: <span id="pomodoro-today" class="font-semibold">0</span>
+                        </div>
+                        <div class="text-sm text-slate-200">
+                            Total: <span id="pomodoro-total" class="font-semibold">0</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 items-end">
+                        <button id="export-json-btn" class="px-2 py-1 rounded-md bg-slate-700/80 text-[11px] hover:bg-slate-600 transition">
+                            Exportar JSON
+                        </button>
+                        <button id="export-csv-btn" class="px-2 py-1 rounded-md bg-slate-700/80 text-[11px] hover:bg-slate-600 transition">
+                            Exportar CSV
+                        </button>
+                    </div>
                 </div>
-                <div class="text-sm text-slate-200">
-                    Total: <span id="pomodoro-total" class="font-semibold">0</span>
-                </div>
-                <p class="text-xs text-slate-400 mt-1">
-                    Bloques de trabajo completados con el temporizador.
+                <p class="text-[11px] text-slate-500">
+                    Exporta tu histórico para analizarlo fuera (Notion, Excel, etc.).
                 </p>
             </div>
+        </section>
+
+        <!-- Insights hoy vs ayer -->
+        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="text-sm font-medium text-slate-200">Insights rápidos</h2>
+            </div>
+            <div id="insights" class="text-xs text-slate-300 space-y-1">
+                <p class="text-slate-500 text-xs">Aún no hay suficientes datos para comparar días.</p>
+            </div>
+        </section>
+
+        <!-- Heatmap -->
+        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-sm font-medium text-slate-200">Heatmap de productividad (últimos 30 días)</h2>
+                <span class="text-[11px] text-slate-500">Intensidad basada en minutos de foco</span>
+            </div>
+            <div id="heatmap" class="flex flex-col gap-1 text-[10px] text-slate-400"></div>
         </section>
 
         <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
@@ -151,6 +187,23 @@ function getHtml(): string {
         const pomodoroTodayEl = document.getElementById('pomodoro-today');
         const pomodoroTotalEl = document.getElementById('pomodoro-total');
 
+        const heatmapEl = document.getElementById('heatmap');
+        const insightsEl = document.getElementById('insights');
+
+        const exportJsonBtn = document.getElementById('export-json-btn');
+        const exportCsvBtn = document.getElementById('export-csv-btn');
+
+        if (exportJsonBtn) {
+            exportJsonBtn.addEventListener('click', () => {
+                vscode.postMessage({ type: 'export', format: 'json' });
+            });
+        }
+        if (exportCsvBtn) {
+            exportCsvBtn.addEventListener('click', () => {
+                vscode.postMessage({ type: 'export', format: 'csv' });
+            });
+        }
+
         function scoreColor(score) {
             if (score >= 80) return 'bg-emerald-500';
             if (score >= 50) return 'bg-amber-400';
@@ -174,9 +227,112 @@ function getHtml(): string {
             while (el.firstChild) el.removeChild(el.firstChild);
         }
 
+        function buildHeatmap(historyAll) {
+            clearChildren(heatmapEl);
+            if (!historyAll || !historyAll.length) {
+                const p = document.createElement('p');
+                p.className = 'text-[11px] text-slate-500';
+                p.textContent = 'Todavía no hay suficiente histórico para mostrar el heatmap.';
+                heatmapEl.appendChild(p);
+                return;
+            }
+
+            // últimos 30 días
+            const sorted = historyAll.slice().sort((a, b) => a.date.localeCompare(b.date));
+            const last30 = sorted.slice(-30);
+            if (!last30.length) return;
+
+            const maxMs = last30.reduce((max, d) => Math.max(max, d.totalTimeMs), 0) || 1;
+
+            const row = document.createElement('div');
+            row.className = 'flex flex-wrap gap-1';
+
+            last30.forEach(day => {
+                const level = day.totalTimeMs / maxMs; // 0..1
+                let bg = 'bg-slate-800';
+                if (level > 0 && level <= 0.25) bg = 'bg-sky-900';
+                else if (level <= 0.5) bg = 'bg-sky-700';
+                else if (level <= 0.75) bg = 'bg-sky-500';
+                else if (level > 0.75) bg = 'bg-sky-400';
+
+                const cell = document.createElement('div');
+                cell.className = 'w-4 h-4 rounded-sm ' + bg + ' cursor-default';
+                cell.title =
+                    day.date +
+                    '\\n' +
+                    'Tiempo: ' +
+                    formatMs(day.totalTimeMs) +
+                    '\\nScore medio: ' +
+                    Math.round(day.avgScore);
+
+                row.appendChild(cell);
+            });
+
+            heatmapEl.appendChild(row);
+        }
+
+        function buildInsights(historyAll) {
+            clearChildren(insightsEl);
+
+            if (!historyAll || historyAll.length < 2) {
+                const p = document.createElement('p');
+                p.className = 'text-slate-500 text-xs';
+                p.textContent = 'Aún no hay suficientes días para comparar (mínimo 2).';
+                insightsEl.appendChild(p);
+                return;
+            }
+
+            const sorted = historyAll.slice().sort((a, b) => a.date.localeCompare(b.date));
+            const today = sorted[sorted.length - 1];
+            const yesterday = sorted[sorted.length - 2];
+
+            const todayMin = today.totalTimeMs / 60000;
+            const yesterdayMin = yesterday.totalTimeMs / 60000;
+
+            const diffMin = todayMin - yesterdayMin;
+            const diffPct = yesterdayMin > 0 ? (diffMin / yesterdayMin) * 100 : 0;
+
+            const p1 = document.createElement('p');
+            const arrow = diffMin > 0 ? '↑' : diffMin < 0 ? '↓' : '→';
+            const trendClass =
+                diffMin > 0 ? 'text-emerald-300' : diffMin < 0 ? 'text-rose-300' : 'text-slate-300';
+
+            p1.innerHTML =
+                'Hoy has trabajado <span class="' +
+                trendClass +
+                '">' +
+                arrow +
+                ' ' +
+                Math.round(Math.abs(diffMin)) +
+                ' min</span> ' +
+                (diffMin >= 0 ? 'más' : 'menos') +
+                ' que ayer.';
+
+            const p2 = document.createElement('p');
+            const scoreDiff = today.avgScore - yesterday.avgScore;
+            const scoreArrow = scoreDiff > 0 ? '↑' : scoreDiff < 0 ? '↓' : '→';
+            const scoreClass =
+                scoreDiff > 0 ? 'text-emerald-300' : scoreDiff < 0 ? 'text-rose-300' : 'text-slate-300';
+
+            p2.innerHTML =
+                'Tu foco medio ha ' +
+                (scoreDiff > 0 ? 'mejorado' : scoreDiff < 0 ? 'bajado' : 'quedado igual') +
+                ': <span class="' +
+                scoreClass +
+                '">' +
+                scoreArrow +
+                ' ' +
+                Math.round(Math.abs(scoreDiff)) +
+                '</span> puntos frente a ayer.';
+
+            insightsEl.appendChild(p1);
+            insightsEl.appendChild(p2);
+        }
+
         function render(data) {
             const stats = data.stats || [];
             const history7 = data.history7 || [];
+            const historyAll = data.historyAll || [];
             const streak = data.streak || 0;
             const achievements = data.achievements || [];
             const xp = data.xp || {
@@ -244,6 +400,10 @@ function getHtml(): string {
                     achievementsEl.appendChild(span);
                 });
             }
+
+            // Heatmap + insights
+            buildHeatmap(historyAll);
+            buildInsights(historyAll);
 
             // Tabla y tarjetas
             clearChildren(tableBodyEl);
@@ -343,10 +503,36 @@ export function openDashboard(context: vscode.ExtensionContext) {
         'focusPulseDashboard',
         'Focus Pulse Dashboard',
         vscode.ViewColumn.One,
-        { enableScripts: true }
+        {
+            enableScripts: true,
+            retainContextWhenHidden: true
+        }
     );
 
     currentPanel.webview.html = getHtml();
+
+    currentPanel.webview.onDidReceiveMessage(
+        async (msg) => {
+            if (!msg || msg.type !== 'export') return;
+
+            const format = msg.format === 'csv' ? 'csv' : 'json';
+            const uri = await vscode.window.showSaveDialog({
+                filters: format === 'json'
+                    ? { 'JSON': ['json'] }
+                    : { 'CSV': ['csv'] },
+                saveLabel: 'Exportar'
+            });
+            if (!uri) return;
+
+            // delegamos en extensión vía comando para no meter lógica aquí
+            await vscode.commands.executeCommand('focusPulse.exportData', {
+                format,
+                target: uri
+            });
+        },
+        undefined,
+        context.subscriptions
+    );
 
     currentPanel.onDidDispose(
         () => {
