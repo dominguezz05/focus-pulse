@@ -209,3 +209,93 @@ function parseTimeToMs(text: string): number {
   const seconds = parseInt(m[2], 10);
   return minutes * 60000 + seconds * 1000;
 }
+// Catálogo completo de logros conocidos por Focus Pulse
+export function getAllAchievementsDefinitions(): Achievement[] {
+  return [
+    {
+      id: "first-focus",
+      title: "Primer enfoque",
+      description: "Has trabajado al menos en un archivo hoy.",
+    },
+    {
+      id: "twenty-mins",
+      title: "20 minutos de foco",
+      description: "Más de 20 minutos de trabajo hoy.",
+    },
+    {
+      id: "hundred-edits",
+      title: "Dedos de acero",
+      description: "Has hecho 100+ ediciones en un archivo hoy.",
+    },
+    {
+      id: "streak-3",
+      title: "Racha x3",
+      description: "Llevas al menos 3 días seguidos con sesión de foco.",
+    },
+    {
+      id: "streak-7",
+      title: "Semana épica",
+      description: "7 días seguidos con trabajo registrado.",
+    },
+    {
+      id: "consistent",
+      title: "Constante",
+      description: "Media de foco ≥ 60/100 en los últimos días.",
+    },
+    {
+      id: "heavy-day",
+      title: "Día intenso",
+      description: "Has tenido al menos un día con 90+ minutos de foco.",
+    },
+    {
+      id: "strong-week",
+      title: "Semana sólida",
+      description: "Más de 5 horas de foco en los últimos 7 días.",
+    },
+    {
+      id: "today-better",
+      title: "Hoy mejor que ayer",
+      description: "Has mejorado tu foco medio respecto al día anterior.",
+    },
+    {
+      id: "xp-300",
+      title: "En marcha",
+      description: "Has acumulado al menos 300 XP de foco.",
+    },
+    {
+      id: "level-3",
+      title: "Nivel 3 alcanzado",
+      description: "Has subido hasta el nivel 3 de Focus Pulse.",
+    },
+    {
+      id: "level-5",
+      title: "Dev disciplinado",
+      description: "Nivel 5 o superior. Varias sesiones sólidas.",
+    },
+    {
+      id: "level-10",
+      title: "Leyenda del foco",
+      description: "Nivel 10 o más. Tu disciplina es seria.",
+    },
+    {
+      id: "pomo-first",
+      title: "Primer pomodoro",
+      description: "Has completado un bloque de trabajo con el temporizador.",
+    },
+    {
+      id: "pomo-4-today",
+      title: "Cuatro bloques",
+      description: "Has completado 4 pomodoros en un solo día.",
+    },
+    {
+      id: "pomo-20-total",
+      title: "Acumulador de bloques",
+      description: "Has completado 20 pomodoros en total.",
+    },
+    {
+      id: "pomo-50-total",
+      title: "Máquina de pomodoros",
+      description: "Has completado 50 pomodoros en total.",
+    },
+  ];
+}

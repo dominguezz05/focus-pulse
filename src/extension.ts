@@ -24,7 +24,10 @@ import {
   HistoryDay,
 } from "./storage";
 import { initPomodoro, togglePomodoro, getPomodoroStats } from "./pomodoro";
-import { computeAchievements } from "./achievements";
+import {
+  computeAchievements,
+  getAllAchievementsDefinitions,
+} from "./achievements";
 import { computeXpState, PomodoroStats } from "./xp";
 
 import { DailyGoalProgress } from "./goals";
@@ -114,7 +117,8 @@ async function updateAll() {
 
   const history7 = getLastDays(7);
   const streak = getStreakDays();
-  const achievements = computeAchievements(
+
+  const unlockedAchievements = computeAchievements(
     streak,
     history7,
     statsArray as FocusSummary[],
@@ -123,15 +127,22 @@ async function updateAll() {
     goals,
   );
 
+  const allDefs = getAllAchievementsDefinitions();
+  const mergedAll = allDefs.map((a) => ({
+    ...a,
+    unlocked: unlockedAchievements.some((u) => u.id === a.id),
+  }));
+
   updateDashboard({
     stats: statsArray,
     history7,
     streak,
-    achievements,
+    achievements: unlockedAchievements,
     xp,
     pomodoroStats,
     historyAll: fullHistory,
     goals,
+    allAchievements: mergedAll,
   });
 }
 

@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Mide tu nivel de foco por archivo, con Pomodoro, XP, logros y dashboard en tiempo real.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {

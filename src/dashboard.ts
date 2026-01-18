@@ -22,6 +22,7 @@ interface DashboardData {
     donePomodoros: boolean;
     allDone: boolean;
   };
+  allAchievements?: (Achievement & { unlocked: boolean })[];
 }
 
 let currentPanel: vscode.WebviewPanel | undefined;
@@ -149,15 +150,29 @@ function getHtml(): string {
             <div id="heatmap" class="flex flex-col gap-1 text-[10px] text-slate-400"></div>
         </section>
 
-        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
-            <div class="flex items-center justify-between mb-2">
-                <h2 class="text-sm font-medium text-slate-200">Logros de hoy</h2>
-                <span class="text-xs text-slate-400" id="achievements-count">0 logros</span>
-            </div>
-            <div id="achievements" class="flex flex-wrap gap-2 text-xs">
-                <span class="text-slate-400 text-xs">Sin datos todavía.</span>
-            </div>
-        </section>
+       <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+  <div class="flex items-center justify-between mb-2">
+    <h2 class="text-sm font-medium text-slate-200">Logros de hoy</h2>
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-400" id="achievements-count">0 logros</span>
+      <button
+        id="achievements-toggle"
+        class="text-[11px] text-sky-400 hover:underline"
+        type="button"
+      >
+        Ver todos
+      </button>
+    </div>
+  </div>
+  <div id="achievements" class="flex flex-wrap gap-2 text-xs">
+    <span class="text-slate-400 text-xs">Sin datos todavía.</span>
+  </div>
+  <div
+    id="all-achievements"
+    class="mt-3 grid gap-2 sm:grid-cols-2 text-xs hidden"
+  ></div>
+</section>
+
 
         <section id="cards" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div class="col-span-full bg-slate-800/60 rounded-xl border border-dashed border-slate-700/70 p-4" id="no-data-card">
@@ -191,6 +206,7 @@ function getHtml(): string {
     </div>
 
     <script>
+    let showAllAchievements = false;
         const cardsEl = document.getElementById('cards');
         const noDataCardEl = document.getElementById('no-data-card');
         const tableBodyEl = document.getElementById('table-body');
@@ -217,6 +233,22 @@ function getHtml(): string {
 
                 const goalStatusLabelEl = document.getElementById('goal-status-label');
         const goalContentEl = document.getElementById('goal-content');
+const achievementsToggleEl = document.getElementById("achievements-toggle");
+const allAchievementsEl = document.getElementById("all-achievements");
+
+if (achievementsToggleEl) {
+  achievementsToggleEl.addEventListener("click", () => {
+    showAllAchievements = !showAllAchievements;
+    if (!allAchievementsEl) return;
+    if (showAllAchievements) {
+      allAchievementsEl.classList.remove("hidden");
+      achievementsToggleEl.textContent = "Ocultar";
+    } else {
+      allAchievementsEl.classList.add("hidden");
+      achievementsToggleEl.textContent = "Ver todos";
+    }
+  });
+}
 
 
         if (exportJsonBtn) {
@@ -403,6 +435,45 @@ function getHtml(): string {
         }
 
 
+function buildAllAchievements(all) {
+  if (!allAchievementsEl) return;
+  clearChildren(allAchievementsEl);
+
+  if (!all || !all.length) {
+    const p = document.createElement("p");
+    p.className = "text-[11px] text-slate-500";
+    p.textContent =
+      "Todavía no hay catálogo de logros disponible.";
+    allAchievementsEl.appendChild(p);
+    return;
+  }
+
+  all.forEach((a) => {
+    const div = document.createElement("div");
+    const base =
+      "px-2 py-1 rounded-lg border text-[11px] flex flex-col gap-0.5";
+
+    if (a.unlocked) {
+      div.className =
+        base +
+        " border-emerald-500/60 bg-emerald-500/10 text-emerald-200";
+    } else {
+      div.className =
+        base +
+        " border-slate-700 bg-slate-900/80 text-slate-500";
+    }
+
+    div.innerHTML =
+      '<span class="font-semibold">' +
+      a.title +
+      "</span>" +
+      '<span class="text-[10px] opacity-80">' +
+      a.description +
+      "</span>";
+
+    allAchievementsEl.appendChild(div);
+  });
+}
 
         function render(data) {
             const stats = data.stats || [];
@@ -417,6 +488,7 @@ function getHtml(): string {
                 xpToNext: 100
             };
             const goals = data.goals;
+const allAchievements = data.allAchievements || [];
 
             const pomodoroStats = data.pomodoroStats || { today: 0, total: 0 };
 
@@ -482,6 +554,11 @@ function getHtml(): string {
             buildHeatmap(historyAll);
             buildInsights(historyAll);
 buildGoals(goals);
+buildAllAchievements(allAchievements);
+
+if (!showAllAchievements && allAchievementsEl) {
+  allAchievementsEl.classList.add("hidden");
+}
 
             // Tabla y tarjetas
             clearChildren(tableBodyEl);
