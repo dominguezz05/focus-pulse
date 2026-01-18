@@ -4,6 +4,14 @@ Todas las versiones importantes de **Focus Pulse**.
 
 ---
 
+## [1.2.2] — 2026-01-19
+
+### Mejora
+
+- Mejoras visuales en dashboard .
+
+---
+
 ## [1.2.0] — 2026-01-18
 
 ### Añadido

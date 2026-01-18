@@ -650,6 +650,7 @@ if (!showAllAchievements && allAchievementsEl) {
 
 export function openDashboard(context: vscode.ExtensionContext) {
   if (currentPanel) {
+    currentPanel.webview.html = getHtml();
     currentPanel.reveal(vscode.ViewColumn.One);
     return;
   }
@@ -677,7 +678,6 @@ export function openDashboard(context: vscode.ExtensionContext) {
       });
       if (!uri) return;
 
-      // delegamos en extensión vía comando para no meter lógica aquí
       await vscode.commands.executeCommand("focusPulse.exportData", {
         format,
         target: uri,
