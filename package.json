@@ -13,8 +13,17 @@
     "url": "https://github.com/dominguezz05/focus-pulse.git"
   },
   "categories": [
-    "Other"
+    "Extension Packs"
   ],
+  "keywords": [
+    "focus",
+    "productivity",
+    "pomodoro",
+    "xp",
+    "dashboard",
+    "gamification"
+  ],
+  "icon": "media/publisher-icon.png",
   "activationEvents": [
     "onStartupFinished",
     "onCommand:focusPulse.showStats",

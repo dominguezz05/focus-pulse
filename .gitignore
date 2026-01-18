@@ -1,4 +1,26 @@
-node_modules
-out
+# ─────────────── General ───────────────
+node_modules/
+out/
+dist/
+*.vsix
+
+# ─────────────── VS Code ───────────────
 .vscode/*.log
 .vscode/*.tmp
+.vscode/ipch
+.vscode/.cache
+.vscode/launch.json
+.vscode/tasks.json
+
+# ─────────────── npm / pnpm / yarn ───────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─────────────── TypeScript ───────────────
+*.tsbuildinfo
+
+# ─────────────── Sistema ───────────────
+.DS_Store
+Thumbs.db

@@ -5,6 +5,8 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Status](https://img.shields.io/badge/status-Experimental-orange)
+[![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/dominguezz05.focus-pulse)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
 
 **Focus Pulse** es una extensión de VS Code que mide tu **foco real al programar**, combinando:
 
@@ -17,6 +19,12 @@
 Diseñado para desarrolladores que quieren mejorar su productividad sin complicarse.
 
 ---
+
+## 🖼 Vista previa
+
+### Dashboard principal
+
+## ![Focus Pulse Dashboard](media/focus-pulse-dashboard.png)
 
 ## ✨ Características principales
 
@@ -70,18 +78,17 @@ Ejecuta:
 
 Focus Pulse: Abrir dashboard
 
-
 Incluye:
 
-| Bloque | Métrica |
-|---|---|
-| Nivel + XP | Barra de progreso |
-| Pomodoros | Hoy + total |
-| Racha | Días consecutivos |
-| Últimos 7 días | Media de foco |
-| Archivos hoy | Score + tiempo |
-| Logros | Se actualizan en vivo |
-| Tabla | Detalle por archivo |
+| Bloque         | Métrica               |
+| -------------- | --------------------- |
+| Nivel + XP     | Barra de progreso     |
+| Pomodoros      | Hoy + total           |
+| Racha          | Días consecutivos     |
+| Últimos 7 días | Media de foco         |
+| Archivos hoy   | Score + tiempo        |
+| Logros         | Se actualizan en vivo |
+| Tabla          | Detalle por archivo   |
 
 ---
 
@@ -90,7 +97,6 @@ Incluye:
 Ejecuta:
 
 Focus Pulse: Iniciar/Parar Pomodoro
-
 
 Modos:
 
@@ -107,10 +113,10 @@ Logros especiales si encadenas varios.
 
 El sistema XP recompensa:
 
-+ Tiempo productivo
-+ Score alto
-+ Racha de días
-+ Pomodoros completados
+- Tiempo productivo
+- Score alto
+- Racha de días
+- Pomodoros completados
 
 Ejemplo de logros:
 
@@ -145,13 +151,13 @@ Desde Settings (Focus Pulse):
 
 ## 🧾 Comandos
 
-| Comando | Acción |
-|---|---|
-| **Focus Pulse: Abrir dashboard** | Estadísticas completas |
-| **Focus Pulse: Mostrar estadísticas del archivo actual** | Popup rápido |
-| **Focus Pulse: Iniciar/Parar Pomodoro** | Timer integrado |
-| **Focus Pulse: Resetear histórico y XP** | Limpia datos |
-| **Focus Pulse: Show Stats** | Alias |
+| Comando                                                  | Acción                 |
+| -------------------------------------------------------- | ---------------------- |
+| **Focus Pulse: Abrir dashboard**                         | Estadísticas completas |
+| **Focus Pulse: Mostrar estadísticas del archivo actual** | Popup rápido           |
+| **Focus Pulse: Iniciar/Parar Pomodoro**                  | Timer integrado        |
+| **Focus Pulse: Resetear histórico y XP**                 | Limpia datos           |
+| **Focus Pulse: Show Stats**                              | Alias                  |
 
 ---
 
@@ -183,4 +189,3 @@ Extensions → Install from VSIX…
 ---
 
 Copyright (c) 2026 Iker
-
