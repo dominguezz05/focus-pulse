@@ -1,6 +1,7 @@
 import type { HistoryDay } from "./storage";
 import type { FocusSummary } from "./focusTracker";
 import type { XpState, PomodoroStats } from "./xp";
+import type { DailyGoalProgress } from "./goals";
 
 export interface Achievement {
   id: string;
@@ -14,6 +15,7 @@ export function computeAchievements(
   todayStats: FocusSummary[],
   xp?: XpState,
   pomodoroStats?: PomodoroStats,
+  goals?: DailyGoalProgress,
 ): Achievement[] {
   const list: Achievement[] = [];
 

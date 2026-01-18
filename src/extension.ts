@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
+
 import { reloadConfig } from "./config";
 import { initStatusBar, refreshStatusBar } from "./statusBar";
 import {
@@ -19,43 +21,53 @@ import {
   getStreakDays,
   getHistory,
   clearHistory,
+  HistoryDay,
 } from "./storage";
 import { initPomodoro, togglePomodoro, getPomodoroStats } from "./pomodoro";
 import { computeAchievements } from "./achievements";
-import { computeXpState } from "./xp";
+import { computeXpState, PomodoroStats } from "./xp";
 
-import * as fs from "fs";
+import { DailyGoalProgress } from "./goals";
+// ---------------- Objetivos diarios ----------------
 
-async function updateAll() {
-  refreshStatusBar();
+function computeDailyGoals(
+  fullHistory: HistoryDay[],
+  pomodoroStats: PomodoroStats | undefined,
+): DailyGoalProgress | undefined {
+  const config = vscode.workspace.getConfiguration("focusPulse");
+  const enabled = config.get<boolean>("goals.enabled", true);
+  if (!enabled) return undefined;
 
-  const statsArray = getStatsArray();
-  await updateHistoryFromStats(statsArray);
+  const targetMinutes = config.get<number>("goals.minutes", 60);
+  const targetPomodoros = config.get<number>("goals.pomodoros", 3);
 
-  const fullHistory = getHistory();
-  const pomodoroStats = getPomodoroStats();
-  const xp = computeXpState(fullHistory, pomodoroStats);
+  const todayDate = new Date();
+  const yyyy = todayDate.getFullYear();
+  const mm = String(todayDate.getMonth() + 1).padStart(2, "0");
+  const dd = String(todayDate.getDate()).padStart(2, "0");
+  const todayKey = `${yyyy}-${mm}-${dd}`;
 
-  const history7 = getLastDays(7);
-  const streak = getStreakDays();
-  const achievements = computeAchievements(
-    streak,
-    history7,
-    statsArray as FocusSummary[],
-    xp,
-    pomodoroStats,
-  );
+  const todayHistory = fullHistory.find((h) => h.date === todayKey);
+  const minutesDone = todayHistory ? todayHistory.totalTimeMs / 60000 : 0;
+  const pomodorosDone = pomodoroStats?.today ?? 0;
 
-  updateDashboard({
-    stats: statsArray,
-    history7,
-    streak,
-    achievements,
-    xp,
-    pomodoroStats,
-    historyAll: fullHistory,
-  });
+  const doneMinutes = minutesDone >= targetMinutes;
+  const donePomodoros = pomodorosDone >= targetPomodoros;
+
+  return {
+    enabled,
+    targetMinutes,
+    targetPomodoros,
+    minutesDone,
+    pomodorosDone,
+    doneMinutes,
+    donePomodoros,
+    allDone: doneMinutes && donePomodoros,
+  };
 }
+
+// ---------------- Export histórico ----------------
+
 async function exportHistory(format: "json" | "csv", target: vscode.Uri) {
   const history = getHistory();
   if (!history.length) {
@@ -73,7 +85,9 @@ async function exportHistory(format: "json" | "csv", target: vscode.Uri) {
       "date,totalTimeMs,totalMinutes,totalEdits,avgScore,sessions\n";
     const rows = history.map((h) => {
       const minutes = h.totalTimeMs / 60000;
-      return `${h.date},${h.totalTimeMs},${minutes.toFixed(1)},${h.totalEdits},${h.avgScore.toFixed(2)},${h.sessions}`;
+      return `${h.date},${h.totalTimeMs},${minutes.toFixed(
+        1,
+      )},${h.totalEdits},${h.avgScore.toFixed(2)},${h.sessions}`;
     });
     const csv = header + rows.join("\n");
     await fs.promises.writeFile(target.fsPath, csv, "utf8");
@@ -83,6 +97,45 @@ async function exportHistory(format: "json" | "csv", target: vscode.Uri) {
     `Focus Pulse: histórico exportado como ${format.toUpperCase()}.`,
   );
 }
+
+// ---------------- Loop de actualización ----------------
+
+async function updateAll() {
+  refreshStatusBar();
+
+  const statsArray = getStatsArray();
+  await updateHistoryFromStats(statsArray);
+
+  const fullHistory = getHistory();
+  const pomodoroStats = getPomodoroStats();
+  const goals = computeDailyGoals(fullHistory, pomodoroStats);
+
+  const xp = computeXpState(fullHistory, pomodoroStats);
+
+  const history7 = getLastDays(7);
+  const streak = getStreakDays();
+  const achievements = computeAchievements(
+    streak,
+    history7,
+    statsArray as FocusSummary[],
+    xp,
+    pomodoroStats,
+    goals,
+  );
+
+  updateDashboard({
+    stats: statsArray,
+    history7,
+    streak,
+    achievements,
+    xp,
+    pomodoroStats,
+    historyAll: fullHistory,
+    goals,
+  });
+}
+
+// ---------------- Activación extensión ----------------
 
 export function activate(context: vscode.ExtensionContext) {
   reloadConfig();
@@ -108,6 +161,13 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
   context.subscriptions.push(editorChangeDisposable);
+
+  const editDisposable = vscode.workspace.onDidChangeTextDocument((event) => {
+    handleTextDocumentChange(event);
+    updateAll();
+  });
+  context.subscriptions.push(editDisposable);
+
   const commandExportData = vscode.commands.registerCommand(
     "focusPulse.exportData",
     async (args: any) => {
@@ -118,12 +178,6 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
   context.subscriptions.push(commandExportData);
-
-  const editDisposable = vscode.workspace.onDidChangeTextDocument((event) => {
-    handleTextDocumentChange(event);
-    updateAll();
-  });
-  context.subscriptions.push(editDisposable);
 
   const commandShowStats = vscode.commands.registerCommand(
     "focusPulse.showStats",

@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Mide tu nivel de foco por archivo, con Pomodoro, XP, logros y dashboard en tiempo real.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -104,6 +104,23 @@
           "default": 5,
           "minimum": 1,
           "description": "Duración del descanso (minutos)."
+        },
+        "focusPulse.goals.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activar objetivos diarios (minutos y pomodoros)."
+        },
+        "focusPulse.goals.minutes": {
+          "type": "number",
+          "default": 60,
+          "minimum": 1,
+          "description": "Minutos de foco objetivo para completar el día."
+        },
+        "focusPulse.goals.pomodoros": {
+          "type": "number",
+          "default": 3,
+          "minimum": 0,
+          "description": "Número de pomodoros objetivo para completar el día."
         }
       }
     }

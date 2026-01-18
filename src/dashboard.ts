@@ -1,23 +1,33 @@
-import * as vscode from 'vscode';
-import type { FocusSummary } from './focusTracker';
-import type { HistoryDay } from './storage';
-import type { Achievement } from './achievements';
-import type { XpState, PomodoroStats } from './xp';
+import * as vscode from "vscode";
+import type { FocusSummary } from "./focusTracker";
+import type { HistoryDay } from "./storage";
+import type { Achievement } from "./achievements";
+import type { XpState, PomodoroStats } from "./xp";
 
 interface DashboardData {
-    stats: FocusSummary[];
-    history7: HistoryDay[];
-    streak: number;
-    achievements: Achievement[];
-    xp: XpState;
-    pomodoroStats?: PomodoroStats;
-    historyAll?: HistoryDay[]; // para heatmap + insights
+  stats: FocusSummary[];
+  history7: HistoryDay[];
+  streak: number;
+  achievements: Achievement[];
+  xp: XpState;
+  pomodoroStats?: PomodoroStats;
+  historyAll?: HistoryDay[];
+  goals?: {
+    enabled: boolean;
+    targetMinutes: number;
+    targetPomodoros: number;
+    minutesDone: number;
+    pomodorosDone: number;
+    doneMinutes: boolean;
+    donePomodoros: boolean;
+    allDone: boolean;
+  };
 }
 
 let currentPanel: vscode.WebviewPanel | undefined;
 
 function getHtml(): string {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -107,6 +117,18 @@ function getHtml(): string {
                 </p>
             </div>
         </section>
+        <!-- Objetivo de hoy -->
+        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-sm font-medium text-slate-200">🎯 Objetivo de hoy</h2>
+                <span id="goal-status-label" class="text-xs text-slate-400">Sin objetivo configurado</span>
+            </div>
+            <div id="goal-content" class="space-y-2 text-xs text-slate-300">
+                <p class="text-slate-500 text-xs">
+                    Configura los objetivos diarios en las opciones de Focus Pulse.
+                </p>
+            </div>
+        </section>
 
         <!-- Insights hoy vs ayer -->
         <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
@@ -192,6 +214,10 @@ function getHtml(): string {
 
         const exportJsonBtn = document.getElementById('export-json-btn');
         const exportCsvBtn = document.getElementById('export-csv-btn');
+
+                const goalStatusLabelEl = document.getElementById('goal-status-label');
+        const goalContentEl = document.getElementById('goal-content');
+
 
         if (exportJsonBtn) {
             exportJsonBtn.addEventListener('click', () => {
@@ -328,6 +354,55 @@ function getHtml(): string {
             insightsEl.appendChild(p1);
             insightsEl.appendChild(p2);
         }
+                          function buildGoals(goals) {
+            if (!goalStatusLabelEl || !goalContentEl) return;
+
+            if (!goals || !goals.enabled) {
+                goalStatusLabelEl.textContent = 'Objetivos desactivados';
+                goalContentEl.innerHTML =
+                    '<p class="text-slate-500 text-xs">Activa los objetivos diarios en la configuración de Focus Pulse.</p>';
+                return;
+            }
+
+            const min = Math.round(goals.minutesDone);
+            const targetMin = goals.targetMinutes;
+            const pom = goals.pomodorosDone;
+            const targetPom = goals.targetPomodoros;
+
+            const pctMin = Math.max(0, Math.min(100, (min / targetMin) * 100));
+            const pctPom = targetPom > 0
+                ? Math.max(0, Math.min(100, (pom / targetPom) * 100))
+                : 100;
+
+            goalStatusLabelEl.textContent = goals.allDone
+                ? '✅ Objetivo completado'
+                : 'En progreso';
+
+            goalContentEl.innerHTML =
+                '<div class="space-y-1.5">' +
+                    '<div class="flex items-center justify-between">' +
+                        '<span>Minutos de foco</span>' +
+                        '<span class="text-slate-200 font-semibold">' + min + '/' + targetMin + ' min</span>' +
+                    '</div>' +
+                    '<div class="w-full h-2 rounded-full bg-slate-700 overflow-hidden">' +
+                        '<div class="h-full bg-sky-500 transition-all" style="width: ' + pctMin + '%;"></div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="space-y-1.5 mt-2">' +
+                    '<div class="flex items-center justify-between">' +
+                        '<span>Pomodoros</span>' +
+                        '<span class="text-slate-200 font-semibold">' + pom + '/' + targetPom + '</span>' +
+                    '</div>' +
+                    '<div class="w-full h-2 rounded-full bg-slate-700 overflow-hidden">' +
+                        '<div class="h-full bg-emerald-500 transition-all" style="width: ' + pctPom + '%;"></div>' +
+                    '</div>' +
+                '</div>' +
+                (goals.allDone
+                    ? '<p class="text-[11px] text-emerald-300 mt-2">Has cumplido el objetivo de hoy. Buen trabajo 👏</p>'
+                    : '<p class="text-[11px] text-slate-500 mt-2">Completa ambos objetivos para cerrar el día.</p>');
+        }
+
+
 
         function render(data) {
             const stats = data.stats || [];
@@ -341,6 +416,8 @@ function getHtml(): string {
                 xpInLevel: 0,
                 xpToNext: 100
             };
+            const goals = data.goals;
+
             const pomodoroStats = data.pomodoroStats || { today: 0, total: 0 };
 
             // XP / nivel
@@ -404,6 +481,7 @@ function getHtml(): string {
             // Heatmap + insights
             buildHeatmap(historyAll);
             buildInsights(historyAll);
+buildGoals(goals);
 
             // Tabla y tarjetas
             clearChildren(tableBodyEl);
@@ -494,59 +572,57 @@ function getHtml(): string {
 }
 
 export function openDashboard(context: vscode.ExtensionContext) {
-    if (currentPanel) {
-        currentPanel.reveal(vscode.ViewColumn.One);
-        return;
-    }
+  if (currentPanel) {
+    currentPanel.reveal(vscode.ViewColumn.One);
+    return;
+  }
 
-    currentPanel = vscode.window.createWebviewPanel(
-        'focusPulseDashboard',
-        'Focus Pulse Dashboard',
-        vscode.ViewColumn.One,
-        {
-            enableScripts: true,
-            retainContextWhenHidden: true
-        }
-    );
+  currentPanel = vscode.window.createWebviewPanel(
+    "focusPulseDashboard",
+    "Focus Pulse Dashboard",
+    vscode.ViewColumn.One,
+    {
+      enableScripts: true,
+      retainContextWhenHidden: true,
+    },
+  );
 
-    currentPanel.webview.html = getHtml();
+  currentPanel.webview.html = getHtml();
 
-    currentPanel.webview.onDidReceiveMessage(
-        async (msg) => {
-            if (!msg || msg.type !== 'export') return;
+  currentPanel.webview.onDidReceiveMessage(
+    async (msg) => {
+      if (!msg || msg.type !== "export") return;
 
-            const format = msg.format === 'csv' ? 'csv' : 'json';
-            const uri = await vscode.window.showSaveDialog({
-                filters: format === 'json'
-                    ? { 'JSON': ['json'] }
-                    : { 'CSV': ['csv'] },
-                saveLabel: 'Exportar'
-            });
-            if (!uri) return;
+      const format = msg.format === "csv" ? "csv" : "json";
+      const uri = await vscode.window.showSaveDialog({
+        filters: format === "json" ? { JSON: ["json"] } : { CSV: ["csv"] },
+        saveLabel: "Exportar",
+      });
+      if (!uri) return;
 
-            // delegamos en extensión vía comando para no meter lógica aquí
-            await vscode.commands.executeCommand('focusPulse.exportData', {
-                format,
-                target: uri
-            });
-        },
-        undefined,
-        context.subscriptions
-    );
+      // delegamos en extensión vía comando para no meter lógica aquí
+      await vscode.commands.executeCommand("focusPulse.exportData", {
+        format,
+        target: uri,
+      });
+    },
+    undefined,
+    context.subscriptions,
+  );
 
-    currentPanel.onDidDispose(
-        () => {
-            currentPanel = undefined;
-        },
-        null,
-        context.subscriptions
-    );
+  currentPanel.onDidDispose(
+    () => {
+      currentPanel = undefined;
+    },
+    null,
+    context.subscriptions,
+  );
 }
 
 export function updateDashboard(data: DashboardData) {
-    if (!currentPanel) return;
-    currentPanel.webview.postMessage({
-        type: 'stats:update',
-        payload: data
-    });
+  if (!currentPanel) return;
+  currentPanel.webview.postMessage({
+    type: "stats:update",
+    payload: data,
+  });
 }

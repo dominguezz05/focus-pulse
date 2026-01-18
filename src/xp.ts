@@ -1,75 +1,75 @@
-import type { HistoryDay } from './storage';
+import type { HistoryDay } from "./storage";
 
 export interface XpState {
-    totalXp: number;
-    level: number;
-    xpInLevel: number;
-    xpToNext: number;
+  totalXp: number;
+  level: number;
+  xpInLevel: number;
+  xpToNext: number;
 }
 
 export interface PomodoroStats {
-    today: number;
-    total: number;
+  today: number;
+  total: number;
 }
 
 // Punto de entrada principal: histórico + stats de pomodoro
 export function computeXpState(
-    history: HistoryDay[],
-    pomodoroStats?: PomodoroStats
+  history: HistoryDay[],
+  pomodoroStats?: PomodoroStats,
 ): XpState {
-    const baseXp = computeBaseXpFromHistory(history);
-    const bonusXp = computePomodoroBonus(pomodoroStats);
-    const totalXp = baseXp + bonusXp;
-    return computeXpStateFromTotal(totalXp);
+  const baseXp = computeBaseXpFromHistory(history);
+  const bonusXp = computePomodoroBonus(pomodoroStats);
+  const totalXp = baseXp + bonusXp;
+  return computeXpStateFromTotal(totalXp);
 }
 
 // Compatibilidad por si en algún sitio queda la antigua
 export function computeXpStateFromHistory(history: HistoryDay[]): XpState {
-    return computeXpState(history);
+  return computeXpState(history);
 }
 
 // XP base según histórico de días (sin pomodoro aún)
 function computeBaseXpFromHistory(history: HistoryDay[]): number {
-    if (!history.length) return 0;
+  if (!history.length) return 0;
 
-    let totalXp = 0;
-    for (const day of history) {
-        const minutes = day.totalTimeMs / 60000;
-        const dayXp = minutes * (day.avgScore / 100) * 10;
-        totalXp += dayXp;
-    }
-    return totalXp;
+  let totalXp = 0;
+  for (const day of history) {
+    const minutes = day.totalTimeMs / 60000;
+    const dayXp = minutes * (day.avgScore / 100) * 10;
+    totalXp += dayXp;
+  }
+  return totalXp;
 }
 
 // Bonus por pomodoro: hoy pesa más que el acumulado
 function computePomodoroBonus(stats?: PomodoroStats): number {
-    if (!stats) return 0;
-    const todayBonus = stats.today * 50; // 50 XP por bloque de hoy
-    const totalBonus = stats.total * 10; // 10 XP por bloque histórico
-    return todayBonus + totalBonus;
+  if (!stats) return 0;
+  const todayBonus = stats.today * 50; // 50 XP por bloque de hoy
+  const totalBonus = stats.total * 10; // 10 XP por bloque histórico
+  return todayBonus + totalBonus;
 }
 
 // Convierte XP total en nivel + progreso al siguiente
 function computeXpStateFromTotal(totalXp: number): XpState {
-    let level = 1;
-    let xpRemaining = totalXp;
-    let xpToNext = xpNeededForLevel(level);
+  let level = 1;
+  let xpRemaining = totalXp;
+  let xpToNext = xpNeededForLevel(level);
 
-    while (xpRemaining >= xpToNext) {
-        xpRemaining -= xpToNext;
-        level++;
-        xpToNext = xpNeededForLevel(level);
-    }
+  while (xpRemaining >= xpToNext) {
+    xpRemaining -= xpToNext;
+    level++;
+    xpToNext = xpNeededForLevel(level);
+  }
 
-    return {
-        totalXp,
-        level,
-        xpInLevel: xpRemaining,
-        xpToNext
-    };
+  return {
+    totalXp,
+    level,
+    xpInLevel: xpRemaining,
+    xpToNext,
+  };
 }
 
 // Curva simple: cada nivel pide un poco más
 function xpNeededForLevel(level: number): number {
-    return 100 + (level - 1) * 50;
+  return 100 + (level - 1) * 50;
 }
