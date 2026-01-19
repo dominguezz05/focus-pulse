@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 
 import { reloadConfig } from "./config";
-import { initStatusBar, refreshStatusBar } from "./statusBar";
+import { initStatusBar, refreshStatusBar, setDeepWorkState } from "./statusBar";
 import {
   handleEditorChange,
   handleTextDocumentChange,
@@ -31,6 +31,14 @@ import {
 import { computeXpState, PomodoroStats } from "./xp";
 
 import { DailyGoalProgress } from "./goals";
+import {
+  initDeepWork,
+  toggleDeepWork,
+  checkDeepWorkCompletion,
+  getDeepWorkState,
+} from "./deepWork";
+import type { DeepWorkState } from "./deepWork";
+
 // ---------------- Objetivos diarios ----------------
 
 function computeDailyGoals(
@@ -103,18 +111,22 @@ async function exportHistory(format: "json" | "csv", target: vscode.Uri) {
 
 // ---------------- Loop de actualización ----------------
 
-async function updateAll() {
+async function updateAll(context: vscode.ExtensionContext) {
   refreshStatusBar();
 
   const statsArray = getStatsArray();
   await updateHistoryFromStats(statsArray);
 
   const fullHistory = getHistory();
+  const { state: deepWorkState, completed } =
+    await checkDeepWorkCompletion(context);
+  setDeepWorkState(deepWorkState);
+
   const pomodoroStats = getPomodoroStats();
   const goals = computeDailyGoals(fullHistory, pomodoroStats);
 
-  const xp = computeXpState(fullHistory, pomodoroStats);
-
+  const xp = computeXpState(fullHistory, pomodoroStats, deepWorkState);
+  const weeklySummary = buildWeeklySummaryFromHistory(fullHistory);
   const history7 = getLastDays(7);
   const streak = getStreakDays();
 
@@ -125,6 +137,7 @@ async function updateAll() {
     xp,
     pomodoroStats,
     goals,
+    deepWorkState,
   );
 
   const allDefs = getAllAchievementsDefinitions();
@@ -142,8 +155,49 @@ async function updateAll() {
     pomodoroStats,
     historyAll: fullHistory,
     goals,
+    deepWork: deepWorkState,
+    weeklySummary,
     allAchievements: mergedAll,
   });
+}
+
+function buildWeeklySummaryFromHistory(history: HistoryDay[]) {
+  const byWeek = new Map<
+    string,
+    { totalMinutes: number; totalScore: number; days: number }
+  >();
+
+  for (const h of history) {
+    const d = new Date(h.date);
+    const year = d.getFullYear();
+    const week = getWeekNumber(d); // helper abajo
+    const key = `${year}-W${String(week).padStart(2, "0")}`;
+    const entry = byWeek.get(key) ?? {
+      totalMinutes: 0,
+      totalScore: 0,
+      days: 0,
+    };
+    entry.totalMinutes += h.totalTimeMs / 60000;
+    entry.totalScore += h.avgScore;
+    entry.days += 1;
+    byWeek.set(key, entry);
+  }
+
+  return Array.from(byWeek.entries())
+    .map(([weekLabel, v]) => ({
+      weekLabel,
+      totalMinutes: v.totalMinutes,
+      avgScore: v.days ? v.totalScore / v.days : 0,
+    }))
+    .sort((a, b) => (a.weekLabel < b.weekLabel ? -1 : 1));
+}
+
+function getWeekNumber(d: Date): number {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil(((+date - +yearStart) / 86400000 + 1) / 7);
 }
 
 // ---------------- Activación extensión ----------------
@@ -155,12 +209,14 @@ export function activate(context: vscode.ExtensionContext) {
   initPomodoro(context);
 
   handleEditorChange(vscode.window.activeTextEditor);
-  updateAll();
+  updateAll(context);
+  initDeepWork(context);
+  setDeepWorkState(getDeepWorkState(context));
 
   const configDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration("focusPulse")) {
       reloadConfig();
-      updateAll();
+      updateAll(context);
     }
   });
   context.subscriptions.push(configDisposable);
@@ -168,14 +224,14 @@ export function activate(context: vscode.ExtensionContext) {
   const editorChangeDisposable = vscode.window.onDidChangeActiveTextEditor(
     (editor) => {
       handleEditorChange(editor);
-      updateAll();
+      updateAll(context);
     },
   );
   context.subscriptions.push(editorChangeDisposable);
 
   const editDisposable = vscode.workspace.onDidChangeTextDocument((event) => {
     handleTextDocumentChange(event);
-    updateAll();
+    updateAll(context);
   });
   context.subscriptions.push(editDisposable);
 
@@ -219,10 +275,19 @@ export function activate(context: vscode.ExtensionContext) {
     "focusPulse.openDashboard",
     () => {
       openDashboard(context);
-      updateAll();
+      updateAll(context);
     },
   );
   context.subscriptions.push(commandOpenDashboard);
+
+  const commandDeepWorkToggle = vscode.commands.registerCommand(
+    "focusPulse.deepWorkToggle",
+    async () => {
+      const state = await toggleDeepWork(context);
+      setDeepWorkState(state);
+    },
+  );
+  context.subscriptions.push(commandDeepWorkToggle);
 
   const commandPomodoroToggle = vscode.commands.registerCommand(
     "focusPulse.pomodoroToggle",
@@ -246,7 +311,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       resetFocusStats();
       await clearHistory();
-      await updateAll();
+      await updateAll(context);
 
       vscode.window.showInformationMessage(
         "Focus Pulse: histórico y XP reseteados.",

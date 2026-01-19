@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Mide tu nivel de foco por archivo, con Pomodoro, XP, logros y dashboard en tiempo real.",
-  "version": "1.2.2",
+  "version": "2.0.0",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -53,6 +53,10 @@
       {
         "command": "focusPulse.exportData",
         "title": "Focus Pulse: Exportar histórico (interno)"
+      },
+      {
+        "command": "focusPulse.deepWorkToggle",
+        "title": "Focus Pulse: Alternar modo Deep Work"
       }
     ],
     "configuration": {
@@ -121,6 +125,29 @@
           "default": 3,
           "minimum": 0,
           "description": "Número de pomodoros objetivo para completar el día."
+        },
+        "focusPulse.deepWork.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Permitir el modo Deep Work en Focus Pulse."
+        },
+        "focusPulse.deepWork.durationMinutes": {
+          "type": "number",
+          "default": 60,
+          "minimum": 10,
+          "description": "Duración de una sesión de Deep Work (minutos)."
+        },
+        "focusPulse.deepWork.switchPenalty": {
+          "type": "number",
+          "default": 40,
+          "minimum": 0,
+          "description": "Penalización extra por cambios de archivo durante Deep Work."
+        },
+        "focusPulse.deepWork.xpBonus": {
+          "type": "number",
+          "default": 150,
+          "minimum": 0,
+          "description": "XP extra al completar una sesión de Deep Work."
         }
       }
     }

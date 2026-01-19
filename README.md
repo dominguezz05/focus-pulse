@@ -1,190 +1,182 @@
-# ⚡ Focus Pulse
+# ⚡ Focus Pulse — Productivity Tracking for Developers
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-0.4.0-informational)
+![Version](https://img.shields.io/badge/version-2.0.0-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Status](https://img.shields.io/badge/status-Experimental-orange)
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/dominguezz05.focus-pulse)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
 
-**Focus Pulse** es una extensión de VS Code que mide tu **foco real al programar**, combinando:
+**Gamified productivity system for VS Code** that measures your **real focus while coding** through:
 
-- Análisis en tiempo real por archivo
-- Sistema Pomodoro integrado
-- XP + niveles + logros
-- Dashboard visual con Tailwind
-- Racha de días y progreso diario
+- real-time dashboard
+- integrated Pomodoro
+- XP + levels + achievements
+- deep work mode
+- insights & weekly summary
+- streak & daily goals
+- heatmap (30 days)
 
-Diseñado para desarrolladores que quieren mejorar su productividad sin complicarse.
+> Designed for developers who want to work with intention and reduce context switching.
 
 ---
 
-## 🖼 Vista previa
+# Why Focus Pulse?
 
-### Dashboard principal
+🚫 No time-tracking manual
+🚫 No tasks
+🚫 No cards/boards
+🚫 No project management
+
+> Just coding → metrics → progression → discipline.
+
+---
+
+## 🖼 Preview
+
+### Main dashboard
 
 ## ![Focus Pulse Dashboard](media/focus-pulse-dashboard.png)
 
-## ✨ Características principales
+## How it measures focus
 
-✔ **Dashboard en vivo**  
-Muestra en tiempo real tu desempeño: score, tiempo, ediciones, cambios de archivo, XP y nivel.
+Based on 3 key signals:
 
-✔ **Focus Score inteligente**  
-Calcula foco usando tiempo, ritmo de edición y penalización por cambios de fichero.  
-Configurable desde Settings.
+1 **Time on file (active)**
 
-✔ **Pomodoro integrado**  
-Temporizador de trabajo/descanso con bonus de XP y logros.
+2 **Edits per minute (intent)e**
 
-✔ **XP + niveles + gamificación**  
-Sube de nivel como si fuera un RPG.  
-Bonus por rachas y pomodoros completados.
+3 **Tab switching penalty (attention drift)**
 
-✔ **Logros diarios**  
-Desbloquea insignias por disciplina, racha, minutos, nivel o pomodoros.
-
-✔ **Racha de días**  
-Visualiza consistencia semanal: 1 día, 3 días, 7 días…
-
-✔ **Integrado en la barra de estado**  
-Muestra `Lvl X · Focus Y` + tiempo y ediciones del archivo activo.
-
-✔ **Sin fricción y sin cuentas**  
-Funciona completamente offline.  
-No envía datos a ningún servidor.
+Result: Focus Score (0-100) for each file + session.
 
 ---
 
-## 📊 Cómo funciona
+## 🎮 Gamification layer
 
-Focus Pulse registra:
+- XP progression curve (RPG-style)
+- Levels unlock naturally
+- Daily and weekly logics
+- Deep work bonus
+- Pomodoro bonus
+- Achievement catalog + unlockable badges
 
-- Tiempo activo por archivo
-- Número de ediciones
-- Cambios de pestaña
-- Racha de días
-- Sesiones Pomodoro
-- XP total y nivel
+Achievement catalog + unlockable badges
 
-El objetivo no es medirte, sino **entrenar disciplina** y evitar multitarea innecesaria.
+- “First Focus”
+- “Dev disciplinado (Lvl 5)”
+- “Leyenda del foco (Lvl 10)”
+- “Cuatro pomodoros hoy”
+
+---
+
+## Pomodoro & Deep Work
+
+Pomodoro adds:
+
+- XP bonus
+- consistency tracking
+- achievements
+- goal system
+
+Deep Work adds:
+
+- Deep Work adds:
+- XP multiplier
+- dashboard pill
+
+---
+
+## 🏆 Achievements Catalog
+
+Unlocked in green
+Locked in gray
+
+Good completion feedback + healthy loop.
+
+---
+
+## Insights — Today vs Yesterday
+
+Quick deltas:
+
+- minutes ↑/↓
+
+- score ↑/↓
+
+- trend classification
 
 ---
 
 ## 🖥 Dashboard
 
-Ejecuta:
+Includes:
 
-Focus Pulse: Abrir dashboard
+| Block        | Metric             |
+| ------------ | ------------------ |
+| Level + XP   | Progression bar    |
+| Pomodoros    | Today + total      |
+| Steak        | Active days        |
+| Heatmap      | Last 30 days       |
+| Insights     | Today vs yesterday |
+| Achievements | Live + catalog     |
+| Score table  | File breakdown     |
 
-Incluye:
-
-| Bloque         | Métrica               |
-| -------------- | --------------------- |
-| Nivel + XP     | Barra de progreso     |
-| Pomodoros      | Hoy + total           |
-| Racha          | Días consecutivos     |
-| Últimos 7 días | Media de foco         |
-| Archivos hoy   | Score + tiempo        |
-| Logros         | Se actualizan en vivo |
-| Tabla          | Detalle por archivo   |
+Runs **locally** and updates while coding.
 
 ---
 
-## ⏱ Pomodoro
+## ⚙ Settings
 
-Ejecuta:
+From Settings (Focus Pulse):
 
-Focus Pulse: Iniciar/Parar Pomodoro
+- minMinutesForScore — minimum minutes to stabilize the score
 
-Modos:
+- focusPulse.score.timeWeight — weight of time
 
-- `Work` → +XP base + bonus
-- `Break`
-- `Idle`
+- focusPulse.score.editsWeight — weight of editions per minute
 
-Bonus XP por bloque completado.  
-Logros especiales si encadenas varios.
+- focusPulse.score.switchPenalty — penalty for file change
 
----
+- focusPulse.enablePomodoro — turn Pomodoro on/off
 
-## 🎮 XP, niveles y logros
+- focusPulse.pomodoro.workMinutes — work duration
 
-El sistema XP recompensa:
-
-- Tiempo productivo
-- Score alto
-- Racha de días
-- Pomodoros completados
-
-Ejemplo de logros:
-
-- Primer enfoque
-- 20 minutos de foco
-- Cuatro pomodoros hoy
-- Racha x7
-- Nivel 5 — “Dev disciplinado”
-- Nivel 10 — “Leyenda del foco”
+- focusPulse.pomodoro.breakMinutes — rest duration
 
 ---
 
-## ⚙ Configuración
+## 🧾 Commands
 
-Desde Settings (Focus Pulse):
-
-- minMinutesForScore — minutos mínimos para estabilizar el score
-
-- focusPulse.score.timeWeight — peso del tiempo
-
-- focusPulse.score.editsWeight — peso de las ediciones por minuto
-
-- focusPulse.score.switchPenalty — penalización por cambio de archivo
-
-- focusPulse.enablePomodoro — activar/desactivar Pomodoro
-
-- focusPulse.pomodoro.workMinutes — duración de trabajo
-
-- focusPulse.pomodoro.breakMinutes — duración de descanso
+| Commands                                                 | Action              |
+| -------------------------------------------------------- | ------------------- |
+| **Focus Pulse: Abrir dashboard**                         | Complete statistics |
+| **Focus Pulse: Mostrar estadísticas del archivo actual** | Fast Popup          |
+| **Focus Pulse: Iniciar/Parar Pomodoro**                  | Timer integer       |
+| **Focus Pulse: Resetear histórico y XP**                 | Clean data          |
+| **Focus Pulse: Show Stats**                              | Alias               |
 
 ---
 
-## 🧾 Comandos
+## Use Cases
 
-| Comando                                                  | Acción                 |
-| -------------------------------------------------------- | ---------------------- |
-| **Focus Pulse: Abrir dashboard**                         | Estadísticas completas |
-| **Focus Pulse: Mostrar estadísticas del archivo actual** | Popup rápido           |
-| **Focus Pulse: Iniciar/Parar Pomodoro**                  | Timer integrado        |
-| **Focus Pulse: Resetear histórico y XP**                 | Limpia datos           |
-| **Focus Pulse: Show Stats**                              | Alias                  |
-
----
-
-## 🗂 Datos y privacidad
-
-- Todo se guarda **localmente en VS Code**
-- No envía datos
-- No hace tracking externo
-- No requiere cuenta
+✔ Solo developers
+✔ Students / Bootcamp
+✔ Makers / Indie hackers
+✔ Focus training
+✔ Habit building
+✔ ADHD-friendly workflows
 
 ---
 
-## 🚀 Instalación (VSIX)
+## 🗺 Roadmap
 
-```bash
-vsce package
-```
-
-Instalar en VS Code:
-
-Extensions → Install from VSIX…
-
-Seleccionar focus-pulse-x.y.z.vsix
-
-Reiniciar VS Code si lo pide
-
-Extensions → Install from VSIX…
+> v2.1 → Refactor and improve UI
+> v2.2 → Multi-day deep work sessions
+> v2.3 → Personalized achievements and badges
+> v2.4 → Friends
+> v3.0 → Personal analytics (local only) ...
 
 ---
 

@@ -3,6 +3,7 @@ import type { FocusSummary } from "./focusTracker";
 import type { HistoryDay } from "./storage";
 import type { Achievement } from "./achievements";
 import type { XpState, PomodoroStats } from "./xp";
+import type { DeepWorkState } from "./deepWork";
 
 interface DashboardData {
   stats: FocusSummary[];
@@ -12,6 +13,12 @@ interface DashboardData {
   xp: XpState;
   pomodoroStats?: PomodoroStats;
   historyAll?: HistoryDay[];
+  deepWork?: DeepWorkState;
+  weeklySummary?: {
+    weekLabel: string; // "2026-W03"
+    totalMinutes: number;
+    avgScore: number;
+  }[];
   goals?: {
     enabled: boolean;
     targetMinutes: number;
@@ -63,6 +70,7 @@ function getHtml(): string {
                 </div>
                 <span id="xp-label" class="text-[11px] text-slate-400">0 XP total</span>
             </div>
+              <div id="deepwork-pill" class="text-[11px] text-slate-500"></div>
         </header>
 
         <!-- Bloque métricas rápidas + insights + export -->
@@ -150,6 +158,17 @@ function getHtml(): string {
             <div id="heatmap" class="flex flex-col gap-1 text-[10px] text-slate-400"></div>
         </section>
 
+        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
+  <div class="flex items-center justify-between mb-2">
+    <h2 class="text-sm font-medium text-slate-200">Resumen semanal</h2>
+    <span class="text-[11px] text-slate-500">Minutos totales por semana</span>
+  </div>
+  <div id="weekly-summary" class="space-y-1 text-[11px] text-slate-300">
+    <p class="text-slate-500 text-xs">Todavía no hay datos suficientes.</p>
+  </div>
+</section>
+
+
        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
   <div class="flex items-center justify-between mb-2">
     <h2 class="text-sm font-medium text-slate-200">Logros de hoy</h2>
@@ -235,7 +254,8 @@ function getHtml(): string {
         const goalContentEl = document.getElementById('goal-content');
 const achievementsToggleEl = document.getElementById("achievements-toggle");
 const allAchievementsEl = document.getElementById("all-achievements");
-
+const deepWorkPillEl = document.getElementById("deepwork-pill");
+const weeklySummaryEl = document.getElementById("weekly-summary");
 if (achievementsToggleEl) {
   achievementsToggleEl.addEventListener("click", () => {
     showAllAchievements = !showAllAchievements;
@@ -284,7 +304,68 @@ if (achievementsToggleEl) {
         function clearChildren(el) {
             while (el.firstChild) el.removeChild(el.firstChild);
         }
+function buildWeeklySummary(weekly) {
+  if (!weeklySummaryEl) return;
+  clearChildren(weeklySummaryEl);
 
+  if (!weekly || !weekly.length) {
+    const p = document.createElement("p");
+    p.className = "text-slate-500 text-xs";
+    p.textContent = "Todavía no hay datos suficientes.";
+    weeklySummaryEl.appendChild(p);
+    return;
+  }
+
+  weekly.forEach((w) => {
+    const row = document.createElement("div");
+    row.className = "flex items-center gap-2";
+    const label = document.createElement("span");
+    label.className = "w-16 text-slate-400";
+    label.textContent = w.weekLabel;
+
+    const barWrapper = document.createElement("div");
+    barWrapper.className =
+      "flex-1 h-2 rounded-full bg-slate-700 overflow-hidden";
+    const bar = document.createElement("div");
+    const pct = Math.max(
+      5,
+      Math.min(100, (w.totalMinutes / 600) * 100),
+    ); // normalización simple (600min = 10h)
+    bar.style.width = pct + "%";
+    bar.className = "h-full bg-indigo-400";
+
+    barWrapper.appendChild(bar);
+
+    const text = document.createElement("span");
+    text.className = "w-24 text-right text-slate-300";
+    text.textContent =
+      Math.round(w.totalMinutes) + " min · " + w.avgScore.toFixed(0) + "/100";
+
+    row.appendChild(label);
+    row.appendChild(barWrapper);
+    row.appendChild(text);
+
+    weeklySummaryEl.appendChild(row);
+  });
+}
+
+function renderDeepWorkPill(deepWork) {
+  if (!deepWorkPillEl) return;
+  if (!deepWork) {
+    deepWorkPillEl.textContent = "";
+    return;
+  }
+  if (deepWork.active) {
+    deepWorkPillEl.textContent = "🧠 Deep Work activo";
+    deepWorkPillEl.className =
+      "text-[11px] text-emerald-300 mt-1";
+  } else {
+    deepWorkPillEl.textContent =
+      "Deep Work inactivo (pulsa en la barra de estado para iniciar)";
+    deepWorkPillEl.className =
+      "text-[11px] text-slate-500 mt-1";
+  }
+}
         function buildHeatmap(historyAll) {
             clearChildren(heatmapEl);
             if (!historyAll || !historyAll.length) {
@@ -489,8 +570,13 @@ function buildAllAchievements(all) {
             };
             const goals = data.goals;
 const allAchievements = data.allAchievements || [];
+const deepWork = data.deepWork;
+const weeklySummary = data.weeklySummary || [];
 
             const pomodoroStats = data.pomodoroStats || { today: 0, total: 0 };
+
+
+
 
             // XP / nivel
             if (xpLevelEl && xpBarInnerEl && xpLabelEl) {
@@ -555,6 +641,8 @@ const allAchievements = data.allAchievements || [];
             buildInsights(historyAll);
 buildGoals(goals);
 buildAllAchievements(allAchievements);
+renderDeepWorkPill(deepWork);
+buildWeeklySummary(weeklySummary);
 
 if (!showAllAchievements && allAchievementsEl) {
   allAchievementsEl.classList.add("hidden");

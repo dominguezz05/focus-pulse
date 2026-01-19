@@ -1,70 +1,93 @@
 # Changelog
 
-Todas las versiones importantes de **Focus Pulse**.
+All notable versions of **Focus Pulse**.
+
+---
+
+## [2.0.0] — 2026-01-20
+
+### Added
+
+- **Deep Work mode** with status bar toggle and pill in the dashboard.
+- XP integration with Deep Work (extra XP per completed deep session).
+- New Deep Work achievements (first session, 5 sessions, 15 sessions…).
+- **Weekly summary** section (total minutes per week + average focus).
+- “View all” achievements panel with unlocked / locked (grey) states.
+
+### Improved
+
+- Internal structure of dashboard data (`deepWork`, `weeklySummary`, `allAchievements`, `goals`).
+- Visual polish of the dashboard for the 2.0.0 release.
 
 ---
 
 ## [1.2.2] — 2026-01-19
 
-### Mejora
+### Improved
 
-- Mejoras visuales en dashboard .
+- Visual tweaks and small layout refinements in the dashboard.
 
 ---
 
 ## [1.2.0] — 2026-01-18
 
-### Añadido
+### Added
 
-- Sistema de objetivos diarios (tiempo + pomodoros).
-- Exportación del histórico en JSON y CSV.
-- Nuevos logros basados en días, semanas y consistencia.
-- Mejoras visuales en dashboard (secciones + copy + layout).
-  Mejoras
-- Integración de XP con pomodoros.
-- Refactor del cálculo de logros.
-- Limpieza de tipos + estructura interna.
+- Daily goals system (time + pomodoros).
+- Historical export in JSON and CSV.
+- New achievements based on days, weeks and consistency.
+- Visual improvements in the dashboard (sections, copy, layout).
+- XP integration with pomodoros.
+
+### Improved
+
+- Refactor of the achievement calculation.
+- Type cleanup and internal structure.
 
 ---
 
 ## [1.1.0] — 2026-01-17
 
-### Añadido
+### Added
 
-- Sistema de XP mejorado (curva + bonus + niveles).
-- Barra de estado con `Lvl X · Focus Y`.
-- Logros ligados a XP y nivel.
-- Panel de logros en dashboard.
-  Mejoras
-- Ajustes de pesos del Focus Score.
-- Animaciones suaves en dashboard.
+- Improved XP system (progression curve, bonuses, levels).
+- Status bar showing `Lvl X · Focus Y`.
+- Achievements linked to XP and level.
+- Achievements panel in the dashboard.
 
----
+### Improved
 
-## [1.0.0] - 2026-01-16
-
-### Añadido
-
-- Dashboard en tiempo real con Tailwind.
-- Cálculo de Focus Score por archivo (tiempo, ediciones, cambios).
-- Barra de estado con `Lvl X · Focus Y | tiempo | edits`.
-- Sistema XP + niveles con curva de progreso.
-- Histórico diario y racha de días activos.
-- Pomodoro integrado (work/break) con bonus de XP.
-- Logros básicos: primer enfoque, 20 min, 100+ edits, rachas, etc.
-- Logros ligados a nivel y XP (nivel 3, 5, 10…).
-- Logros específicos de Pomodoro (primer bloque, 4 en un día, acumulados).
-- Comandos:
-  - `Focus Pulse: Abrir dashboard`
-  - `Focus Pulse: Mostrar estadísticas del archivo actual`
-  - `Focus Pulse: Iniciar/Parar Pomodoro`
-  - `Focus Pulse: Resetear histórico y XP`
-- Configuración avanzada del Focus Score + Pomodoro.
+- Focus Score weights.
+- Smooth animations in the dashboard.
 
 ---
 
-## [0.4.0] - 2026-01-15
+## [1.0.0] — 2026-01-16
 
-### Añadido
+### Added
 
-- Primera versión pública con dashboard, pomodoro, XP y logros básicos.
+- Real-time dashboard built with Tailwind.
+- Focus Score per file (time, edits, switches).
+- Status bar with `Lvl X · Focus Y | time | edits`.
+- XP + level system with progression curve.
+- Daily history and active-streak tracking.
+- Integrated Pomodoro (work/break) with XP bonus.
+- Basic achievements: first focus, 20 min, 100+ edits, streaks, etc.
+- Level/XP achievements (level 3, 5, 10…).
+- Pomodoro-specific achievements (first block, 4 in a day, accumulated).
+
+- Commands:
+  - `Focus Pulse: Open dashboard`
+  - `Focus Pulse: Show stats for current file`
+  - `Focus Pulse: Start/Stop Pomodoro`
+  - `Focus Pulse: Reset history and XP`
+
+- Advanced configuration for Focus Score + Pomodoro.
+
+---
+
+## [0.4.0] — 2026-01-15
+
+### Added
+
+- First public version with dashboard, Pomodoro, XP and basic achievements.

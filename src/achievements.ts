@@ -2,6 +2,7 @@ import type { HistoryDay } from "./storage";
 import type { FocusSummary } from "./focusTracker";
 import type { XpState, PomodoroStats } from "./xp";
 import type { DailyGoalProgress } from "./goals";
+import type { DeepWorkState } from "./deepWork";
 
 export interface Achievement {
   id: string;
@@ -16,6 +17,7 @@ export function computeAchievements(
   xp?: XpState,
   pomodoroStats?: PomodoroStats,
   goals?: DailyGoalProgress,
+  deepWork?: DeepWorkState,
 ): Achievement[] {
   const list: Achievement[] = [];
 
@@ -198,6 +200,30 @@ export function computeAchievements(
       });
     }
   }
+  // --- Logros de Deep Work ---
+  if (deepWork) {
+    if (deepWork.completedSessions >= 1) {
+      list.push({
+        id: "deepwork-1",
+        title: "Primer bloque profundo",
+        description: "Has completado tu primera sesión de Deep Work.",
+      });
+    }
+    if (deepWork.completedSessions >= 5) {
+      list.push({
+        id: "deepwork-5",
+        title: "Hábito profundo",
+        description: "Has completado 5 sesiones de Deep Work.",
+      });
+    }
+    if (deepWork.completedSessions >= 15) {
+      list.push({
+        id: "deepwork-15",
+        title: "Modo monje",
+        description: "15 sesiones de Deep Work completadas.",
+      });
+    }
+  }
 
   return list;
 }
@@ -296,6 +322,21 @@ export function getAllAchievementsDefinitions(): Achievement[] {
       id: "pomo-50-total",
       title: "Máquina de pomodoros",
       description: "Has completado 50 pomodoros en total.",
+    },
+    {
+      id: "deepwork-1",
+      title: "Primer bloque profundo",
+      description: "Has completado tu primera sesión de Deep Work.",
+    },
+    {
+      id: "deepwork-5",
+      title: "Hábito profundo",
+      description: "Has completado 5 sesiones de Deep Work.",
+    },
+    {
+      id: "deepwork-15",
+      title: "Modo monje",
+      description: "15 sesiones de Deep Work completadas.",
     },
   ];
 }

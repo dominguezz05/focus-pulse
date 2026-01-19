@@ -1,4 +1,6 @@
 import type { HistoryDay } from "./storage";
+import type { DeepWorkState } from "./deepWork";
+import * as vscode from "vscode";
 
 export interface XpState {
   totalXp: number;
@@ -16,11 +18,20 @@ export interface PomodoroStats {
 export function computeXpState(
   history: HistoryDay[],
   pomodoroStats?: PomodoroStats,
+  deepWork?: DeepWorkState,
 ): XpState {
   const baseXp = computeBaseXpFromHistory(history);
   const bonusXp = computePomodoroBonus(pomodoroStats);
-  const totalXp = baseXp + bonusXp;
+  const deepWorkBonus = computeDeepWorkBonus(deepWork);
+  const totalXp = baseXp + bonusXp + deepWorkBonus;
   return computeXpStateFromTotal(totalXp);
+}
+// Bonus por Deep Work completados
+function computeDeepWorkBonus(state?: DeepWorkState): number {
+  if (!state) return 0;
+  const cfg = vscode.workspace.getConfiguration("focusPulse");
+  const perSession = cfg.get<number>("deepWork.xpBonus", 150);
+  return state.completedSessions * perSession;
 }
 
 // Compatibilidad por si en algún sitio queda la antigua
