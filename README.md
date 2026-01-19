@@ -176,6 +176,7 @@ From Settings (Focus Pulse):
 > v2.2 → Multi-day deep work sessions
 > v2.3 → Personalized achievements and badges
 > v2.4 → Friends
+> v2.4 → MultiLanguaje
 > v3.0 → Personal analytics (local only) ...
 
 ---
