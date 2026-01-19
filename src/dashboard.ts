@@ -215,6 +215,7 @@ function getHtml(): string {
                             <th class="px-4 py-2">Puntuación</th>
                             <th class="px-4 py-2">Tiempo</th>
                             <th class="px-4 py-2">Ediciones</th>
+                            <th class="px-4 py-2">Δ texto</th>
                             <th class="px-4 py-2">Cambios</th>
                         </tr>
                     </thead>
@@ -707,19 +708,24 @@ if (!showAllAchievements && allAchievementsEl) {
 
                 tr.innerHTML = \`
                     <td class="px-4 py-2 text-slate-100 whitespace-nowrap max-w-xs truncate">
-                        \${item.fileName}
-                    </td>
-                    <td class="px-4 py-2">
-                        <span class="inline-flex items-center gap-1">
-                            <span class="inline-block w-6 text-slate-100">\${item.score}</span>
-                            <span class="h-1.5 w-16 rounded-full bg-slate-700 overflow-hidden">
-                                <span class="block h-full bg-emerald-500" style="width: \${item.score}%;"></span>
-                            </span>
-                        </span>
-                    </td>
-                    <td class="px-4 py-2 text-slate-100">\${item.timeText}</td>
-                    <td class="px-4 py-2 text-slate-100">\${item.edits}</td>
-                    <td class="px-4 py-2 text-slate-100">\${item.switches}</td>
+    \${item.fileName}
+  </td>
+  <td class="px-4 py-2">
+    <span class="inline-flex items-center gap-1">
+      <span class="inline-block w-6 text-slate-100">\${item.score}</span>
+      <span class="h-1.5 w-16 rounded-full bg-slate-700 overflow-hidden">
+        <span class="block h-full bg-emerald-500" style="width: \${item.score}%;"></span>
+      </span>
+    </span>
+  </td>
+  <td class="px-4 py-2 text-slate-100">\${item.timeText}</td>
+  <td class="px-4 py-2 text-slate-100">\${item.edits}</td>
+  <td class="px-4 py-2 text-slate-100">
+    <span class="text-emerald-300">+\${item.added}</span>
+    <span class="text-slate-500 mx-1">/</span>
+    <span class="text-rose-300">-\${item.deleted}</span>
+  </td>
+  <td class="px-4 py-2 text-slate-100">\${item.switches}</td>
                 \`;
 
                 tableBodyEl.appendChild(tr);
