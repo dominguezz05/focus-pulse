@@ -31,7 +31,8 @@
     "onCommand:focusPulse.showStats",
     "onCommand:focusPulse.openDashboard",
     "onCommand:focusPulse.pomodoroToggle",
-    "onCommand:focusPulse.resetData"
+    "onCommand:focusPulse.resetData",
+    "onCommand:focusPulse.deepWorkToggle"
   ],
   "main": "./out/extension-refactored.js",
   "contributes": {

@@ -245,10 +245,10 @@ export function activate(context: vscode.ExtensionContext) {
         "Focus Pulse: histórico y estado reiniciados.",
       );
     }),
-    vscode.commands.registerCommand("focusPulse.toggleDeepWork", () => {
+    vscode.commands.registerCommand("focusPulse.deepWorkToggle", () => {
       toggleDeepWork(context);
     }),
-    vscode.commands.registerCommand("focusPulse.togglePomodoro", () => {
+    vscode.commands.registerCommand("focusPulse.pomodoroToggle", () => {
       togglePomodoro(context);
     }),
   ];
