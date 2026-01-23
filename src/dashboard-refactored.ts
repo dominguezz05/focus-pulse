@@ -39,8 +39,24 @@ import {
   getDeepWorkState,
   DeepWorkState,
 } from "./deepWork";
+import type { DeepWorkState as StateTypesDeepWorkState } from "./state/StateTypes";
 
 let currentPanel: vscode.WebviewPanel | undefined;
+
+// Type guard to distinguish between DeepWorkState types
+function isStateTypesDeepWorkState(obj: any): obj is StateTypesDeepWorkState {
+  return obj && typeof obj === 'object' && 'startTime' in obj && 'expectedDuration' in obj && 'score' in obj;
+}
+
+// Convert StateTypes.DeepWorkState to deepWork.DeepWorkState
+function convertToDeepWorkState(state: StateTypesDeepWorkState): DeepWorkState {
+  return {
+    active: state.active,
+    startedAt: state.startTime,
+    durationMinutes: state.expectedDuration || 60,
+    completedSessions: Math.floor(state.score) // Using score as proxy for completed sessions
+  };
+}
 
 function getRefactoredHtml(): string {
   return `<!DOCTYPE html>
@@ -333,28 +349,27 @@ function getRefactoredHtml(): string {
                     const tableBody = document.getElementById('table-body');
                     if (tableBody) {
                         tableBody.innerHTML = '';
-                        data.stats.forEach((item: any) => {
+                        data.stats.forEach((item) => {
                             const tr = document.createElement('tr');
                             tr.className = 'hover:bg-slate-800/80 transition-colors';
-                            tr.innerHTML = \`
-                                <td class="px-4 py-2 text-slate-100 whitespace-nowrap max-w-xs truncate">\${item.fileName}</td>
-                                <td class="px-4 py-2">
-                                    <span class="inline-flex items-center gap-1">
-                                        <span class="inline-block w-6 text-slate-100">\${item.score}</span>
-                                        <span class="h-1.5 w-16 rounded-full bg-slate-700 overflow-hidden">
-                                            <span class="block h-full bg-emerald-500" style="width: \${item.score}%;"></span>
-                                        </span>
-                                    </span>
-                                </td>
-                                <td class="px-4 py-2 text-slate-100">\${item.timeText}</td>
-                                <td class="px-4 py-2 text-slate-100">\${item.edits}</td>
-                                <td class="px-4 py-2 text-slate-100">
-                                    <span class="text-emerald-300">+\${item.added}</span>
-                                    <span class="text-slate-500 mx-1">/</span>
-                                    <span class="text-rose-300">-\${item.deleted}</span>
-                                </td>
-                                <td class="px-4 py-2 text-slate-100">\${item.switches}</td>
-                            \`;
+                            tr.innerHTML = 
+                                '<td class="px-4 py-2 text-slate-100 whitespace-nowrap max-w-xs truncate">' + item.fileName + '</td>' +
+                                '<td class="px-4 py-2">' +
+                                    '<span class="inline-flex items-center gap-1">' +
+                                        '<span class="inline-block w-6 text-slate-100">' + item.score + '</span>' +
+                                        '<span class="h-1.5 w-16 rounded-full bg-slate-700 overflow-hidden">' +
+                                            '<span class="block h-full bg-emerald-500" style="width: ' + item.score + '%;"></span>' +
+                                        '</span>' +
+                                    '</span>' +
+                                '</td>' +
+                                '<td class="px-4 py-2 text-slate-100">' + item.timeText + '</td>' +
+                                '<td class="px-4 py-2 text-slate-100">' + item.edits + '</td>' +
+                                '<td class="px-4 py-2 text-slate-100">' +
+                                    '<span class="text-emerald-300">+' + item.added + '</span>' +
+                                    '<span class="text-slate-500 mx-1">/</span>' +
+                                    '<span class="text-rose-300">-' + item.deleted + '</span>' +
+                                '</td>' +
+                                '<td class="px-4 py-2 text-slate-100">' + item.switches + '</td>';
                             tableBody.appendChild(tr);
                         });
                     }
@@ -388,30 +403,29 @@ function getRefactoredHtml(): string {
                             const pctPom = targetPom > 0 ? Math.max(0, Math.min(100, (pom / targetPom) * 100)) : 100;
                             
                             statusEl.textContent = goals.allDone ? '✅ Objetivo completado' : 'En progreso';
-                            contentEl.innerHTML = \`
-                                <div class="space-y-1.5">
-                                    <div class="flex items-center justify-between">
-                                        <span>Minutos de foco</span>
-                                        <span class="text-slate-200 font-semibold">\${min}/\${targetMin} min</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
-                                        <div class="h-full bg-sky-500 transition-all" style="width: \${pctMin}%;"></div>
-                                    </div>
-                                </div>
-                                <div class="space-y-1.5 mt-2">
-                                    <div class="flex items-center justify-between">
-                                        <span>Pomodoros</span>
-                                        <span class="text-slate-200 font-semibold">\${pom}/\${targetPom}</span>
-                                    </div>
-                                    <div class="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
-                                        <div class="h-full bg-emerald-500 transition-all" style="width: \${pctPom}%;"></div>
-                                    </div>
-                                </div>
-                                \${goals.allDone 
+                            contentEl.innerHTML = 
+                                '<div class="space-y-1.5">' +
+                                    '<div class="flex items-center justify-between">' +
+                                        '<span>Minutos de foco</span>' +
+                                        '<span class="text-slate-200 font-semibold">' + min + '/' + targetMin + ' min</span>' +
+                                    '</div>' +
+                                    '<div class="w-full h-2 rounded-full bg-slate-700 overflow-hidden">' +
+                                        '<div class="h-full bg-sky-500 transition-all" style="width: ' + pctMin + '%;"></div>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class="space-y-1.5 mt-2">' +
+                                    '<div class="flex items-center justify-between">' +
+                                        '<span>Pomodoros</span>' +
+                                        '<span class="text-slate-200 font-semibold">' + pom + '/' + targetPom + '</span>' +
+                                    '</div>' +
+                                    '<div class="w-full h-2 rounded-full bg-slate-700 overflow-hidden">' +
+                                        '<div class="h-full bg-emerald-500 transition-all" style="width: ' + pctPom + '%;"></div>' +
+                                    '</div>' +
+                                '</div>' +
+                                (goals.allDone 
                                     ? '<p class="text-[11px] text-emerald-300 mt-2">Has cumplido el objetivo de hoy. Buen trabajo 👏</p>'
                                     : '<p class="text-[11px] text-slate-500 mt-2">Completa ambos objetivos para cerrar el día.</p>'
-                                }
-                            \`;
+                                );
                         }
                     }
                 }
@@ -451,16 +465,15 @@ function getRefactoredHtml(): string {
                 const scoreArrow = scoreDiff > 0 ? '↑' : scoreDiff < 0 ? '↓' : '→';
                 const scoreClass = scoreDiff > 0 ? 'text-emerald-300' : scoreDiff < 0 ? 'text-rose-300' : 'text-slate-300';
                 
-                insightsEl.innerHTML = \`
-                    <p>
-                        Hoy has trabajado <span class="\${trendClass}">\${arrow} \${Math.round(Math.abs(diffMin))} min</span> 
-                        \${diffMin >= 0 ? 'más' : 'menos'} que ayer.
-                    </p>
-                    <p>
-                        Tu foco medio ha \${scoreDiff > 0 ? 'mejorado' : scoreDiff < 0 ? 'bajado' : 'quedado igual'}: 
-                        <span class="\${scoreClass}">\${scoreArrow} \${Math.round(Math.abs(scoreDiff))}</span> puntos frente a ayer.
-                    </p>
-                \`;
+                insightsEl.innerHTML = 
+                    '<p>' +
+                        'Hoy has trabajado <span class="' + trendClass + '">' + arrow + ' ' + Math.round(Math.abs(diffMin)) + ' min</span> ' +
+                        (diffMin >= 0 ? 'más' : 'menos') + ' que ayer.' +
+                    '</p>' +
+                    '<p>' +
+                        'Tu foco medio ha ' + (scoreDiff > 0 ? 'mejorado' : scoreDiff < 0 ? 'bajado' : 'quedado igual') + ': ' +
+                        '<span class="' + scoreClass + '">' + scoreArrow + ' ' + Math.round(Math.abs(scoreDiff)) + '</span> puntos frente a ayer.' +
+                    '</p>';
             }
             
             updateHeatmap(data) {
@@ -479,7 +492,7 @@ function getRefactoredHtml(): string {
                 const maxMs = last30.reduce((max, d) => Math.max(max, d.totalTimeMs), 0) || 1;
                 
                 let html = '<div class="flex flex-wrap gap-1">';
-                last30.forEach((day: any) => {
+                last30.forEach((day) => {
                     const level = day.totalTimeMs / maxMs;
                     let bg = 'bg-slate-800';
                     if (level > 0 && level <= 0.25) bg = 'bg-sky-900';
@@ -487,11 +500,10 @@ function getRefactoredHtml(): string {
                     else if (level <= 0.75) bg = 'bg-sky-500';
                     else if (level > 0.75) bg = 'bg-sky-400';
                     
-                    html += \`
-                        <div class="w-4 h-4 rounded-sm \${bg} cursor-default" 
-                             title="\${day.date}\\nTiempo: \${this.formatMs(day.totalTimeMs)}\\nScore medio: \${Math.round(day.avgScore)}">
-                        </div>
-                    \`;
+                    html += 
+                        '<div class="w-4 h-4 rounded-sm ' + bg + ' cursor-default" ' +
+                             'title="' + day.date + '\\nTiempo: ' + this.formatMs(day.totalTimeMs) + '\\nScore medio: ' + Math.round(day.avgScore) + '">' +
+                        '</div>';
                 });
                 html += '</div>';
                 heatmapEl.innerHTML = html;
@@ -507,19 +519,18 @@ function getRefactoredHtml(): string {
                 }
                 
                 let html = '';
-                data.weeklySummary.forEach((w: any) => {
+                data.weeklySummary.forEach((w) => {
                     const pct = Math.max(5, Math.min(100, (w.totalMinutes / 600) * 100));
-                    html += \`
-                        <div class="flex items-center gap-2">
-                            <span class="w-16 text-slate-400">\${w.weekLabel}</span>
-                            <div class="flex-1 h-2 rounded-full bg-slate-700 overflow-hidden">
-                                <div class="h-full bg-indigo-400" style="width: \${pct}%;"></div>
-                            </div>
-                            <span class="w-24 text-right text-slate-300">
-                                \${Math.round(w.totalMinutes)} min · \${w.avgScore.toFixed(0)}/100
-                            </span>
-                        </div>
-                    \`;
+                    html += 
+                        '<div class="flex items-center gap-2">' +
+                            '<span class="w-16 text-slate-400">' + w.weekLabel + '</span>' +
+                            '<div class="flex-1 h-2 rounded-full bg-slate-700 overflow-hidden">' +
+                                '<div class="h-full bg-indigo-400" style="width: ' + pct + '%;"></div>' +
+                            '</div>' +
+                            '<span class="w-24 text-right text-slate-300">' +
+                                Math.round(w.totalMinutes) + ' min · ' + w.avgScore.toFixed(0) + '/100' +
+                            '</span>' +
+                        '</div>';
                 });
                 weeklyEl.innerHTML = html;
             }
@@ -536,13 +547,12 @@ function getRefactoredHtml(): string {
                         achievementsCountEl.textContent = '0 logros';
                     } else {
                         achievementsEl.innerHTML = '';
-                        data.achievements.forEach((a: any) => {
+                        data.achievements.forEach((a) => {
                             const span = document.createElement('span');
                             span.className = 'inline-flex flex-col gap-0.5 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-2 py-1';
-                            span.innerHTML = \`
-                                <span class="text-[11px] font-semibold text-emerald-300">\${a.title}</span>
-                                <span class="text-[10px] text-emerald-200/80">\${a.description}</span>
-                            \`;
+                            span.innerHTML = 
+                                '<span class="text-[11px] font-semibold text-emerald-300">' + a.title + '</span>' +
+                                '<span class="text-[10px] text-emerald-200/80">' + a.description + '</span>';
                             achievementsEl.appendChild(span);
                         });
                         achievementsCountEl.textContent = data.achievements.length + (data.achievements.length === 1 ? ' logro' : ' logros');
@@ -552,7 +562,7 @@ function getRefactoredHtml(): string {
                 // Update all achievements
                 if (allAchievementsEl && data.allAchievements) {
                     allAchievementsEl.innerHTML = '';
-                    data.allAchievements.forEach((a: any) => {
+                    data.allAchievements.forEach((a) => {
                         const div = document.createElement('div');
                         const base = 'px-2 py-1 rounded-lg border text-[11px] flex flex-col gap-0.5';
                         
@@ -562,10 +572,9 @@ function getRefactoredHtml(): string {
                             div.className = base + ' border-slate-700 bg-slate-900/80 text-slate-500';
                         }
                         
-                        div.innerHTML = \`
-                            <span class="font-semibold">\${a.title}</span>
-                            <span class="text-[10px] opacity-80">\${a.description}</span>
-                        \`;
+                        div.innerHTML = 
+                            '<span class="font-semibold">' + a.title + '</span>' +
+                            '<span class="text-[10px] opacity-80">' + a.description + '</span>';
                         allAchievementsEl.appendChild(div);
                     });
                 }
@@ -653,9 +662,17 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
     const allDefs = getAllAchievementsDefinitions();
     const allAchievements = allDefs.map((a: any) => ({
       ...a,
-      unlocked: achievements.some((u: any) => u.id === a.id),
+      unlocked: achievements.some((u) => u.id === a.id),
     }));
-    const xp = computeXpState(historyAll, pomodoroStats, deepWork as any);
+    // Check if deepWork is from StateTypes and convert if needed
+    let deepWorkForXp: DeepWorkState | undefined;
+    if (isStateTypesDeepWorkState(deepWork)) {
+      deepWorkForXp = convertToDeepWorkState(deepWork);
+    } else {
+      deepWorkForXp = deepWork;
+    }
+    
+    const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
         const dashboardData: DashboardData = {
           stats: statsArray,
@@ -704,6 +721,9 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
 }
 
 export function updateRefactoredDashboard(data: DashboardData) {
+  // Check if panel exists before debouncing
+  if (!currentPanel) return;
+  
   // Debounce dashboard updates for performance
   debounceDashboardUpdate(() => {
     if (!currentPanel) return;
@@ -735,9 +755,17 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     const allDefs = getAllAchievementsDefinitions();
     const allAchievements = allDefs.map((a: any) => ({
       ...a,
-      unlocked: achievements.some((u: any) => u.id === a.id),
+      unlocked: achievements.some((u) => u.id === a.id),
     }));
-    const xp = computeXpState(historyAll, pomodoroStats, deepWork as any);
+    // Check if deepWork is from StateTypes and convert if needed
+    let deepWorkForXp: DeepWorkState | undefined;
+    if (isStateTypesDeepWorkState(deepWork)) {
+      deepWorkForXp = convertToDeepWorkState(deepWork);
+    } else {
+      deepWorkForXp = deepWork;
+    }
+    
+    const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
     const dashboardData: DashboardData = {
       stats: statsArray,
@@ -772,9 +800,17 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     const allDefs = getAllAchievementsDefinitions();
     const allAchievements = allDefs.map((a: any) => ({
       ...a,
-      unlocked: achievements.some((u: any) => u.id === a.id),
+      unlocked: achievements.some((u) => u.id === a.id),
     }));
-    const xp = computeXpState(historyAll, pomodoroStats, deepWork as any);
+    // Check if deepWork is from StateTypes and convert if needed
+    let deepWorkForXp: DeepWorkState | undefined;
+    if (isStateTypesDeepWorkState(deepWork)) {
+      deepWorkForXp = convertToDeepWorkState(deepWork);
+    } else {
+      deepWorkForXp = deepWork;
+    }
+    
+    const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
     
     updateRefactoredDashboard({
       stats: statsArray,
