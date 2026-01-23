@@ -62,9 +62,6 @@ function getRefactoredHtml(): string {
         // For now, we'll create a simple version that matches the new architecture
         
         class RefactoredDashboardRenderer {
-            components: Map<string, any>;
-            state: any;
-            
             constructor() {
                 this.components = new Map();
                 this.state = {};
@@ -240,27 +237,28 @@ function getRefactoredHtml(): string {
             }
             
             setupEventListeners() {
+                var self = this;
                 // Export buttons
-                document.getElementById('export-json-btn')?.addEventListener('click', () => {
+                document.getElementById('export-json-btn').addEventListener('click', function() {
                     vscode.postMessage({ type: 'export', format: 'json' });
                 });
                 
-                document.getElementById('export-csv-btn')?.addEventListener('click', () => {
+                document.getElementById('export-csv-btn').addEventListener('click', function() {
                     vscode.postMessage({ type: 'export', format: 'csv' });
                 });
                 
                 // Achievements toggle
-                let showAllAchievements = false;
-                document.getElementById('achievements-toggle')?.addEventListener('click', () => {
+                var showAllAchievements = false;
+                document.getElementById('achievements-toggle').addEventListener('click', function() {
                     showAllAchievements = !showAllAchievements;
-                    const allAchievementsEl = document.getElementById('all-achievements');
-                    const toggleBtn = document.getElementById('achievements-toggle');
+                    var allAchievementsEl = document.getElementById('all-achievements');
+                    var toggleBtn = document.getElementById('achievements-toggle');
                     
                     if (showAllAchievements) {
-                        allAchievementsEl?.classList.remove('hidden');
+                        allAchievementsEl.classList.remove('hidden');
                         if (toggleBtn) toggleBtn.textContent = 'Ocultar';
                     } else {
-                        allAchievementsEl?.classList.add('hidden');
+                        allAchievementsEl.classList.add('hidden');
                         if (toggleBtn) toggleBtn.textContent = 'Ver todos';
                     }
                 });
@@ -273,13 +271,13 @@ function getRefactoredHtml(): string {
             updateData(data) {
                 // Update XP
                 if (data.xp) {
-                    const levelEl = document.getElementById('xp-level');
-                    const barEl = document.getElementById('xp-bar-inner');
-                    const labelEl = document.getElementById('xp-label');
+                    var levelEl = document.getElementById('xp-level');
+                    var barEl = document.getElementById('xp-bar-inner');
+                    var labelEl = document.getElementById('xp-label');
                     
                     if (levelEl) levelEl.textContent = data.xp.level;
                     if (barEl) {
-                        const pct = data.xp.xpToNext > 0 
+                        var pct = data.xp.xpToNext > 0 
                             ? Math.max(0, Math.min(100, (data.xp.xpInLevel / data.xp.xpToNext) * 100))
                             : 0;
                         barEl.style.width = pct.toFixed(1) + '%';
@@ -585,7 +583,7 @@ function getRefactoredHtml(): string {
         let dashboardRenderer;
         
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('DOMContentLoaded', function() {
                 dashboardRenderer = new RefactoredDashboardRenderer();
                 dashboardRenderer.init();
             });
@@ -595,7 +593,7 @@ function getRefactoredHtml(): string {
         }
         
         // Listen for data updates
-        window.addEventListener('message', (event) => {
+        window.addEventListener('message', function(event) {
             const msg = event.data;
             console.log('Mensaje recibido en dashboard:', msg);
             if (!msg || msg.type !== 'stats:update') return;
@@ -611,12 +609,15 @@ function getRefactoredHtml(): string {
 }
 
 export function openRefactoredDashboard(context: vscode.ExtensionContext) {
+  console.log("openRefactoredDashboard llamado");
   if (currentPanel) {
+    console.log("Reutilizando panel existente");
     currentPanel.webview.html = getRefactoredHtml();
     currentPanel.reveal(vscode.ViewColumn.One);
     return;
   }
 
+  console.log("Creando nuevo panel de dashboard");
   currentPanel = vscode.window.createWebviewPanel(
     "focusPulseDashboardV2",
     "Focus Pulse Dashboard v2.1",
@@ -627,6 +628,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
     },
   );
 
+  console.log("Estableciendo HTML del dashboard");
   currentPanel.webview.html = getRefactoredHtml();
 
   currentPanel.webview.onDidReceiveMessage(
@@ -702,11 +704,10 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
 }
 
 export function updateRefactoredDashboard(data: DashboardData) {
-  if (!currentPanel) return;
-
   // Debounce dashboard updates for performance
   debounceDashboardUpdate(() => {
-    currentPanel!.webview.postMessage({
+    if (!currentPanel) return;
+    currentPanel.webview.postMessage({
       type: "stats:update",
       payload: data,
     });
