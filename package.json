@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Analiza tu foco por archivo, con Pomodoro integrado, XP, logros y dashboard en tiempo real",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -33,7 +33,7 @@
     "onCommand:focusPulse.pomodoroToggle",
     "onCommand:focusPulse.resetData"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/extension-refactored.js",
   "contributes": {
     "commands": [
       {

@@ -236,7 +236,7 @@ function parseTimeToMs(text: string): number {
   return minutes * 60000 + seconds * 1000;
 }
 // Catálogo completo de logros conocidos por Focus Pulse
-export function getAllAchievementsDefinitions(): Achievement[] {
+export function getAllAchievementsDefinitions(unlockedAchievements: Achievement[] = []): Achievement[] {
   return [
     {
       id: "first-focus",

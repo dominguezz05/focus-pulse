@@ -1,0 +1,87 @@
+/* Animaciones para el dashboard */
+
+/* Transiciones suaves */
+.goal-progress-bar {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2);
+}
+
+.goal-value-update {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2);
+}
+
+.goal-celebration {
+  animation: celebration-pulse 1s ease-out;
+  color: #10b981;
+}
+
+/* Animaciones de logros */
+@keyframes celebration-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.achievement-unlock {
+  animation: achievement-unlock 0.5s ease-out;
+}
+
+@keyframes achievement-unlock {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Estados hover */
+.goal-value-update:hover {
+  color: #60a5fa;
+  transform: scale(1.05);
+}
+
+/* Efectos visuales */
+.goal-celebration {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background-size: 200% 200%;
+  background-position: 0% 0%;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.goal-celebration::before {
+  content: '🎉';
+  font-size: 2rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Improvements responsive */
+@media (max-width: 640px) {
+  .goal-progress-bar {
+    height: 3px;
+  }
+}
