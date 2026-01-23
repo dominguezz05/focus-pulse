@@ -597,9 +597,11 @@ function getRefactoredHtml(): string {
         // Listen for data updates
         window.addEventListener('message', (event) => {
             const msg = event.data;
+            console.log('Mensaje recibido en dashboard:', msg);
             if (!msg || msg.type !== 'stats:update') return;
             
             if (dashboardRenderer) {
+                console.log('Actualizando dashboard con datos:', msg.payload);
                 dashboardRenderer.updateData(msg.payload || {});
             }
         });
@@ -633,6 +635,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
 
       // Handle different message types
       if (msg.type === "requestData") {
+        console.log("Dashboard requesting data");
         // Send initial data when dashboard requests it
         const statsArray = getStatsArray();
         const history7 = getLastDays(7);
@@ -640,17 +643,17 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
         const pomodoroStats = getPomodoroStats();
         const deepWork = getDeepWorkState(context);
         const streakDays = getStreakDays(historyAll);
-        const achievements = computeAchievements(
-          Array.isArray(streakDays) ? streakDays.length : streakDays,
-          historyAll,
-          statsArray,
-        );
-    const allDefs = getAllAchievementsDefinitions(achievements);
-        const allAchievements = allDefs.map((a: any) => ({
-          ...a,
-          unlocked: achievements.some((u: any) => u.id === a.id),
-        }));
-        const xp = computeXpState(historyAll, pomodoroStats, deepWork as any);
+    const achievements = computeAchievements(
+      Array.isArray(streakDays) ? streakDays.length : streakDays,
+      historyAll,
+      statsArray,
+    );
+    const allDefs = getAllAchievementsDefinitions();
+    const allAchievements = allDefs.map((a: any) => ({
+      ...a,
+      unlocked: achievements.some((u: any) => u.id === a.id),
+    }));
+    const xp = computeXpState(historyAll, pomodoroStats, deepWork as any);
 
         const dashboardData: DashboardData = {
           stats: statsArray,
@@ -666,6 +669,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
           goals: undefined, // TODO: Implement goals
         };
 
+        console.log("Enviando datos al dashboard:", dashboardData.stats?.length || 0, "archivos");
         currentPanel?.webview.postMessage({
           type: "stats:update",
           payload: dashboardData,
@@ -727,7 +731,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       historyAll,
       statsArray,
     );
-    const allDefs = getAllAchievementsDefinitions(achievements);
+    const allDefs = getAllAchievementsDefinitions();
     const allAchievements = allDefs.map((a: any) => ({
       ...a,
       unlocked: achievements.some((u: any) => u.id === a.id),
@@ -757,14 +761,14 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     const statsArray = getStatsArray();
     const historyAll = getHistory();
     const pomodoroStats = getPomodoroStats();
-    const deepWork = getDeepWorkState((currentPanel as any)?.context || context as any);
+    const deepWork = getDeepWorkState(context);
     const streakDays = getStreakDays(historyAll);
     const achievements = computeAchievements(
       Array.isArray(streakDays) ? streakDays.length : streakDays,
       historyAll,
       statsArray,
     );
-    const allDefs = getAllAchievementsDefinitions(achievements);
+    const allDefs = getAllAchievementsDefinitions();
     const allAchievements = allDefs.map((a: any) => ({
       ...a,
       unlocked: achievements.some((u: any) => u.id === a.id),

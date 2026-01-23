@@ -226,6 +226,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const handlers = [
     vscode.commands.registerCommand("focusPulse.openDashboard", () => {
+      console.log("Abriendo dashboard refactorizado");
       openRefactoredDashboard(context);
     }),
     vscode.commands.registerCommand("focusPulse.openDashboardLegacy", () => {
