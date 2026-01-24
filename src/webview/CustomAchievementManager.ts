@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
-import { CustomAchievement, validateCustomAchievement, generateAchievementId } from "../achievements";
+import {
+  CustomAchievement,
+  validateCustomAchievement,
+  generateAchievementId,
+} from "../achievements";
 
 export class CustomAchievementManager {
   private static currentPanel: vscode.WebviewPanel | undefined;
@@ -17,7 +21,7 @@ export class CustomAchievementManager {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-      }
+      },
     );
 
     panel.webview.html = this.getWebviewContent(panel.webview, context);
@@ -40,7 +44,7 @@ export class CustomAchievementManager {
         }
       },
       undefined,
-      context.subscriptions
+      context.subscriptions,
     );
 
     panel.onDidDispose(
@@ -48,13 +52,16 @@ export class CustomAchievementManager {
         this.currentPanel = undefined;
       },
       null,
-      context.subscriptions
+      context.subscriptions,
     );
 
     this.currentPanel = panel;
   }
 
-  private static getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionContext): string {
+  private static getWebviewContent(
+    webview: vscode.Webview,
+    context: vscode.ExtensionContext,
+  ): string {
     return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -86,8 +93,8 @@ export class CustomAchievementManager {
     <div class="max-w-4xl mx-auto p-6">
         <header class="mb-8">
             <div class="flex items-center gap-3 mb-2">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl font-bold text-white">
-                    FP
+               <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl">
+                    🏆
                 </div>
                 <div>
                     <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
@@ -410,31 +417,42 @@ export class CustomAchievementManager {
 </html>`;
   }
 
-  private static loadAchievements(webview: vscode.Webview, context: vscode.ExtensionContext): void {
+  private static loadAchievements(
+    webview: vscode.Webview,
+    context: vscode.ExtensionContext,
+  ): void {
     const { getCustomAchievements } = require("../achievements");
     const achievements = getCustomAchievements(context);
     webview.postMessage({
       type: "achievementsLoaded",
-      data: achievements
+      data: achievements,
     });
   }
 
-  private static createAchievement(webview: vscode.Webview, context: vscode.ExtensionContext, data: any): void {
-    const { validateCustomAchievement, generateAchievementId, saveCustomAchievement } = require("../achievements");
-    
+  private static createAchievement(
+    webview: vscode.Webview,
+    context: vscode.ExtensionContext,
+    data: any,
+  ): void {
+    const {
+      validateCustomAchievement,
+      generateAchievementId,
+      saveCustomAchievement,
+    } = require("../achievements");
+
     const achievement = {
       ...data,
       id: generateAchievementId(data.title),
       created: Date.now(),
-      custom: true
+      custom: true,
     };
 
     const validation = validateCustomAchievement(achievement);
-    
+
     if (!validation.valid) {
       webview.postMessage({
         type: "validationResult",
-        data: { errors: validation.errors }
+        data: { errors: validation.errors },
       });
       return;
     }
@@ -443,7 +461,11 @@ export class CustomAchievementManager {
     webview.postMessage({ type: "achievementCreated" });
   }
 
-  private static deleteAchievement(webview: vscode.Webview, context: vscode.ExtensionContext, id: string): void {
+  private static deleteAchievement(
+    webview: vscode.Webview,
+    context: vscode.ExtensionContext,
+    id: string,
+  ): void {
     const { deleteCustomAchievement } = require("../achievements");
     deleteCustomAchievement(id, context);
     webview.postMessage({ type: "achievementDeleted" });
@@ -455,13 +477,13 @@ export class CustomAchievementManager {
       ...data,
       id: "temp-id",
       created: Date.now(),
-      custom: true
+      custom: true,
     };
 
     const validation = validateCustomAchievement(achievement);
     webview.postMessage({
       type: "validationResult",
-      data: { errors: validation.valid ? [] : validation.errors }
+      data: { errors: validation.valid ? [] : validation.errors },
     });
   }
 }

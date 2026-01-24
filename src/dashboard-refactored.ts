@@ -69,7 +69,7 @@ function getRefactoredHtml(): string {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Pulse Dashboard v2.1</title>
+    <title>Focus Pulse Dashboard </title>
     <script>
       const vscode = acquireVsCodeApi();
     </script>
@@ -105,13 +105,13 @@ function getRefactoredHtml(): string {
                         <header class="flex flex-col gap-2" id="header-container">
                             <div>
                                 <h1 class="text-2xl font-semibold flex items-center gap-2">
-                                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
-                                        FP
+                                   <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                                        ⚡
                                     </span>
-                                    Focus Pulse Dashboard v2.1
+                                    Focus Pulse Dashboard 
                                 </h1>
                                 <p class="text-sm text-slate-400">
-                                    Dashboard con arquitectura de componentes refactorizada.
+                                    Visualiza tu productividad y progreso directamente en VS Code.
                                 </p>
                             </div>
                             
@@ -768,7 +768,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
         const allDefs = getAllAchievementsDefinitions();
         const { getCustomAchievements } = require("./achievements");
         const customAchievements = getCustomAchievements(context);
-        
+
         // Combinar definiciones estáticas con logros personalizados
         const allAchievements = [
           ...allDefs.map((a: any) => ({
@@ -778,7 +778,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
           ...customAchievements.map((a: any) => ({
             ...a,
             unlocked: achievements.some((u) => u.id === a.id),
-          }))
+          })),
         ];
         // Check if deepWork is from StateTypes and convert if needed
         let deepWorkForXp: DeepWorkState | undefined;
@@ -814,7 +814,9 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
           payload: dashboardData,
         });
       } else if (msg.type === "openCustomAchievements") {
-        const { CustomAchievementManager } = require("./webview/CustomAchievementManager");
+        const {
+          CustomAchievementManager,
+        } = require("./webview/CustomAchievementManager");
         CustomAchievementManager.show(context);
       } else if (msg.type === "export") {
         const format = msg.format === "csv" ? "csv" : "json";
@@ -891,7 +893,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     const allDefs = getAllAchievementsDefinitions();
     const { getCustomAchievements } = require("./achievements");
     const customAchievements = getCustomAchievements(context);
-    
+
     // Combinar definiciones estáticas con logros personalizados
     const allAchievements = [
       ...allDefs.map((a: any) => ({
@@ -901,7 +903,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       ...customAchievements.map((a: any) => ({
         ...a,
         unlocked: achievements.some((u) => u.id === a.id),
-      }))
+      })),
     ];
     // Check if deepWork is from StateTypes and convert if needed
     let deepWorkForXp: DeepWorkState | undefined;
@@ -951,7 +953,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     const allDefs = getAllAchievementsDefinitions();
     const { getCustomAchievements } = require("./achievements");
     const customAchievements = getCustomAchievements(context);
-    
+
     // Combinar definiciones estáticas con logros personalizados
     const allAchievements = [
       ...allDefs.map((a: any) => ({
@@ -961,7 +963,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       ...customAchievements.map((a: any) => ({
         ...a,
         unlocked: achievements.some((u) => u.id === a.id),
-      }))
+      })),
     ];
     // Check if deepWork is from StateTypes and convert if needed
     let deepWorkForXp: DeepWorkState | undefined;
