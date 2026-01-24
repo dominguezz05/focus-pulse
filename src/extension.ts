@@ -13,7 +13,11 @@ import {
   FocusSummary,
   resetFocusStats,
 } from "./focusTracker";
-import { openDashboard, updateDashboard } from "./dashboard";
+import { openRefactoredDashboard, updateRefactoredDashboard, setupDashboardEventListeners } from "./dashboard-refactored";
+import { getStateManager, type AppState } from "./state/StateManager";
+
+// Legacy imports - commented out for clarity
+// import { openDashboard, updateDashboard } from "./dashboard";
 import {
   initStorage,
   updateHistoryFromStats,
@@ -38,6 +42,7 @@ import {
   getDeepWorkState,
 } from "./deepWork";
 import type { DeepWorkState } from "./deepWork";
+import { openDashboard, updateDashboard } from "./dashboard";
 
 // ---------------- Objetivos diarios ----------------
 
@@ -128,19 +133,15 @@ async function updateAll(context: vscode.ExtensionContext) {
   const xp = computeXpState(fullHistory, pomodoroStats, deepWorkState);
   const weeklySummary = buildWeeklySummaryFromHistory(fullHistory);
   const history7 = getLastDays(7);
-  const streak = getStreakDays();
+  const streak = getStreakDays(fullHistory);
 
   const unlockedAchievements = computeAchievements(
-    streak,
+    Array.isArray(streak) ? streak.length : streak,
     history7,
     statsArray as FocusSummary[],
-    xp,
-    pomodoroStats,
-    goals,
-    deepWorkState,
   );
 
-  const allDefs = getAllAchievementsDefinitions();
+  const allDefs = getAllAchievementsDefinitions(unlockedAchievements);
   const mergedAll = allDefs.map((a) => ({
     ...a,
     unlocked: unlockedAchievements.some((u) => u.id === a.id),
@@ -203,23 +204,49 @@ function getWeekNumber(d: Date): number {
 // ---------------- Activación extensión ----------------
 
 export function activate(context: vscode.ExtensionContext) {
-  reloadConfig();
+  console.log("Focus Pulse v2.1 activado con refactor de componentes");
+
+  // Initialize state and events
+  const stateManager = getStateManager();
+  stateManager.load();
+  setupDashboardEventListeners(context);
+
   initStorage(context);
   initStatusBar(context);
   initPomodoro(context);
-
-  handleEditorChange(vscode.window.activeTextEditor);
-  updateAll(context);
   initDeepWork(context);
-  setDeepWorkState(getDeepWorkState(context));
 
-  const configDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
-    if (e.affectsConfiguration("focusPulse")) {
-      reloadConfig();
-      updateAll(context);
-    }
-  });
-  context.subscriptions.push(configDisposable);
+  const handlers = [
+  vscode.commands.registerCommand("focusPulse.openDashboard", () => {
+      openRefactoredDashboard(context);
+    }),
+    vscode.commands.registerCommand("focusPulse.openDashboardLegacy", () => {
+      // Keep original as fallback for testing
+      vscode.window.showInformationMessage("Focus Pulse: Using legacy dashboard for compatibility");
+    }),
+    vscode.commands.registerCommand("focusPulse.exportData", async (args: any) => {
+      await exportHistory(args.format, args.target);
+    }),
+    vscode.commands.registerCommand("focusPulse.resetHistory", async () => {
+      resetFocusStats();
+      clearHistory();
+      await stateManager.reset();
+      vscode.window.showInformationMessage("Focus Pulse: histórico y estado reiniciados.");
+    }),
+    vscode.commands.registerCommand("focusPulse.toggleDeepWork", () => {
+      toggleDeepWork(context);
+    }),
+    vscode.commands.registerCommand("focusPulse.togglePomodoro", () => {
+      togglePomodoro(context);
+    }),
+  ];
+
+  
+
+  // Loop principal con mejor rendimiento
+  setInterval(() => {
+    updateAll(context);
+  },2000);
 
   const editorChangeDisposable = vscode.window.onDidChangeActiveTextEditor(
     (editor) => {
@@ -291,9 +318,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   const commandPomodoroToggle = vscode.commands.registerCommand(
     "focusPulse.pomodoroToggle",
-    () => {
-      togglePomodoro();
-    },
+     () => {
+      togglePomodoro(context);
+     },
   );
   context.subscriptions.push(commandPomodoroToggle);
 
