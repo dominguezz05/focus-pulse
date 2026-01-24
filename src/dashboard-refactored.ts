@@ -549,10 +549,24 @@ function getRefactoredHtml(): string {
                         achievementsEl.innerHTML = '';
                         data.achievements.forEach((a) => {
                             const span = document.createElement('span');
-                            span.className = 'inline-flex flex-col gap-0.5 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-2 py-1';
-                            span.innerHTML = 
-                                '<span class="text-[11px] font-semibold text-emerald-300">' + a.title + '</span>' +
-                                '<span class="text-[10px] text-emerald-200/80">' + a.description + '</span>';
+                            
+                            // Estilos diferentes para logros personalizados
+                            if (a.custom) {
+                                const colorClass = a.color ? getColorClass(a.color) : 'border-purple-600/50 bg-purple-500/10';
+                                const textColorClass = a.color ? getTextColorClass(a.color) : 'text-purple-300';
+                                const textSecondaryClass = a.color ? getTextSecondaryClass(a.color) : 'text-purple-200/80';
+                                
+                                span.className = 'inline-flex flex-col gap-0.5 rounded-lg border ' + colorClass + ' px-2 py-1 badge-glow';
+                                span.innerHTML = 
+                                    '<span class="text-[11px] font-semibold ' + textColorClass + '">' + (a.icon || '🏆') + ' ' + a.title + '</span>' +
+                                    '<span class="text-[10px] ' + textSecondaryClass + '">' + a.description + '</span>';
+                            } else {
+                                span.className = 'inline-flex flex-col gap-0.5 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-2 py-1';
+                                span.innerHTML = 
+                                    '<span class="text-[11px] font-semibold text-emerald-300">' + a.title + '</span>' +
+                                    '<span class="text-[10px] text-emerald-200/80">' + a.description + '</span>';
+                            }
+                            
                             achievementsEl.appendChild(span);
                         });
                         achievementsCountEl.textContent = data.achievements.length + (data.achievements.length === 1 ? ' logro' : ' logros');
@@ -586,8 +600,81 @@ function getRefactoredHtml(): string {
                 if (m === 0) return s + 's';
                 return m + 'm ' + s + 's';
             }
+            
+            getColorClass(color) {
+                const colors = {
+                    blue: 'border-blue-500/60 bg-blue-500/10',
+                    green: 'border-green-500/60 bg-green-500/10',
+                    purple: 'border-purple-600/50 bg-purple-500/10',
+                    red: 'border-red-500/60 bg-red-500/10',
+                    yellow: 'border-yellow-500/60 bg-yellow-500/10',
+                    pink: 'border-pink-500/60 bg-pink-500/10'
+                };
+                return colors[color] || colors.blue;
+            }
+            
+            getTextColorClass(color) {
+                const colors = {
+                    blue: 'text-blue-300',
+                    green: 'text-green-300',
+                    purple: 'text-purple-300',
+                    red: 'text-red-300',
+                    yellow: 'text-yellow-300',
+                    pink: 'text-pink-300'
+                };
+                return colors[color] || colors.blue;
+            }
+            
+            getTextSecondaryClass(color) {
+                const colors = {
+                    blue: 'text-blue-200/80',
+                    green: 'text-green-200/80',
+                    purple: 'text-purple-200/80',
+                    red: 'text-red-200/80',
+                    yellow: 'text-yellow-200/80',
+                    pink: 'text-pink-200/80'
+                };
+                return colors[color] || colors.blue;
+            }
         }
         
+        // Helper functions for color styling
+        function getColorClass(color) {
+            const colors = {
+                blue: 'border-blue-500/60 bg-blue-500/10',
+                green: 'border-green-500/60 bg-green-500/10',
+                purple: 'border-purple-600/50 bg-purple-500/10',
+                red: 'border-red-500/60 bg-red-500/10',
+                yellow: 'border-yellow-500/60 bg-yellow-500/10',
+                pink: 'border-pink-500/60 bg-pink-500/10'
+            };
+            return colors[color] || colors.blue;
+        }
+        
+        function getTextColorClass(color) {
+            const colors = {
+                blue: 'text-blue-300',
+                green: 'text-green-300',
+                purple: 'text-purple-300',
+                red: 'text-red-300',
+                yellow: 'text-yellow-300',
+                pink: 'text-pink-300'
+            };
+            return colors[color] || colors.blue;
+        }
+        
+        function getTextSecondaryClass(color) {
+            const colors = {
+                blue: 'text-blue-200/80',
+                green: 'text-green-200/80',
+                purple: 'text-purple-200/80',
+                red: 'text-red-200/80',
+                yellow: 'text-yellow-200/80',
+                pink: 'text-pink-200/80'
+            };
+            return colors[color] || colors.blue;
+        }
+
         // Initialize dashboard when DOM is ready
         let dashboardRenderer;
         
@@ -658,6 +745,11 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
       Array.isArray(streakDays) ? streakDays.length : streakDays,
       historyAll,
       statsArray,
+      undefined,
+      pomodoroStats,
+      undefined,
+      deepWork,
+      context,
     );
     const allDefs = getAllAchievementsDefinitions();
     const allAchievements = allDefs.map((a: any) => ({
@@ -746,11 +838,24 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     const historyAll = getHistory();
     const pomodoroStats = getPomodoroStats();
     const deepWork = state.deepWork;
+    // Convert deepWork for computeAchievements if needed
+    let deepWorkForAchievement: DeepWorkState | undefined;
+    if (isStateTypesDeepWorkState(deepWork)) {
+      deepWorkForAchievement = convertToDeepWorkState(deepWork);
+    } else {
+      deepWorkForAchievement = deepWork;
+    }
+    
     const streakDays = getStreakDays(historyAll);
     const achievements = computeAchievements(
       Array.isArray(streakDays) ? streakDays.length : streakDays,
       historyAll,
       statsArray,
+      undefined,
+      pomodoroStats,
+      undefined,
+      deepWorkForAchievement,
+      context,
     );
     const allDefs = getAllAchievementsDefinitions();
     const allAchievements = allDefs.map((a: any) => ({
@@ -796,6 +901,11 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       Array.isArray(streakDays) ? streakDays.length : streakDays,
       historyAll,
       statsArray,
+      undefined,
+      pomodoroStats,
+      undefined,
+      deepWork,
+      context,
     );
     const allDefs = getAllAchievementsDefinitions();
     const allAchievements = allDefs.map((a: any) => ({

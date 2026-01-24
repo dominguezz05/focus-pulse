@@ -1,8 +1,8 @@
 {
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
-  "description": "Analiza tu foco por archivo, con Pomodoro integrado, XP, logros y dashboard en tiempo real",
-  "version": "2.1.0",
+  "description": "Track your focus level per file with Pomodoro timers, XP progression, achievements, and a real-time dashboard.",
+  "version": "2.2.0",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -32,7 +32,9 @@
     "onCommand:focusPulse.openDashboard",
     "onCommand:focusPulse.pomodoroToggle",
     "onCommand:focusPulse.resetData",
-    "onCommand:focusPulse.deepWorkToggle"
+    "onCommand:focusPulse.deepWorkToggle",
+    "onCommand:focusPulse.createCustomAchievement",
+    "onCommand:focusPulse.manageCustomAchievements"
   ],
   "main": "./out/extension-refactored.js",
   "contributes": {
@@ -60,6 +62,14 @@
       {
         "command": "focusPulse.deepWorkToggle",
         "title": "Focus Pulse: Alternar modo Deep Work"
+      },
+      {
+        "command": "focusPulse.createCustomAchievement",
+        "title": "Focus Pulse: Crear logro personalizado"
+      },
+      {
+        "command": "focusPulse.manageCustomAchievements",
+        "title": "Focus Pulse: Gestionar logros personalizados"
       }
     ],
     "configuration": {
