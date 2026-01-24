@@ -1,7 +1,7 @@
 # ⚡ Focus Pulse — Productivity Tracking for Developers
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.0.0-informational)
+![Version](https://img.shields.io/badge/version-2.2.0-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Status](https://img.shields.io/badge/status-Experimental-orange)
@@ -13,6 +13,7 @@
 - real-time dashboard
 - integrated Pomodoro
 - XP + levels + achievements
+- personalized achievements and badges
 - deep work mode
 - insights & weekly summary
 - streak & daily goals
@@ -35,9 +36,13 @@
 
 ## 🖼 Preview
 
-### Main dashboard
+### Main dashboard v1.0
 
-## ![Focus Pulse Dashboard](media/focus-pulse-dashboard.png)
+## ![Focus Pulse Dashboard v1.0](media/focus-pulse-dashboard.png)
+
+### Main dashboard v2.2
+
+## ![Focus Pulse Dashboard v2.2](media/focus-pulse-dashboard-v2.2.png)
 
 ## How it measures focus
 
@@ -45,7 +50,7 @@ Based on 3 key signals:
 
 1 **Time on file (active)**
 
-2 **Edits per minute (intent)e**
+2 **Edits per minute (intent)**
 
 3 **Tab switching penalty (attention drift)**
 
@@ -156,6 +161,7 @@ From Settings (Focus Pulse):
 | **Focus Pulse: Iniciar/Parar Pomodoro**                  | Timer integer       |
 | **Focus Pulse: Resetear histórico y XP**                 | Clean data          |
 | **Focus Pulse: Show Stats**                              | Alias               |
+| **Focus Pulse: Crear logo personalizado**                | personalized badges |
 
 ---
 
@@ -172,11 +178,10 @@ From Settings (Focus Pulse):
 
 ## 🗺 Roadmap
 
-> v2.1 → Refactor and improve UI
-> v2.2 → Multi-day deep work sessions
-> v2.3 → Personalized achievements and badges
-> v2.4 → Friends
-> v2.4 → MultiLanguaje
+> v2.1 → Refactor and improve UI ✔
+> v2.2 → Personalized achievements and badges ✔
+> v2.3 → Friends
+> v2.3 → MultiLanguaje
 > v3.0 → Personal analytics (local only) ...
 > v3.1 → Assistant widget
 
