@@ -178,6 +178,7 @@ From Settings (Focus Pulse):
 > v2.4 → Friends
 > v2.4 → MultiLanguaje
 > v3.0 → Personal analytics (local only) ...
+> v3.1 → Assistant widget
 
 ---
 

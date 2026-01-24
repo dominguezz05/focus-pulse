@@ -45,7 +45,13 @@ let currentPanel: vscode.WebviewPanel | undefined;
 
 // Type guard to distinguish between DeepWorkState types
 function isStateTypesDeepWorkState(obj: any): obj is StateTypesDeepWorkState {
-  return obj && typeof obj === 'object' && 'startTime' in obj && 'expectedDuration' in obj && 'score' in obj;
+  return (
+    obj &&
+    typeof obj === "object" &&
+    "startTime" in obj &&
+    "expectedDuration" in obj &&
+    "score" in obj
+  );
 }
 
 // Convert StateTypes.DeepWorkState to deepWork.DeepWorkState
@@ -54,7 +60,7 @@ function convertToDeepWorkState(state: StateTypesDeepWorkState): DeepWorkState {
     active: state.active,
     startedAt: state.startTime,
     durationMinutes: state.expectedDuration || 60,
-    completedSessions: Math.floor(state.score) // Using score as proxy for completed sessions
+    completedSessions: Math.floor(state.score), // Using score as proxy for completed sessions
   };
 }
 
@@ -99,8 +105,8 @@ function getRefactoredHtml(): string {
                         <header class="flex flex-col gap-2" id="header-container">
                             <div>
                                 <h1 class="text-2xl font-semibold flex items-center gap-2">
-                                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                                        ⚡
+                                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold">
+                                        FP
                                     </span>
                                     Focus Pulse Dashboard v2.1
                                 </h1>
@@ -214,6 +220,9 @@ function getRefactoredHtml(): string {
                             <div class="flex items-center justify-between mb-2">
                                 <h2 class="text-sm font-medium text-slate-200">Logros de hoy</h2>
                                 <div class="flex items-center gap-2">
+                                    <button id="custom-achievements-btn" class="text-[11px] bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 px-2 py-1 rounded border border-purple-500/30" type="button">
+                                        ⚡ Personalizados
+                                    </button>
                                     <span class="text-xs text-slate-400" id="achievements-count">0 logros</span>
                                     <button id="achievements-toggle" class="text-[11px] text-sky-400 hover:underline" type="button">
                                         Ver todos
@@ -277,6 +286,11 @@ function getRefactoredHtml(): string {
                         allAchievementsEl.classList.add('hidden');
                         if (toggleBtn) toggleBtn.textContent = 'Ver todos';
                     }
+                });
+                
+                // Custom achievements button
+                document.getElementById('custom-achievements-btn').addEventListener('click', function() {
+                    vscode.postMessage({ type: 'openCustomAchievements' });
                 });
             }
             
@@ -716,7 +730,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   console.log("Creando nuevo panel de dashboard");
   currentPanel = vscode.window.createWebviewPanel(
     "focusPulseDashboardV2",
-    "Focus Pulse Dashboard v2.1",
+    "Focus Pulse Dashboard ",
     vscode.ViewColumn.One,
     {
       enableScripts: true,
@@ -741,30 +755,40 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
         const pomodoroStats = getPomodoroStats();
         const deepWork = getDeepWorkState(context);
         const streakDays = getStreakDays(historyAll);
-    const achievements = computeAchievements(
-      Array.isArray(streakDays) ? streakDays.length : streakDays,
-      historyAll,
-      statsArray,
-      undefined,
-      pomodoroStats,
-      undefined,
-      deepWork,
-      context,
-    );
-    const allDefs = getAllAchievementsDefinitions();
-    const allAchievements = allDefs.map((a: any) => ({
-      ...a,
-      unlocked: achievements.some((u) => u.id === a.id),
-    }));
-    // Check if deepWork is from StateTypes and convert if needed
-    let deepWorkForXp: DeepWorkState | undefined;
-    if (isStateTypesDeepWorkState(deepWork)) {
-      deepWorkForXp = convertToDeepWorkState(deepWork);
-    } else {
-      deepWorkForXp = deepWork;
-    }
-    
-    const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
+        const achievements = computeAchievements(
+          Array.isArray(streakDays) ? streakDays.length : streakDays,
+          historyAll,
+          statsArray,
+          undefined,
+          pomodoroStats,
+          undefined,
+          deepWork,
+          context,
+        );
+        const allDefs = getAllAchievementsDefinitions();
+        const { getCustomAchievements } = require("./achievements");
+        const customAchievements = getCustomAchievements(context);
+        
+        // Combinar definiciones estáticas con logros personalizados
+        const allAchievements = [
+          ...allDefs.map((a: any) => ({
+            ...a,
+            unlocked: achievements.some((u) => u.id === a.id),
+          })),
+          ...customAchievements.map((a: any) => ({
+            ...a,
+            unlocked: achievements.some((u) => u.id === a.id),
+          }))
+        ];
+        // Check if deepWork is from StateTypes and convert if needed
+        let deepWorkForXp: DeepWorkState | undefined;
+        if (isStateTypesDeepWorkState(deepWork)) {
+          deepWorkForXp = convertToDeepWorkState(deepWork);
+        } else {
+          deepWorkForXp = deepWork;
+        }
+
+        const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
         const dashboardData: DashboardData = {
           stats: statsArray,
@@ -780,11 +804,18 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
           goals: undefined, // TODO: Implement goals
         };
 
-        console.log("Enviando datos al dashboard:", dashboardData.stats?.length || 0, "archivos");
+        console.log(
+          "Enviando datos al dashboard:",
+          dashboardData.stats?.length || 0,
+          "archivos",
+        );
         currentPanel?.webview.postMessage({
           type: "stats:update",
           payload: dashboardData,
         });
+      } else if (msg.type === "openCustomAchievements") {
+        const { CustomAchievementManager } = require("./webview/CustomAchievementManager");
+        CustomAchievementManager.show(context);
       } else if (msg.type === "export") {
         const format = msg.format === "csv" ? "csv" : "json";
         const uri = await vscode.window.showSaveDialog({
@@ -815,7 +846,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
 export function updateRefactoredDashboard(data: DashboardData) {
   // Check if panel exists before debouncing
   if (!currentPanel) return;
-  
+
   // Debounce dashboard updates for performance
   debounceDashboardUpdate(() => {
     if (!currentPanel) return;
@@ -845,7 +876,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     } else {
       deepWorkForAchievement = deepWork;
     }
-    
+
     const streakDays = getStreakDays(historyAll);
     const achievements = computeAchievements(
       Array.isArray(streakDays) ? streakDays.length : streakDays,
@@ -858,10 +889,20 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       context,
     );
     const allDefs = getAllAchievementsDefinitions();
-    const allAchievements = allDefs.map((a: any) => ({
-      ...a,
-      unlocked: achievements.some((u) => u.id === a.id),
-    }));
+    const { getCustomAchievements } = require("./achievements");
+    const customAchievements = getCustomAchievements(context);
+    
+    // Combinar definiciones estáticas con logros personalizados
+    const allAchievements = [
+      ...allDefs.map((a: any) => ({
+        ...a,
+        unlocked: achievements.some((u) => u.id === a.id),
+      })),
+      ...customAchievements.map((a: any) => ({
+        ...a,
+        unlocked: achievements.some((u) => u.id === a.id),
+      }))
+    ];
     // Check if deepWork is from StateTypes and convert if needed
     let deepWorkForXp: DeepWorkState | undefined;
     if (isStateTypesDeepWorkState(deepWork)) {
@@ -869,7 +910,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     } else {
       deepWorkForXp = deepWork;
     }
-    
+
     const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
     const dashboardData: DashboardData = {
@@ -908,10 +949,20 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       context,
     );
     const allDefs = getAllAchievementsDefinitions();
-    const allAchievements = allDefs.map((a: any) => ({
-      ...a,
-      unlocked: achievements.some((u) => u.id === a.id),
-    }));
+    const { getCustomAchievements } = require("./achievements");
+    const customAchievements = getCustomAchievements(context);
+    
+    // Combinar definiciones estáticas con logros personalizados
+    const allAchievements = [
+      ...allDefs.map((a: any) => ({
+        ...a,
+        unlocked: achievements.some((u) => u.id === a.id),
+      })),
+      ...customAchievements.map((a: any) => ({
+        ...a,
+        unlocked: achievements.some((u) => u.id === a.id),
+      }))
+    ];
     // Check if deepWork is from StateTypes and convert if needed
     let deepWorkForXp: DeepWorkState | undefined;
     if (isStateTypesDeepWorkState(deepWork)) {
@@ -919,9 +970,9 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     } else {
       deepWorkForXp = deepWork;
     }
-    
+
     const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
-    
+
     updateRefactoredDashboard({
       stats: statsArray,
       history7: getLastDays(7),

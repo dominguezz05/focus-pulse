@@ -86,8 +86,8 @@ export class CustomAchievementManager {
     <div class="max-w-4xl mx-auto p-6">
         <header class="mb-8">
             <div class="flex items-center gap-3 mb-2">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl">
-                    🏆
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl font-bold text-white">
+                    FP
                 </div>
                 <div>
                     <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
