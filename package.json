@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Track your focus level per file with Pomodoro timers, XP progression, achievements, and a real-time dashboard.",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -33,8 +33,21 @@
     "onCommand:focusPulse.pomodoroToggle",
     "onCommand:focusPulse.resetData",
     "onCommand:focusPulse.deepWorkToggle",
-    "onCommand:focusPulse.createCustomAchievement",
-    "onCommand:focusPulse.manageCustomAchievements"
+"onCommand:focusPulse.createCustomAchievement",
+    "onCommand:focusPulse.manageCustomAchievements",
+    "onCommand:focusPulse.exportDataToFile",
+    "onCommand:focusPulse.importDataFromFile",
+    "onCommand:focusPulse.exportAsJSON",
+    "onCommand:focusPulse.exportAsXML",
+    "onCommand:focusPulse.authenticate",
+    "onCommand:focusPulse.enableAutoSync",
+    "onCommand:focusPulse.disableAutoSync",
+    "onCommand:focusPulse.manualSync",
+    "onCommand:focusPulse.downloadSync",
+    "onCommand:focusPulse.listSyncs",
+    "onCommand:focusPulse.deleteSync",
+    "onCommand:focusPulse.signOut",
+    "onCommand:focusPulse.syncStatus"
   ],
   "main": "./out/extension-refactored.js",
   "contributes": {
@@ -70,6 +83,58 @@
       {
         "command": "focusPulse.manageCustomAchievements",
         "title": "Focus Pulse: Gestionar logros personalizados"
+      },
+      {
+        "command": "focusPulse.exportDataToFile",
+        "title": "Focus Pulse: Exportar datos a archivo"
+      },
+      {
+        "command": "focusPulse.importDataFromFile",
+        "title": "Focus Pulse: Importar datos desde archivo"
+      },
+      {
+        "command": "focusPulse.exportAsJSON",
+        "title": "Focus Pulse: Exportar como JSON"
+      },
+      {
+        "command": "focusPulse.exportAsXML",
+        "title": "Focus Pulse: Exportar como XML"
+      },
+      {
+        "command": "focusPulse.authenticate",
+        "title": "Focus Pulse: Autenticar cuenta"
+      },
+      {
+        "command": "focusPulse.enableAutoSync",
+        "title": "Focus Pulse: Habilitar sincronización automática"
+      },
+      {
+        "command": "focusPulse.disableAutoSync",
+        "title": "Focus Pulse: Deshabilitar sincronización automática"
+      },
+      {
+        "command": "focusPulse.manualSync",
+        "title": "Focus Pulse: Sincronizar ahora"
+      },
+      {
+        "command": "focusPulse.downloadSync",
+        "title": "Focus Pulse: Descargar sincronización"
+      },
+      {
+        "command": "focusPulse.listSyncs",
+        "title": "Focus Pulse: Listar sincronizaciones"
+      },
+      {
+        "command": "focusPulse.deleteSync",
+        "title": "Focus Pulse: Eliminar sincronización"
+      },
+      {
+        "command": "focusPulse.signOut",
+        "title": "Focus Pulse: Cerrar sesión"
+      },
+      {
+        "command": "focusPulse.syncStatus",
+        "title": "Focus Pulse: Estado de sincronización"
       }
     ],
     "configuration": {
