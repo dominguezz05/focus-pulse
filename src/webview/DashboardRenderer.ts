@@ -5,6 +5,7 @@ import { GoalsComponent } from "./components/Goals";
 import { HeatmapComponent } from "./components/Heatmap";
 import { AchievementsComponent } from "./components/Achievements";
 import { TableComponent } from "./components/Table";
+import { AssistantComponent } from "./components/Assistant";
 
 export class DashboardRenderer {
   private components: Map<string, DashboardComponent> = new Map();
@@ -18,6 +19,7 @@ export class DashboardRenderer {
     this.components.set("heatmap", new HeatmapComponent());
     this.components.set("achievements", new AchievementsComponent());
     this.components.set("table", new TableComponent());
+    this.components.set("assistant", new AssistantComponent());
   }
 
   render(container: any, data: DashboardData): void {
@@ -33,6 +35,7 @@ export class DashboardRenderer {
         <div id="achievements-container"></div>
         <div id="cards-container"></div>
         <div id="table-container"></div>
+        <div id="assistant-container"></div>
       </div>
     `;
 
@@ -43,6 +46,9 @@ export class DashboardRenderer {
     this.renderComponent("heatmap", data);
     this.renderComponent("achievements", data);
     this.renderComponent("table", data);
+
+    // Render assistant component (fixed position)
+    this.renderComponent("assistant", data);
 
     // Render insights and weekly summary (simple components)
     this.renderInsights(data);
@@ -62,6 +68,14 @@ export class DashboardRenderer {
     this.renderInsights(data);
     this.renderWeeklySummary(data);
     this.renderCards(data);
+  }
+
+  // Public method for assistant-specific updates
+  updateAssistant(data: { type: string; payload: any }): void {
+    const assistant = this.components.get("assistant");
+    if (assistant && (assistant as any).handleAssistantMessage) {
+      (assistant as any).handleAssistantMessage(data.type, data.payload);
+    }
   }
 
   private renderComponent(key: string, data: DashboardData): void {

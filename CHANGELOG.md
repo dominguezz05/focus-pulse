@@ -4,6 +4,32 @@ All notable versions of **Focus Pulse**.
 
 ---
 
+## [2.4.0] - 2026-01-30
+
+### Added
+
+- **Focus Pulse Assistant**: Your new virtual coding companion integrated into the dashboard.
+- **Visual State Engine**: Implemented three distinct visual states for the assistant: `IDLE`, `FOCUSED`, and `WARNING`.
+- **Intelligent Suggestion Engine**:
+  - **Fatigue Logic**: Real-time suggestions to rest during long sessions.
+  - **Drift Detection**: Alerts for excessive file switching (attention drift).
+  - **Motivation System**: Positive reinforcement based on real-time focus stats.
+- **Interactive Productivity Tips**: Click interaction to reveal productivity fun facts and history-based advice.
+- **Event-Driven Alerts**: Real-time notifications for achievements, XP levels, and deep work streaks.
+
+### Fixed
+
+- **Dashboard Syntax Error**: Fixed `Uncaught SyntaxError` related to `document.write` during dashboard initialization.
+- **Panel Persistence**: Resolved issue where the dashboard failed to establish HTML when reusing an existing panel.
+- **Extension Host Communication**: Improved reliability when opening the refactored dashboard and setting the HTML content.
+
+### Improved
+
+- **Dashboard Architecture**: Refactored the `DashboardRenderer` to support the new `AssistantComponent` system.
+- **Bidirectional Communication**: Enhanced the EventBus to handle specific message types for the assistant.
+
+---
+
 ## [2.3.0] - 2026-01-28
 
 ### Added
