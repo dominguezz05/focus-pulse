@@ -108,18 +108,108 @@ function getRefactoredHtml(): string {
                 
                 root.innerHTML = \`
                     <div class="max-w-6xl mx-auto p-4 space-y-4">
-                        <!-- Header Component -->
+<!-- Header Component -->
                         <header class="flex flex-col gap-2" id="header-container">
-                            <div>
-                                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 flex items-center gap-3">
-                                   <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                                        ⚡
-                                    </span>
-                                    Focus Pulse Dashboard 
-                                </h1>
-                                <p class="text-slate-400">
-                                    Visualiza tu productividad y progreso directamente en VS Code.
-                                </p>
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 flex items-center gap-3">
+                                       <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                                            ⚡
+                                        </span>
+                                        Focus Pulse Dashboard 
+                                    </h1>
+                                    <p class="text-slate-400">
+                                        Visualiza tu productividad y progreso directamente en VS Code.
+                                    </p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <div class="relative">
+                                        <button 
+                                            id="export-menu-btn"
+                                            class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-md transition-colors duration-200 flex items-center gap-1.5 border border-slate-600"
+                                            title="Exportar/Importar datos"
+                                        >
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7,10 12,15 17,10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                            Datos
+                                        </button>
+                                        <div 
+                                            id="export-menu" 
+                                            class="absolute right-0 mt-1 w-48 bg-slate-800 border border-slate-600 rounded-md shadow-lg hidden z-50"
+                                        >
+                                            <div class="py-1">
+                                                <button 
+                                                    class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
+                                                    data-action="export-json"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="7,10 12,15 17,10"></polyline>
+                                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                    </svg>
+                                                    Exportar JSON
+                                                </button>
+                                                <button 
+                                                    class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
+                                                    data-action="export-xml"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="7,10 12,15 17,10"></polyline>
+                                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                    </svg>
+                                                    Exportar XML
+                                                </button>
+                                                <button 
+                                                    class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
+                                                    data-action="export-file"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="7,10 12,15 17,10"></polyline>
+                                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                    </svg>
+                                                    Exportar a archivo
+                                                </button>
+                                                <button 
+                                                    class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
+                                                    data-action="import-file"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="17,8 12,3 7,8"></polyline>
+                                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                                    </svg>
+                                                    Importar desde archivo
+                                                </button>
+                                                <div class="border-t border-slate-700 my-1"></div>
+                                                <button 
+                                                    class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
+                                                    data-action="sync-status"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polyline points="23,4 23,10 17,10"></polyline>
+                                                        <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"></path>
+                                                    </svg>
+                                                    Estado de sincronización
+                                                </button>
+                                                <button 
+                                                    class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
+                                                    data-action="manual-sync"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polyline points="23,4 23,10 17,10"></polyline>
+                                                        <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"></path>
+                                                    </svg>
+                                                    Sincronizar ahora
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
                             <div class="flex items-center gap-4 text-sm" id="xp-container">
@@ -280,16 +370,52 @@ function getRefactoredHtml(): string {
                 \`;
             }
             
-            setupEventListeners() {
+setupEventListeners() {
                 var self = this;
-                // Export buttons
-                document.getElementById('export-json-btn').addEventListener('click', function() {
-                    vscode.postMessage({ type: 'export', format: 'json' });
-                });
                 
-                document.getElementById('export-csv-btn').addEventListener('click', function() {
-                    vscode.postMessage({ type: 'export', format: 'csv' });
-                });
+                // Export menu toggle
+                const exportBtn = document.getElementById('export-menu-btn');
+                const exportMenu = document.getElementById('export-menu');
+                const menuItems = document.querySelectorAll('.export-menu-item');
+
+                if (exportBtn && exportMenu) {
+                    exportBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        exportMenu.classList.toggle('hidden');
+                    });
+
+                    document.addEventListener('click', function(e) {
+                        if (!exportMenu.contains(e.target) && !exportBtn.contains(e.target)) {
+                            exportMenu.classList.add('hidden');
+                        }
+                    });
+
+                    menuItems.forEach(function(item) {
+                        item.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const action = item.getAttribute('data-action');
+                            if (action) {
+                                vscode.postMessage({ command: action });
+                            }
+                            exportMenu.classList.add('hidden');
+                        });
+                    });
+                }
+                
+                // Legacy export buttons (if they exist)
+                const legacyExportJsonBtn = document.getElementById('export-json-btn');
+                if (legacyExportJsonBtn) {
+                    legacyExportJsonBtn.addEventListener('click', function() {
+                        vscode.postMessage({ type: 'export', format: 'json' });
+                    });
+                }
+                
+                const legacyExportCsvBtn = document.getElementById('export-csv-btn');
+                if (legacyExportCsvBtn) {
+                    legacyExportCsvBtn.addEventListener('click', function() {
+                        vscode.postMessage({ type: 'export', format: 'csv' });
+                    });
+                }
                 
                 // Achievements toggle
                 var showAllAchievements = false;
@@ -760,12 +886,13 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   console.log("Estableciendo HTML del dashboard");
   currentPanel.webview.html = getRefactoredHtml();
 
-  currentPanel.webview.onDidReceiveMessage(
+currentPanel.webview.onDidReceiveMessage(
     async (msg) => {
       if (!msg) return;
 
       // Handle different message types
-      if (msg.type === "requestData") {
+      switch (msg.command || msg.type) {
+        case "requestData": {
         console.log("Dashboard requesting data");
         // Send initial data when dashboard requests it
         const statsArray = getStatsArray();
@@ -832,23 +959,56 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
           type: "stats:update",
           payload: dashboardData,
         });
-      } else if (msg.type === "openCustomAchievements") {
-        const {
-          CustomAchievementManager,
-        } = require("./webview/CustomAchievementManager");
-        CustomAchievementManager.show(context);
-      } else if (msg.type === "export") {
-        const format = msg.format === "csv" ? "csv" : "json";
-        const uri = await vscode.window.showSaveDialog({
-          filters: format === "json" ? { JSON: ["json"] } : { CSV: ["csv"] },
-          saveLabel: "Exportar",
-        });
-        if (!uri) return;
+          break;
+        }
+        case "openCustomAchievements": {
+          const {
+            CustomAchievementManager,
+          } = require("./webview/CustomAchievementManager");
+          CustomAchievementManager.show(context);
+          break;
+        }
+        case "export": {
+          const format = msg.format === "csv" ? "csv" : "json";
+          const uri = await vscode.window.showSaveDialog({
+            filters: format === "json" ? { JSON: ["json"] } : { CSV: ["csv"] },
+            saveLabel: "Exportar",
+          });
+          if (!uri) return;
 
-        await vscode.commands.executeCommand("focusPulse.exportData", {
-          format,
-          target: uri,
-        });
+          await vscode.commands.executeCommand("focusPulse.exportData", {
+            format,
+            target: uri,
+          });
+          break;
+        }
+        case "export-json": {
+          await vscode.commands.executeCommand("focusPulse.exportAsJSON");
+          break;
+        }
+        case "export-xml": {
+          await vscode.commands.executeCommand("focusPulse.exportAsXML");
+          break;
+        }
+        case "export-file": {
+          await vscode.commands.executeCommand("focusPulse.exportDataToFile");
+          break;
+        }
+        case "import-file": {
+          await vscode.commands.executeCommand("focusPulse.importDataFromFile");
+          break;
+        }
+        case "sync-status": {
+          await vscode.commands.executeCommand("focusPulse.syncStatus");
+          break;
+        }
+        case "manual-sync": {
+          await vscode.commands.executeCommand("focusPulse.manualSync");
+          break;
+        }
+        default: {
+          console.warn("Unknown message type:", msg.type || msg.command);
+        }
       }
     },
     undefined,

@@ -4,6 +4,22 @@ All notable versions of **Focus Pulse**.
 
 ---
 
+## [2.3.0] - 2026-01-28
+
+### Added
+
+- **Cloud Sync Engine**: Integration with VS Code Authentication to keep progress across multiple devices.
+- **Data Portability**: New commands to manually Export and Import your data in JSON/XML formats.
+- **Direct Access**: Added synchronization and backup buttons directly onto the Dashboard for faster management.
+- **Smart Merge**: Advanced logic to combine local history with imported backups without losing data.
+
+### Improved
+
+- **UI Refactor**: Significant layout improvements for better readability and responsiveness.
+- **Personalized Achievements**: Enhanced the badge system with custom unlocking logic and visual feedback.
+
+---
+
 ## [2.2.0] - 2026-01-28
 
 ## Added

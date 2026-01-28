@@ -44,6 +44,8 @@ import {
 } from "./dashboard-refactored";
 import { getStateManager, type AppState } from "./state/StateManager";
 import { CustomAchievementManager } from "./webview/CustomAchievementManager";
+import { registerExportCommands } from "./export/exportCommands";
+import { registerSyncCommands } from "./export/syncCommands";
 
 // ---------------- Objetivos diarios ----------------
 
@@ -225,6 +227,12 @@ export function activate(context: vscode.ExtensionContext) {
   initStatusBar(context);
   initPomodoro(context);
   initDeepWork(context);
+  
+  // Register export/import commands
+  registerExportCommands(context);
+  
+  // Register sync commands
+  registerSyncCommands(context);
 
   const handlers = [
     vscode.commands.registerCommand("focusPulse.openDashboard", () => {

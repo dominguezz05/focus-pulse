@@ -1,12 +1,13 @@
 # ⚡ Focus Pulse — Productivity Tracking for Developers
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.2.0-informational)
+![Version](https://img.shields.io/badge/version-2.3.0-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Status](https://img.shields.io/badge/status-Experimental-orange)
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/dominguezz05.focus-pulse)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
+![Sync](https://img.shields.io/badge/Sync-Cloud--Enabled-blueviolet?logo=icloud&logoColor=white)
 
 **Gamified productivity system for VS Code** that measures your **real focus while coding** through:
 
@@ -54,7 +55,33 @@ Based on 3 key signals:
 
 3 **Tab switching penalty (attention drift)**
 
+4 **Data Portability** (New!) — Your progress is yours. Export, import, or sync your stats anytime.
+
 Result: Focus Score (0-100) for each file + session.
+
+---
+
+## 🔄 Cloud Sync & Data Management (v2.3+)
+
+Focus Pulse now ensures your progress follows you wherever you go. Never lose your streak or XP again when switching machines or reinstalling your environment.
+
+### ☁️ Cloud Synchronization
+
+Leverage your VS Code account to keep your statistics up to date across all your devices:
+
+- **Auto-Sync:** Set custom intervals (e.g., every 30 min) to back up your progress automatically.
+- **Version History:** Access a list of previous sync points and restore the one you need at any time.
+- **Multi-device Support:** Start coding on your laptop and continue on your desktop without losing your levels or achievements.
+
+### 📂 Manual Export & Import
+
+For those who prefer full control or local backups:
+
+- **Standard Formats:** Export your entire configuration, achievements, and history to **JSON** or **XML**.
+- **Smart Merge:** When importing, you choose whether to overwrite your current settings or simply merge your XP history.
+
+> [!TIP]
+> **Privacy First:** Synchronization only uploads your calculated metrics (XP, total time, achievements). Your specific file names remain secure within your local configuration.
 
 ---
 
@@ -154,14 +181,19 @@ From Settings (Focus Pulse):
 
 ## 🧾 Commands
 
-| Commands                                                 | Action              |
-| -------------------------------------------------------- | ------------------- |
-| **Focus Pulse: Abrir dashboard**                         | Complete statistics |
-| **Focus Pulse: Mostrar estadísticas del archivo actual** | Fast Popup          |
-| **Focus Pulse: Iniciar/Parar Pomodoro**                  | Timer integer       |
-| **Focus Pulse: Resetear histórico y XP**                 | Clean data          |
-| **Focus Pulse: Show Stats**                              | Alias               |
-| **Focus Pulse: Crear logo personalizado**                | personalized badges |
+| Commands                                                 | Action                                                   |
+| -------------------------------------------------------- | -------------------------------------------------------- |
+| **Focus Pulse: Abrir dashboard**                         | Complete statistics                                      |
+| **Focus Pulse: Mostrar estadísticas del archivo actual** | Fast Popup                                               |
+| **Focus Pulse: Iniciar/Parar Pomodoro**                  | Timer integer                                            |
+| **Focus Pulse: Resetear histórico y XP**                 | Clean data                                               |
+| **Focus Pulse: Show Stats**                              | Alias                                                    |
+| **Focus Pulse: Crear logo personalizado**                | personalized badges                                      |
+| **Focus Pulse: Export data to file**                     | Creates a local backup (.json/.xml) of all your progress |
+| **Focus Pulse: Import data from file**                   | Restores configuration, XP, and history from a backup    |
+| **Focus Pulse: Sync with account (Login)**               | Links your account for cloud-based backups               |
+| **Focus Pulse: Sync now**                                | Manually uploads your current status to the cloud        |
+| **Focus Pulse: View sync status**                        | Shows your last backup timestamp and active account      |
 
 ---
 
@@ -180,6 +212,7 @@ From Settings (Focus Pulse):
 
 > v2.1 → Refactor and improve UI ✔
 > v2.2 → Personalized achievements and badges ✔
+> v2.3 → Github Sync & Import/Export Data ✔
 > v2.3 → Friends
 > v2.3 → MultiLanguaje
 > v3.0 → Personal analytics (local only) ...
