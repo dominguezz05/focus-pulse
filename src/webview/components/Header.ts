@@ -163,22 +163,22 @@ export class HeaderComponent implements DashboardComponent {
 
     switch (action) {
       case 'export-json':
-        vscode.postMessage({ command: 'exportAsJSON' });
+        (window as any).acquireVsCodeApi().postMessage({ command: 'export-json' });
         break;
       case 'export-xml':
-        vscode.postMessage({ command: 'exportAsXML' });
+        (window as any).acquireVsCodeApi().postMessage({ command: 'export-xml' });
         break;
       case 'export-file':
-        vscode.postMessage({ command: 'exportDataToFile' });
+        (window as any).acquireVsCodeApi().postMessage({ command: 'export-file' });
         break;
       case 'import-file':
-        vscode.postMessage({ command: 'importDataFromFile' });
+        (window as any).acquireVsCodeApi().postMessage({ command: 'import-file' });
         break;
       case 'sync-status':
-        vscode.postMessage({ command: 'syncStatus' });
+        (window as any).acquireVsCodeApi().postMessage({ command: 'sync-status' });
         break;
       case 'manual-sync':
-        vscode.postMessage({ command: 'manualSync' });
+        (window as any).acquireVsCodeApi().postMessage({ command: 'manual-sync' });
         break;
     }
   }

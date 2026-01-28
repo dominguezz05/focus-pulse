@@ -982,27 +982,27 @@ currentPanel.webview.onDidReceiveMessage(
           });
           break;
         }
-        case "exportAsJSON": {
+        case "export-json": {
           await vscode.commands.executeCommand("focusPulse.exportAsJSON");
           break;
         }
-        case "exportAsXML": {
+        case "export-xml": {
           await vscode.commands.executeCommand("focusPulse.exportAsXML");
           break;
         }
-        case "exportDataToFile": {
+        case "export-file": {
           await vscode.commands.executeCommand("focusPulse.exportDataToFile");
           break;
         }
-        case "importDataFromFile": {
+        case "import-file": {
           await vscode.commands.executeCommand("focusPulse.importDataFromFile");
           break;
         }
-        case "syncStatus": {
+        case "sync-status": {
           await vscode.commands.executeCommand("focusPulse.syncStatus");
           break;
         }
-        case "manualSync": {
+        case "manual-sync": {
           await vscode.commands.executeCommand("focusPulse.manualSync");
           break;
         }
