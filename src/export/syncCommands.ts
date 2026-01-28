@@ -9,11 +9,31 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
     'focusPulse.authenticate',
     async () => {
       try {
+        // Check if already authenticated
+        const existingUser = syncManager.getCurrentUser();
+        if (existingUser) {
+          const action = await vscode.window.showQuickPick(
+            ['Continue as current user', 'Sign out and re-authenticate', 'Cancel'],
+            {
+              placeHolder: `Already authenticated as ${existingUser.email}`,
+            }
+          );
+          
+          if (action === 'Sign out and re-authenticate') {
+            await syncManager.signOut();
+          } else if (action === 'Continue as current user' || action === 'Cancel') {
+            vscode.window.showInformationMessage(`Continuing as ${existingUser.email}`);
+            return existingUser;
+          }
+        }
+
         const provider = new MockCloudSyncProvider();
         const user = await syncManager.authenticate(provider);
-        vscode.window.showInformationMessage(`Authenticated as ${user.email}`);
+        vscode.window.showInformationMessage(`✅ Successfully authenticated as ${user.email}`);
+        return user;
       } catch (error) {
-        vscode.window.showErrorMessage(`Authentication failed: ${error}`);
+        vscode.window.showErrorMessage(`❌ Authentication failed: ${error}`);
+        throw error;
       }
     }
   );
@@ -63,6 +83,24 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
     'focusPulse.manualSync',
     async () => {
       try {
+        // Auto-authenticate if not already authenticated
+        if (!syncManager.getCurrentUser()) {
+          const shouldAuthenticate = await vscode.window.showQuickPick(
+            ['Yes', 'No'],
+            {
+              placeHolder: 'Not authenticated. Do you want to authenticate for sync?',
+            }
+          );
+          
+          if (shouldAuthenticate === 'Yes') {
+            const provider = new MockCloudSyncProvider();
+            await syncManager.authenticate(provider);
+          } else {
+            vscode.window.showInformationMessage('Sync cancelled. Authentication required.');
+            return;
+          }
+        }
+
         const options: SyncOptions = {
           includeHistory: true,
           includeState: true,
@@ -196,23 +234,41 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
         const autoSyncEnabled = syncManager.isAutoSyncEnabled();
         const lastSync = syncManager.getLastSyncTime();
 
-        let status = 'Sync Status:\n\n';
+        let status = '=== FOCUS PULSE SYNC STATUS ===\n\n';
         
         if (user) {
-          status += `User: ${user.email}\n`;
-          status += `User ID: ${user.id}\n`;
-          status += `Account created: ${user.createdAt}\n`;
+          status += `👤 User: ${user.email}\n`;
+          status += `🆔 User ID: ${user.id}\n`;
+          status += `📅 Account created: ${new Date(user.createdAt).toLocaleString()}\n`;
           if (user.lastSyncAt) {
-            status += `Last sync: ${user.lastSyncAt}\n`;
+            status += `🔄 Last sync: ${new Date(user.lastSyncAt).toLocaleString()}\n`;
           }
+          status += `✅ Authentication: Active\n`;
         } else {
-          status += 'User: Not authenticated\n';
+          status += `👤 User: Not authenticated\n`;
+          status += `❌ Authentication: Inactive\n`;
+          status += `💡 Tip: Use "Sincronizar ahora" to auto-authenticate\n`;
         }
 
-        status += `Auto-sync: ${autoSyncEnabled ? 'Enabled' : 'Disabled'}\n`;
+        status += `\n🔄 Auto-sync: ${autoSyncEnabled ? '✅ Enabled' : '❌ Disabled'}\n`;
         
         if (lastSync > 0) {
-          status += `Last successful sync: ${new Date(lastSync).toLocaleString()}\n`;
+          const timeSince = Date.now() - lastSync;
+          const hours = Math.floor(timeSince / (1000 * 60 * 60));
+          const minutes = Math.floor((timeSince % (1000 * 60 * 60)) / (1000 * 60));
+          
+          status += `⏰ Last successful sync: ${new Date(lastSync).toLocaleString()}\n`;
+          status += `⏱️  Time since last sync: ${hours}h ${minutes}m ago\n`;
+        } else {
+          status += `⏰ Last successful sync: Never\n`;
+        }
+
+        status += `\n📊 Available syncs: `;
+        try {
+          const syncs = await syncManager.listAvailableSyncs();
+          status += `${syncs.length} sync(s) available\n`;
+        } catch (err) {
+          status += `Unable to check (authentication required)\n`;
         }
 
         const document = await vscode.workspace.openTextDocument({
