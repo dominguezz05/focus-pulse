@@ -4,6 +4,15 @@ All notable versions of **Focus Pulse**.
 
 ---
 
+## [2.2.0] - 2026-01-28
+
+## Added
+
+- Implemented personalized achievements and badges functionality.
+- Refactoring in the UI
+
+---
+
 ## [2.1.0] — 2026-01-23
 
 ### Major Refactor – Component Architecture

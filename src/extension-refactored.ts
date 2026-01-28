@@ -43,6 +43,7 @@ import {
   setupDashboardEventListeners,
 } from "./dashboard-refactored";
 import { getStateManager, type AppState } from "./state/StateManager";
+import { CustomAchievementManager } from "./webview/CustomAchievementManager";
 
 // ---------------- Objetivos diarios ----------------
 
@@ -150,6 +151,7 @@ async function updateAll(context: vscode.ExtensionContext) {
     pomodoroStats,
     goals,
     deepWorkState,
+    context,
   );
 
   const allDefs = getAllAchievementsDefinitions();
@@ -251,6 +253,12 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.commands.registerCommand("focusPulse.pomodoroToggle", () => {
       togglePomodoro(context);
+    }),
+    vscode.commands.registerCommand("focusPulse.createCustomAchievement", () => {
+      CustomAchievementManager.show(context);
+    }),
+    vscode.commands.registerCommand("focusPulse.manageCustomAchievements", () => {
+      CustomAchievementManager.show(context);
     }),
   ];
 

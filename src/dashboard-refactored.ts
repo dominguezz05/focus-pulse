@@ -45,7 +45,13 @@ let currentPanel: vscode.WebviewPanel | undefined;
 
 // Type guard to distinguish between DeepWorkState types
 function isStateTypesDeepWorkState(obj: any): obj is StateTypesDeepWorkState {
-  return obj && typeof obj === 'object' && 'startTime' in obj && 'expectedDuration' in obj && 'score' in obj;
+  return (
+    obj &&
+    typeof obj === "object" &&
+    "startTime" in obj &&
+    "expectedDuration" in obj &&
+    "score" in obj
+  );
 }
 
 // Convert StateTypes.DeepWorkState to deepWork.DeepWorkState
@@ -54,7 +60,7 @@ function convertToDeepWorkState(state: StateTypesDeepWorkState): DeepWorkState {
     active: state.active,
     startedAt: state.startTime,
     durationMinutes: state.expectedDuration || 60,
-    completedSessions: Math.floor(state.score) // Using score as proxy for completed sessions
+    completedSessions: Math.floor(state.score), // Using score as proxy for completed sessions
   };
 }
 
@@ -62,13 +68,20 @@ function getRefactoredHtml(): string {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Focus Pulse Dashboard v2.1</title>
-    <script>
-      const vscode = acquireVsCodeApi();
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>Focus Pulse Dashboard</title>
+
+  <link rel="icon" href="data:image/svg+xml,
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+    <text y='0.9em' font-size='90'>⚡</text>
+  </svg>">
+
+  <script>
+    const vscode = acquireVsCodeApi();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-slate-900 text-slate-100">
     <div id="dashboard-root"></div>
     
@@ -98,68 +111,68 @@ function getRefactoredHtml(): string {
                         <!-- Header Component -->
                         <header class="flex flex-col gap-2" id="header-container">
                             <div>
-                                <h1 class="text-2xl font-semibold flex items-center gap-2">
-                                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 flex items-center gap-3">
+                                   <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
                                         ⚡
                                     </span>
-                                    Focus Pulse Dashboard v2.1
+                                    Focus Pulse Dashboard 
                                 </h1>
-                                <p class="text-sm text-slate-400">
-                                    Dashboard con arquitectura de componentes refactorizada.
+                                <p class="text-slate-400">
+                                    Visualiza tu productividad y progreso directamente en VS Code.
                                 </p>
                             </div>
                             
-                            <div class="flex items-center gap-3 text-xs text-slate-400" id="xp-container">
-                                <div class="flex items-center gap-1">
-                                    <span class="uppercase tracking-wide">Nivel</span>
-                                    <span id="xp-level" class="text-sm font-semibold text-emerald-300">1</span>
+                            <div class="flex items-center gap-4 text-sm" id="xp-container">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-slate-300 font-medium">Nivel</span>
+                                    <span id="xp-level" class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">1</span>
                                 </div>
-                                <div class="flex-1 h-2 rounded-full bg-slate-700 overflow-hidden">
-                                    <div id="xp-bar-inner" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%;"></div>
+                                <div class="flex-1 h-3 rounded-full bg-slate-700/50 overflow-hidden backdrop-blur-sm border border-slate-600/50">
+                                    <div id="xp-bar-inner" class="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 shadow-lg shadow-blue-500/25" style="width: 0%;"></div>
                                 </div>
-                                <span id="xp-label" class="text-[11px] text-slate-400">0 XP total</span>
+                                <span id="xp-label" class="text-sm text-slate-300 font-medium">0 XP total</span>
                             </div>
                             <div id="deepwork-pill" class="text-[11px] text-slate-500"></div>
                         </header>
                         
                         <!-- Metrics Grid -->
-                        <section class="grid gap-3 md:grid-cols-4" id="metrics-container">
-                            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
-                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Racha</div>
-                                <div class="text-2xl font-semibold" id="streak-value">0 días</div>
-                                <p class="text-xs text-slate-400 mt-1">Días consecutivos con tiempo de foco registrado.</p>
+                        <section class="grid gap-4 md:grid-cols-4" id="metrics-container">
+                            <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Racha</div>
+                                <div class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400" id="streak-value">0 días</div>
+                                <p class="text-xs text-slate-400 mt-2">Días consecutivos con tiempo de foco registrado.</p>
                             </div>
-                            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
-                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Últimos 7 días</div>
-                                <div class="text-sm text-slate-200">
-                                    <span id="last7-time" class="font-semibold">0s</span> de trabajo
+                            <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Últimos 7 días</div>
+                                <div class="text-lg text-slate-200 mb-1">
+                                    <span id="last7-time" class="font-bold text-blue-300">0s</span> de trabajo
                                 </div>
-                                <div class="text-sm text-slate-200">
-                                    Media de foco: <span id="last7-score" class="font-semibold">-</span>/100
+                                <div class="text-lg text-slate-200">
+                                    Media de foco: <span id="last7-score" class="font-bold text-purple-300">-</span>/100
                                 </div>
-                                <p class="text-xs text-slate-400 mt-1">Basado en sesiones registradas con Focus Pulse.</p>
+                                <p class="text-xs text-slate-400 mt-2">Basado en sesiones registradas con Focus Pulse.</p>
                             </div>
-                            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3">
-                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Archivos hoy</div>
-                                <div class="text-2xl font-semibold" id="files-today">0</div>
-                                <p class="text-xs text-slate-400 mt-1">Archivos con foco en esta sesión de VS Code.</p>
+                            <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Archivos hoy</div>
+                                <div class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400" id="files-today">0</div>
+                                <p class="text-xs text-slate-400 mt-2">Archivos con foco en esta sesión de VS Code.</p>
                             </div>
-                            <div class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3 flex flex-col gap-2">
+                            <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 flex flex-col gap-3">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Pomodoros</div>
-                                        <div class="text-sm text-slate-200">
-                                            Hoy: <span id="pomodoro-today" class="font-semibold">0</span>
+                                        <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Pomodoros</div>
+                                        <div class="text-lg text-slate-200 mb-1">
+                                            Hoy: <span id="pomodoro-today" class="font-bold text-emerald-300">0</span>
                                         </div>
-                                        <div class="text-sm text-slate-200">
-                                            Total: <span id="pomodoro-total" class="font-semibold">0</span>
+                                        <div class="text-lg text-slate-200">
+                                            Total: <span id="pomodoro-total" class="font-bold text-emerald-400">0</span>
                                         </div>
                                     </div>
-                                    <div class="flex flex-col gap-1 items-end">
-                                        <button id="export-json-btn" class="px-2 py-1 rounded-md bg-slate-700/80 text-[11px] hover:bg-slate-600 transition">
+                                    <div class="flex flex-col gap-2 items-end">
+                                        <button id="export-json-btn" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-[11px] font-medium text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-200 border border-blue-500/30">
                                             Exportar JSON
                                         </button>
-                                        <button id="export-csv-btn" class="px-2 py-1 rounded-md bg-slate-700/80 text-[11px] hover:bg-slate-600 transition">
+                                        <button id="export-csv-btn" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500/20 to-blue-500/20 text-[11px] font-medium text-emerald-300 hover:from-emerald-500/30 hover:to-blue-500/30 transition-all duration-200 border border-emerald-500/30">
                                             Exportar CSV
                                         </button>
                                     </div>
@@ -169,82 +182,97 @@ function getRefactoredHtml(): string {
                         </section>
                         
                         <!-- Goals Component -->
-                        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3" id="goals-container">
-                            <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-sm font-medium text-slate-200">🎯 Objetivo de hoy</h2>
-                                <span id="goal-status-label" class="text-xs text-slate-400">Sin objetivo configurado</span>
+                        <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="goals-container">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="text-lg font-semibold flex items-center gap-2">
+                                    <span>🎯</span> Objetivo de hoy
+                                </h2>
+                                <span id="goal-status-label" class="text-sm text-slate-400 font-medium">Sin objetivo configurado</span>
                             </div>
-                            <div id="goal-content" class="space-y-2 text-xs text-slate-300">
-                                <p class="text-slate-500 text-xs">Configura los objetivos diarios en las opciones de Focus Pulse.</p>
+                            <div id="goal-content" class="space-y-3 text-sm text-slate-300">
+                                <p class="text-slate-500 text-sm">Configura los objetivos diarios en las opciones de Focus Pulse.</p>
                             </div>
                         </section>
                         
                         <!-- Insights Component -->
-                        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3" id="insights-container">
-                            <div class="flex items-center justify-between mb-1">
-                                <h2 class="text-sm font-medium text-slate-200">Insights rápidos</h2>
+                        <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="insights-container">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="text-lg font-semibold flex items-center gap-2">
+                                    <span>📊</span> Insights rápidos
+                                </h2>
                             </div>
-                            <div id="insights" class="text-xs text-slate-300 space-y-1">
-                                <p class="text-slate-500 text-xs">Aún no hay suficientes datos para comparar días.</p>
+                            <div id="insights" class="text-sm text-slate-300 space-y-2">
+                                <p class="text-slate-500 text-sm">Aún no hay suficientes datos para comparar días.</p>
                             </div>
                         </section>
                         
                         <!-- Heatmap Component -->
-                        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3" id="heatmap-container">
-                            <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-sm font-medium text-slate-200">Heatmap de productividad (últimos 30 días)</h2>
-                                <span class="text-[11px] text-slate-500">Intensidad basada en minutos de foco</span>
+                        <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="heatmap-container">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="text-lg font-semibold flex items-center gap-2">
+                                    <span>🔥</span> Heatmap de productividad (últimos 30 días)
+                                </h2>
+                                <span class="text-sm text-slate-500">Intensidad basada en minutos de foco</span>
                             </div>
                             <div id="heatmap" class="flex flex-col gap-1 text-[10px] text-slate-400"></div>
                         </section>
                         
                         <!-- Weekly Summary Component -->
-                        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3" id="weekly-container">
-                            <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-sm font-medium text-slate-200">Resumen semanal</h2>
-                                <span class="text-[11px] text-slate-500">Minutos totales por semana</span>
+                        <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="weekly-container">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="text-lg font-semibold flex items-center gap-2">
+                                    <span>📈</span> Resumen semanal
+                                </h2>
+                                <span class="text-sm text-slate-500">Minutos totales por semana</span>
                             </div>
-                            <div id="weekly-summary" class="space-y-1 text-[11px] text-slate-300">
-                                <p class="text-slate-500 text-xs">Todavía no hay datos suficientes.</p>
+                            <div id="weekly-summary" class="space-y-2 text-sm text-slate-300">
+                                <p class="text-slate-500 text-sm">Todavía no hay datos suficientes.</p>
                             </div>
                         </section>
                         
                         <!-- Achievements Component -->
-                        <section class="bg-slate-800/80 rounded-xl border border-slate-700/70 p-3" id="achievements-container">
-                            <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-sm font-medium text-slate-200">Logros de hoy</h2>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-slate-400" id="achievements-count">0 logros</span>
-                                    <button id="achievements-toggle" class="text-[11px] text-sky-400 hover:underline" type="button">
+                        <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="achievements-container">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="text-lg font-semibold flex items-center gap-2">
+                                    <span>🏆</span> Logros de hoy
+                                </h2>
+                                <div class="flex items-center gap-3">
+                                    <button id="custom-achievements-btn" class="text-sm bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 px-3 py-1.5 rounded-lg border border-purple-500/30 font-medium transition-all duration-200 transform hover:scale-105" type="button">
+                                        ⚡ Personalizados
+                                    </button>
+                                    <span class="text-sm text-slate-400 font-medium" id="achievements-count">0 logros</span>
+                                    <button id="achievements-toggle" class="text-sm text-sky-400 hover:text-sky-300 font-medium underline underline-offset-2 transition-colors" type="button">
                                         Ver todos
                                     </button>
                                 </div>
                             </div>
-                            <div id="achievements" class="flex flex-wrap gap-2 text-xs">
-                                <span class="text-slate-400 text-xs">Sin datos todavía.</span>
+                            <div id="achievements" class="flex flex-wrap gap-2 text-sm">
+                                <span class="text-slate-400 text-sm">Sin datos todavía.</span>
                             </div>
-                            <div id="all-achievements" class="mt-3 grid gap-2 sm:grid-cols-2 text-xs hidden"></div>
+                            <div id="all-achievements" class="mt-3 grid gap-2 sm:grid-cols-2 text-sm hidden"></div>
                         </section>
                         
                         <!-- Table Component -->
-                        <section class="bg-slate-800/60 rounded-xl border border-slate-700/60 overflow-hidden" id="table-container">
-                            <div class="px-4 py-2 border-b border-slate-700/70 flex items-center justify-between">
-                                <h2 class="text-sm font-medium text-slate-200">Detalle por archivo</h2>
-                                <span class="text-xs text-slate-400" id="summary-label">0 archivos registrados</span>
+                        <section class="bg-slate-800/60 rounded-xl border border-slate-700/60 overflow-hidden backdrop-blur-sm" id="table-container">
+                            <div class="px-6 py-3 border-b border-slate-700/70 bg-slate-800/40 flex items-center justify-between">
+                                <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
+                                    <span>📄</span> Detalle por archivo
+                                </h2>
+                                <span class="text-sm text-slate-400 font-medium" id="summary-label">0 archivos registrados</span>
                             </div>
                             <div class="overflow-x-auto">
-                                <table class="min-w-full text-sm">
-                                    <thead class="bg-slate-800">
-                                        <tr class="text-left text-xs uppercase tracking-wide text-slate-400">
-                                            <th class="px-4 py-2">Archivo</th>
-                                            <th class="px-4 py-2">Puntuación</th>
-                                            <th class="px-4 py-2">Tiempo</th>
-                                            <th class="px-4 py-2">Ediciones</th>
-                                            <th class="px-4 py-2">Δ texto</th>
-                                            <th class="px-4 py-2">Cambios</th>
+                                <table class="min-w-full">
+                                    <thead class="bg-slate-800/60 border-b border-slate-700/50">
+                                        <tr class="text-left text-sm uppercase tracking-wide text-slate-400 font-semibold">
+                                            <th class="px-6 py-3">Archivo</th>
+                                            <th class="px-6 py-3">Puntuación</th>
+                                            <th class="px-6 py-3">Tiempo</th>
+                                            <th class="px-6 py-3">Ediciones</th>
+                                            <th class="px-6 py-3">Δ texto</th>
+                                            <th class="px-6 py-3">Cambios</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="table-body" class="divide-y divide-slate-800/80 bg-slate-900/40"></tbody>
+                                    <tbody id="table-body" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
                                 </table>
                             </div>
                         </section>
@@ -277,6 +305,11 @@ function getRefactoredHtml(): string {
                         allAchievementsEl.classList.add('hidden');
                         if (toggleBtn) toggleBtn.textContent = 'Ver todos';
                     }
+                });
+                
+                // Custom achievements button
+                document.getElementById('custom-achievements-btn').addEventListener('click', function() {
+                    vscode.postMessage({ type: 'openCustomAchievements' });
                 });
             }
             
@@ -549,10 +582,24 @@ function getRefactoredHtml(): string {
                         achievementsEl.innerHTML = '';
                         data.achievements.forEach((a) => {
                             const span = document.createElement('span');
-                            span.className = 'inline-flex flex-col gap-0.5 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-2 py-1';
-                            span.innerHTML = 
-                                '<span class="text-[11px] font-semibold text-emerald-300">' + a.title + '</span>' +
-                                '<span class="text-[10px] text-emerald-200/80">' + a.description + '</span>';
+                            
+                            // Estilos diferentes para logros personalizados
+                                if (a.custom) {
+                                const colorClass = a.color ? getColorClass(a.color) : 'border-purple-600/50 bg-purple-500/10';
+                                const textColorClass = a.color ? getTextColorClass(a.color) : 'text-purple-300';
+                                const textSecondaryClass = a.color ? getTextSecondaryClass(a.color) : 'text-purple-200/80';
+                                
+                                span.className = 'inline-flex flex-col gap-1 rounded-lg border ' + colorClass + ' px-3 py-2 badge-glow shadow-sm transform hover:scale-105 transition-all duration-200';
+                                span.innerHTML = 
+                                    '<span class="text-sm font-semibold ' + textColorClass + '">' + (a.icon || '🏆') + ' ' + a.title + '</span>' +
+                                    '<span class="text-xs ' + textSecondaryClass + '">' + a.description + '</span>';
+                            } else {
+                                span.className = 'inline-flex flex-col gap-1 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-3 py-2 shadow-sm transform hover:scale-105 transition-all duration-200';
+                                span.innerHTML = 
+                                    '<span class="text-sm font-semibold text-emerald-300">' + a.title + '</span>' +
+                                    '<span class="text-xs text-emerald-200/80">' + a.description + '</span>';
+                            }
+                            
                             achievementsEl.appendChild(span);
                         });
                         achievementsCountEl.textContent = data.achievements.length + (data.achievements.length === 1 ? ' logro' : ' logros');
@@ -564,17 +611,17 @@ function getRefactoredHtml(): string {
                     allAchievementsEl.innerHTML = '';
                     data.allAchievements.forEach((a) => {
                         const div = document.createElement('div');
-                        const base = 'px-2 py-1 rounded-lg border text-[11px] flex flex-col gap-0.5';
+                        const base = 'px-3 py-2 rounded-lg border text-sm flex flex-col gap-1 transition-all duration-200 hover:transform hover:scale-105';
                         
                         if (a.unlocked) {
-                            div.className = base + ' border-emerald-500/60 bg-emerald-500/10 text-emerald-200';
+                            div.className = base + ' border-emerald-500/60 bg-emerald-500/10 text-emerald-200 shadow-sm shadow-emerald-500/10';
                         } else {
                             div.className = base + ' border-slate-700 bg-slate-900/80 text-slate-500';
                         }
                         
                         div.innerHTML = 
-                            '<span class="font-semibold">' + a.title + '</span>' +
-                            '<span class="text-[10px] opacity-80">' + a.description + '</span>';
+                            '<span class="font-semibold">' + (a.icon || '🏆') + ' ' + a.title + '</span>' +
+                            '<span class="text-xs opacity-80">' + a.description + '</span>';
                         allAchievementsEl.appendChild(div);
                     });
                 }
@@ -586,8 +633,81 @@ function getRefactoredHtml(): string {
                 if (m === 0) return s + 's';
                 return m + 'm ' + s + 's';
             }
+            
+            getColorClass(color) {
+                const colors = {
+                    blue: 'border-blue-500/60 bg-blue-500/10',
+                    green: 'border-green-500/60 bg-green-500/10',
+                    purple: 'border-purple-600/50 bg-purple-500/10',
+                    red: 'border-red-500/60 bg-red-500/10',
+                    yellow: 'border-yellow-500/60 bg-yellow-500/10',
+                    pink: 'border-pink-500/60 bg-pink-500/10'
+                };
+                return colors[color] || colors.blue;
+            }
+            
+            getTextColorClass(color) {
+                const colors = {
+                    blue: 'text-blue-300',
+                    green: 'text-green-300',
+                    purple: 'text-purple-300',
+                    red: 'text-red-300',
+                    yellow: 'text-yellow-300',
+                    pink: 'text-pink-300'
+                };
+                return colors[color] || colors.blue;
+            }
+            
+            getTextSecondaryClass(color) {
+                const colors = {
+                    blue: 'text-blue-200/80',
+                    green: 'text-green-200/80',
+                    purple: 'text-purple-200/80',
+                    red: 'text-red-200/80',
+                    yellow: 'text-yellow-200/80',
+                    pink: 'text-pink-200/80'
+                };
+                return colors[color] || colors.blue;
+            }
         }
         
+        // Helper functions for color styling
+        function getColorClass(color) {
+            const colors = {
+                blue: 'border-blue-500/60 bg-blue-500/10',
+                green: 'border-green-500/60 bg-green-500/10',
+                purple: 'border-purple-600/50 bg-purple-500/10',
+                red: 'border-red-500/60 bg-red-500/10',
+                yellow: 'border-yellow-500/60 bg-yellow-500/10',
+                pink: 'border-pink-500/60 bg-pink-500/10'
+            };
+            return colors[color] || colors.blue;
+        }
+        
+        function getTextColorClass(color) {
+            const colors = {
+                blue: 'text-blue-300',
+                green: 'text-green-300',
+                purple: 'text-purple-300',
+                red: 'text-red-300',
+                yellow: 'text-yellow-300',
+                pink: 'text-pink-300'
+            };
+            return colors[color] || colors.blue;
+        }
+        
+        function getTextSecondaryClass(color) {
+            const colors = {
+                blue: 'text-blue-200/80',
+                green: 'text-green-200/80',
+                purple: 'text-purple-200/80',
+                red: 'text-red-200/80',
+                yellow: 'text-yellow-200/80',
+                pink: 'text-pink-200/80'
+            };
+            return colors[color] || colors.blue;
+        }
+
         // Initialize dashboard when DOM is ready
         let dashboardRenderer;
         
@@ -629,7 +749,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   console.log("Creando nuevo panel de dashboard");
   currentPanel = vscode.window.createWebviewPanel(
     "focusPulseDashboardV2",
-    "Focus Pulse Dashboard v2.1",
+    "Focus Pulse Dashboard ",
     vscode.ViewColumn.One,
     {
       enableScripts: true,
@@ -654,25 +774,40 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
         const pomodoroStats = getPomodoroStats();
         const deepWork = getDeepWorkState(context);
         const streakDays = getStreakDays(historyAll);
-    const achievements = computeAchievements(
-      Array.isArray(streakDays) ? streakDays.length : streakDays,
-      historyAll,
-      statsArray,
-    );
-    const allDefs = getAllAchievementsDefinitions();
-    const allAchievements = allDefs.map((a: any) => ({
-      ...a,
-      unlocked: achievements.some((u) => u.id === a.id),
-    }));
-    // Check if deepWork is from StateTypes and convert if needed
-    let deepWorkForXp: DeepWorkState | undefined;
-    if (isStateTypesDeepWorkState(deepWork)) {
-      deepWorkForXp = convertToDeepWorkState(deepWork);
-    } else {
-      deepWorkForXp = deepWork;
-    }
-    
-    const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
+        const achievements = computeAchievements(
+          Array.isArray(streakDays) ? streakDays.length : streakDays,
+          historyAll,
+          statsArray,
+          undefined,
+          pomodoroStats,
+          undefined,
+          deepWork,
+          context,
+        );
+        const allDefs = getAllAchievementsDefinitions();
+        const { getCustomAchievements } = require("./achievements");
+        const customAchievements = getCustomAchievements(context);
+
+        // Combinar definiciones estáticas con logros personalizados
+        const allAchievements = [
+          ...allDefs.map((a: any) => ({
+            ...a,
+            unlocked: achievements.some((u) => u.id === a.id),
+          })),
+          ...customAchievements.map((a: any) => ({
+            ...a,
+            unlocked: achievements.some((u) => u.id === a.id),
+          })),
+        ];
+        // Check if deepWork is from StateTypes and convert if needed
+        let deepWorkForXp: DeepWorkState | undefined;
+        if (isStateTypesDeepWorkState(deepWork)) {
+          deepWorkForXp = convertToDeepWorkState(deepWork);
+        } else {
+          deepWorkForXp = deepWork;
+        }
+
+        const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
         const dashboardData: DashboardData = {
           stats: statsArray,
@@ -688,11 +823,20 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
           goals: undefined, // TODO: Implement goals
         };
 
-        console.log("Enviando datos al dashboard:", dashboardData.stats?.length || 0, "archivos");
+        console.log(
+          "Enviando datos al dashboard:",
+          dashboardData.stats?.length || 0,
+          "archivos",
+        );
         currentPanel?.webview.postMessage({
           type: "stats:update",
           payload: dashboardData,
         });
+      } else if (msg.type === "openCustomAchievements") {
+        const {
+          CustomAchievementManager,
+        } = require("./webview/CustomAchievementManager");
+        CustomAchievementManager.show(context);
       } else if (msg.type === "export") {
         const format = msg.format === "csv" ? "csv" : "json";
         const uri = await vscode.window.showSaveDialog({
@@ -723,7 +867,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
 export function updateRefactoredDashboard(data: DashboardData) {
   // Check if panel exists before debouncing
   if (!currentPanel) return;
-  
+
   // Debounce dashboard updates for performance
   debounceDashboardUpdate(() => {
     if (!currentPanel) return;
@@ -746,17 +890,40 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     const historyAll = getHistory();
     const pomodoroStats = getPomodoroStats();
     const deepWork = state.deepWork;
+    // Convert deepWork for computeAchievements if needed
+    let deepWorkForAchievement: DeepWorkState | undefined;
+    if (isStateTypesDeepWorkState(deepWork)) {
+      deepWorkForAchievement = convertToDeepWorkState(deepWork);
+    } else {
+      deepWorkForAchievement = deepWork;
+    }
+
     const streakDays = getStreakDays(historyAll);
     const achievements = computeAchievements(
       Array.isArray(streakDays) ? streakDays.length : streakDays,
       historyAll,
       statsArray,
+      undefined,
+      pomodoroStats,
+      undefined,
+      deepWorkForAchievement,
+      context,
     );
     const allDefs = getAllAchievementsDefinitions();
-    const allAchievements = allDefs.map((a: any) => ({
-      ...a,
-      unlocked: achievements.some((u) => u.id === a.id),
-    }));
+    const { getCustomAchievements } = require("./achievements");
+    const customAchievements = getCustomAchievements(context);
+
+    // Combinar definiciones estáticas con logros personalizados
+    const allAchievements = [
+      ...allDefs.map((a: any) => ({
+        ...a,
+        unlocked: achievements.some((u) => u.id === a.id),
+      })),
+      ...customAchievements.map((a: any) => ({
+        ...a,
+        unlocked: achievements.some((u) => u.id === a.id),
+      })),
+    ];
     // Check if deepWork is from StateTypes and convert if needed
     let deepWorkForXp: DeepWorkState | undefined;
     if (isStateTypesDeepWorkState(deepWork)) {
@@ -764,7 +931,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     } else {
       deepWorkForXp = deepWork;
     }
-    
+
     const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
     const dashboardData: DashboardData = {
@@ -796,12 +963,27 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       Array.isArray(streakDays) ? streakDays.length : streakDays,
       historyAll,
       statsArray,
+      undefined,
+      pomodoroStats,
+      undefined,
+      deepWork,
+      context,
     );
     const allDefs = getAllAchievementsDefinitions();
-    const allAchievements = allDefs.map((a: any) => ({
-      ...a,
-      unlocked: achievements.some((u) => u.id === a.id),
-    }));
+    const { getCustomAchievements } = require("./achievements");
+    const customAchievements = getCustomAchievements(context);
+
+    // Combinar definiciones estáticas con logros personalizados
+    const allAchievements = [
+      ...allDefs.map((a: any) => ({
+        ...a,
+        unlocked: achievements.some((u) => u.id === a.id),
+      })),
+      ...customAchievements.map((a: any) => ({
+        ...a,
+        unlocked: achievements.some((u) => u.id === a.id),
+      })),
+    ];
     // Check if deepWork is from StateTypes and convert if needed
     let deepWorkForXp: DeepWorkState | undefined;
     if (isStateTypesDeepWorkState(deepWork)) {
@@ -809,9 +991,9 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
     } else {
       deepWorkForXp = deepWork;
     }
-    
+
     const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
-    
+
     updateRefactoredDashboard({
       stats: statsArray,
       history7: getLastDays(7),
