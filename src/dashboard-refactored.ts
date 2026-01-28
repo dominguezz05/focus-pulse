@@ -760,12 +760,13 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   console.log("Estableciendo HTML del dashboard");
   currentPanel.webview.html = getRefactoredHtml();
 
-  currentPanel.webview.onDidReceiveMessage(
+currentPanel.webview.onDidReceiveMessage(
     async (msg) => {
       if (!msg) return;
 
       // Handle different message types
-      if (msg.type === "requestData") {
+      switch (msg.command || msg.type) {
+        case "requestData": {
         console.log("Dashboard requesting data");
         // Send initial data when dashboard requests it
         const statsArray = getStatsArray();
@@ -832,23 +833,56 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
           type: "stats:update",
           payload: dashboardData,
         });
-      } else if (msg.type === "openCustomAchievements") {
-        const {
-          CustomAchievementManager,
-        } = require("./webview/CustomAchievementManager");
-        CustomAchievementManager.show(context);
-      } else if (msg.type === "export") {
-        const format = msg.format === "csv" ? "csv" : "json";
-        const uri = await vscode.window.showSaveDialog({
-          filters: format === "json" ? { JSON: ["json"] } : { CSV: ["csv"] },
-          saveLabel: "Exportar",
-        });
-        if (!uri) return;
+          break;
+        }
+        case "openCustomAchievements": {
+          const {
+            CustomAchievementManager,
+          } = require("./webview/CustomAchievementManager");
+          CustomAchievementManager.show(context);
+          break;
+        }
+        case "export": {
+          const format = msg.format === "csv" ? "csv" : "json";
+          const uri = await vscode.window.showSaveDialog({
+            filters: format === "json" ? { JSON: ["json"] } : { CSV: ["csv"] },
+            saveLabel: "Exportar",
+          });
+          if (!uri) return;
 
-        await vscode.commands.executeCommand("focusPulse.exportData", {
-          format,
-          target: uri,
-        });
+          await vscode.commands.executeCommand("focusPulse.exportData", {
+            format,
+            target: uri,
+          });
+          break;
+        }
+        case "exportAsJSON": {
+          await vscode.commands.executeCommand("focusPulse.exportAsJSON");
+          break;
+        }
+        case "exportAsXML": {
+          await vscode.commands.executeCommand("focusPulse.exportAsXML");
+          break;
+        }
+        case "exportDataToFile": {
+          await vscode.commands.executeCommand("focusPulse.exportDataToFile");
+          break;
+        }
+        case "importDataFromFile": {
+          await vscode.commands.executeCommand("focusPulse.importDataFromFile");
+          break;
+        }
+        case "syncStatus": {
+          await vscode.commands.executeCommand("focusPulse.syncStatus");
+          break;
+        }
+        case "manualSync": {
+          await vscode.commands.executeCommand("focusPulse.manualSync");
+          break;
+        }
+        default: {
+          console.warn("Unknown message type:", msg.type || msg.command);
+        }
       }
     },
     undefined,
