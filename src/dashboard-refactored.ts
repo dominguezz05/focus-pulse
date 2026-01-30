@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { DashboardData } from "./webview/types";
 import { DashboardRenderer } from "./webview/DashboardRenderer";
+import { UserSyncManager } from "./export/UserSyncManager";
 import { getStateManager } from "./state/StateManager";
 import { getEventBus } from "./events";
 import { FOCUS_EVENTS } from "./events/EventTypes";
@@ -1283,6 +1284,16 @@ currentPanel.webview.onDidReceiveMessage(
 
         const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
+        // Get sync information
+        const syncManager = UserSyncManager.getInstance();
+        const currentUser = syncManager.getCurrentUser();
+        const syncInfo = {
+          isAuthenticated: !!currentUser,
+          userEmail: currentUser?.email,
+          lastSync: syncManager.getLastSyncTime(),
+          autoSyncEnabled: syncManager.isAutoSyncEnabled(),
+        };
+
         const dashboardData: DashboardData = {
           stats: statsArray,
           history7,
@@ -1295,6 +1306,7 @@ currentPanel.webview.onDidReceiveMessage(
           allAchievements,
           weeklySummary: [], // TODO: Implement weekly summary
           goals: undefined, // TODO: Implement goals
+          sync: syncInfo,
         };
 
         console.log(
@@ -1351,6 +1363,14 @@ currentPanel.webview.onDidReceiveMessage(
         }
         case "manual-sync": {
           await vscode.commands.executeCommand("focusPulse.manualSync");
+          break;
+        }
+        case "authenticate": {
+          await vscode.commands.executeCommand("focusPulse.authenticate");
+          break;
+        }
+        case "create-github-token": {
+          await vscode.commands.executeCommand("focusPulse.createGitHubToken");
           break;
         }
         case "assistant:ready": {
@@ -1458,6 +1478,16 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
 
     const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
+    // Get sync information
+    const syncManager = UserSyncManager.getInstance();
+    const currentUser = syncManager.getCurrentUser();
+    const syncInfo = {
+      isAuthenticated: !!currentUser,
+      userEmail: currentUser?.email,
+      lastSync: syncManager.getLastSyncTime(),
+      autoSyncEnabled: syncManager.isAutoSyncEnabled(),
+    };
+
     const dashboardData: DashboardData = {
       stats: statsArray,
       history7,
@@ -1470,6 +1500,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       allAchievements,
       weeklySummary: [], // TODO: Implement weekly summary
       goals: undefined, // TODO: Implement goals
+      sync: syncInfo,
     };
 
     updateRefactoredDashboard(dashboardData);

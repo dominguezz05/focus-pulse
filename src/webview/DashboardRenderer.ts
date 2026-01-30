@@ -6,6 +6,7 @@ import { HeatmapComponent } from "./components/Heatmap";
 import { AchievementsComponent } from "./components/Achievements";
 import { TableComponent } from "./components/Table";
 import { AssistantComponent } from "./components/Assistant";
+import { AuthComponent } from "./components/AuthComponent";
 
 export class DashboardRenderer {
   private components: Map<string, DashboardComponent> = new Map();
@@ -20,12 +21,14 @@ export class DashboardRenderer {
     this.components.set("achievements", new AchievementsComponent());
     this.components.set("table", new TableComponent());
     this.components.set("assistant", new AssistantComponent());
+    this.components.set("auth", new AuthComponent());
   }
 
   render(container: any, data: DashboardData): void {
     this.container = container;
     container.innerHTML = `
       <div class="max-w-6xl mx-auto p-4 space-y-4">
+        <div id="auth-container"></div>
         <div id="header-container"></div>
         <div id="metrics-container"></div>
         <div id="goals-container"></div>
@@ -40,6 +43,7 @@ export class DashboardRenderer {
     `;
 
     // Render each component
+    this.renderComponent("auth", data);
     this.renderComponent("header", data);
     this.renderComponent("metrics", data);
     this.renderComponent("goals", data);

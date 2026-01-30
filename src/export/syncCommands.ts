@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { UserSyncManager, MockCloudSyncProvider, SyncOptions } from './UserSyncManager';
+import { UserSyncManager, MockCloudSyncProvider, GitHubSyncProvider, SyncOptions } from './UserSyncManager';
 
 export function registerSyncCommands(context: vscode.ExtensionContext): void {
   const syncManager = UserSyncManager.getInstance();
@@ -27,9 +27,28 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
           }
         }
 
-        const provider = new MockCloudSyncProvider();
+        // Try to authenticate with stored token first
+        const provider = new GitHubSyncProvider();
+        provider.setContext(context);
+        
+        const storedUser = await provider.authenticateWithStoredToken();
+        if (storedUser) {
+          await syncManager.setProvider(provider);
+          await syncManager.setCurrentUser(storedUser);
+          vscode.window.showInformationMessage(`✅ Autenticado como ${storedUser.email}`);
+          return storedUser;
+        }
+
         const user = await syncManager.authenticate(provider);
-        vscode.window.showInformationMessage(`✅ Successfully authenticated as ${user.email}`);
+        vscode.window.showInformationMessage(`✅ Autenticado como ${user.email} - ¡Tu progreso ahora se sincronizará en la nube!`);
+        
+        // Trigger dashboard refresh to update auth status
+        const eventBus = require('./events').getEventBus();
+        if (eventBus) {
+          const FOCUS_EVENTS = require('./events/EventTypes').FOCUS_EVENTS;
+          eventBus.emit(FOCUS_EVENTS.DASHBOARD_REFRESH);
+        }
+        
         return user;
       } catch (error) {
         vscode.window.showErrorMessage(`❌ Authentication failed: ${error}`);
@@ -93,7 +112,7 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
           );
           
           if (shouldAuthenticate === 'Yes') {
-            const provider = new MockCloudSyncProvider();
+            const provider = new GitHubSyncProvider();
             await syncManager.authenticate(provider);
           } else {
             vscode.window.showInformationMessage('Sync cancelled. Authentication required.');
@@ -226,6 +245,41 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
     }
   );
 
+  const createTokenCommand = vscode.commands.registerCommand(
+    'focusPulse.createGitHubToken',
+    async () => {
+      const action = await vscode.window.showInformationMessage(
+        'Para crear un Personal Access Token de GitHub:',
+        'Abrir GitHub Tokens',
+        'Ver instrucciones'
+      );
+
+      if (action === 'Abrir GitHub Tokens') {
+        vscode.env.openExternal(vscode.Uri.parse('https://github.com/settings/tokens'));
+      } else if (action === 'Ver instrucciones') {
+        const instructions = `
+## Cómo crear tu Personal Access Token de GitHub
+
+1. Ve a github.com/settings/tokens
+2. Haz clic en "Generate new token" → "Generate new token (classic)"
+3. Dale un nombre (ej: "Focus Pulse Sync")
+4. Selecciona "No expiration" o elige una duración
+5. Marca solo el permiso **gist**
+6. Haz clic en "Generate token"
+7. Copia el token (no podrás volver a verlo)
+
+Luego usa "Focus Pulse: Autenticar cuenta" y pega tu token.
+        `;
+
+        const document = await vscode.workspace.openTextDocument({
+          content: instructions,
+          language: 'markdown'
+        });
+        await vscode.window.showTextDocument(document);
+      }
+    }
+  );
+
   const syncStatusCommand = vscode.commands.registerCommand(
     'focusPulse.syncStatus',
     async () => {
@@ -237,17 +291,19 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
         let status = '=== FOCUS PULSE SYNC STATUS ===\n\n';
         
         if (user) {
-          status += `👤 User: ${user.email}\n`;
-          status += `🆔 User ID: ${user.id}\n`;
-          status += `📅 Account created: ${new Date(user.createdAt).toLocaleString()}\n`;
+          status += `👤 Usuario: ${user.email}\n`;
+          status += `🆔 ID Usuario: ${user.id}\n`;
+          status += `📅 Cuenta creada: ${new Date(user.createdAt).toLocaleString()}\n`;
           if (user.lastSyncAt) {
-            status += `🔄 Last sync: ${new Date(user.lastSyncAt).toLocaleString()}\n`;
+            status += `🔄 Última sincronización: ${new Date(user.lastSyncAt).toLocaleString()}\n`;
           }
-          status += `✅ Authentication: Active\n`;
+          status += `✅ Autenticación: Activa\n`;
+          status += `☁️  Almacenamiento: Gists privados de GitHub\n`;
         } else {
-          status += `👤 User: Not authenticated\n`;
-          status += `❌ Authentication: Inactive\n`;
-          status += `💡 Tip: Use "Sincronizar ahora" to auto-authenticate\n`;
+          status += `👤 Usuario: No autenticado\n`;
+          status += `❌ Autenticación: Inactiva\n`;
+          status += `💡 Consejo: Usa "Focus Pulse: Autenticar cuenta" para guardar tu progreso en la nube\n`;
+          status += `📝 Necesitarás un Personal Access Token de GitHub con permiso 'gist'\n`;
         }
 
         status += `\n🔄 Auto-sync: ${autoSyncEnabled ? '✅ Enabled' : '❌ Disabled'}\n`;
@@ -284,6 +340,7 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     authenticateCommand,
+    createTokenCommand,
     enableAutoSyncCommand,
     disableAutoSyncCommand,
     manualSyncCommand,

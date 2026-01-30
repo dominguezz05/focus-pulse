@@ -207,6 +207,15 @@ export class UserSyncManager {
     return this.currentUser;
   }
 
+  async setCurrentUser(user: UserAccount): Promise<void> {
+    this.currentUser = user;
+    await this.storeUser(user);
+  }
+
+  setProvider(provider: CloudSyncProvider): void {
+    this.syncProvider = provider;
+  }
+
   isAutoSyncEnabled(): boolean {
     return this.syncTimer !== null;
   }
@@ -262,11 +271,11 @@ export class MockCloudSyncProvider implements CloudSyncProvider {
   private syncs: Map<string, ExportData> = new Map();
 
   async authenticate(): Promise<UserAccount> {
-    // Mock authentication - in real implementation, this would use OAuth, etc.
+    // Mock authentication - using specific real data
     const mockUser: UserAccount = {
-      id: 'mock-user-' + Math.random().toString(36).substr(2, 9),
-      email: 'user@example.com',
-      name: 'Mock User',
+      id: 'iker-dominguez-focus-pulse-user',
+      email: 'iker.dominguez@example.com',
+      name: 'Iker Domínguez',
       createdAt: new Date().toISOString(),
     };
 
@@ -301,26 +310,201 @@ export class MockCloudSyncProvider implements CloudSyncProvider {
   }
 }
 
-// Future: Implement real cloud providers
+// GitHub-based sync provider
 export class GitHubSyncProvider implements CloudSyncProvider {
-  // TODO: Implement GitHub Gist-based sync
+  private octokit: any;
+  private user: UserAccount | null = null;
+  private token: string | null = null;
+
   async authenticate(): Promise<UserAccount> {
-    throw new Error('GitHub sync not yet implemented');
+    try {
+      // Request GitHub token from user
+      const token = await vscode.window.showInputBox({
+        prompt: 'Enter your GitHub Personal Access Token',
+        password: true,
+        placeHolder: 'Create a token at: github.com/settings/tokens (requires gist permission)',
+        validateInput: (value) => {
+          if (!value || value.length < 10) {
+            return 'Please enter a valid GitHub Personal Access Token';
+          }
+          return undefined;
+        }
+      });
+
+      if (!token) {
+        throw new Error('Authentication cancelled');
+      }
+
+      this.token = token;
+
+      // Initialize Octokit with token
+      const { Octokit } = await import('@octokit/rest');
+      this.octokit = new Octokit({ auth: token });
+
+      // Get authenticated user info from GitHub
+      const { data: githubUser } = await this.octokit.rest.users.getAuthenticated();
+
+      this.user = {
+        id: githubUser.id.toString(),
+        email: githubUser.email || `${githubUser.login}@users.noreply.github.com`,
+        name: githubUser.name || githubUser.login,
+        createdAt: githubUser.created_at,
+      };
+
+      // Store token for future use
+      await this.storeToken(token);
+
+      return this.user;
+    } catch (error) {
+      throw new Error(`GitHub authentication failed: ${error}`);
+    }
   }
 
   async upload(data: ExportData): Promise<string> {
-    throw new Error('GitHub sync not yet implemented');
+    if (!this.octokit || !this.user) {
+      throw new Error('Not authenticated with GitHub');
+    }
+
+    try {
+      const gistName = `focus-pulse-sync-${Date.now()}`;
+      const filename = `focus-pulse-data-${data.version}.json`;
+
+      const { data: gist } = await this.octokit.rest.gists.create({
+        description: `Focus Pulse Sync - ${new Date(data.exportDate).toLocaleString()}`,
+        public: false,
+        files: {
+          [filename]: {
+            content: JSON.stringify(data, null, 2)
+          }
+        }
+      });
+
+      return gist.id;
+    } catch (error) {
+      throw new Error(`Failed to upload to GitHub Gist: ${error}`);
+    }
   }
 
   async download(syncId: string): Promise<ExportData> {
-    throw new Error('GitHub sync not yet implemented');
+    if (!this.octokit) {
+      throw new Error('Not authenticated with GitHub');
+    }
+
+    try {
+      const { data: gist } = await this.octokit.rest.gists.get({
+        gist_id: syncId
+      });
+
+      const files = Object.values(gist.files);
+      if (files.length === 0) {
+        throw new Error('No files found in gist');
+      }
+
+      const file = files[0] as any;
+      if (!file.content) {
+        throw new Error('Gist file has no content');
+      }
+
+      return JSON.parse(file.content);
+    } catch (error) {
+      throw new Error(`Failed to download from GitHub Gist: ${error}`);
+    }
   }
 
   async listSyncs(): Promise<Array<{ id: string; timestamp: string; version: string }>> {
-    throw new Error('GitHub sync not yet implemented');
+    if (!this.octokit) {
+      throw new Error('Not authenticated with GitHub');
+    }
+
+    try {
+      const { data: gists } = await this.octokit.rest.gists.list({
+        per_page: 100
+      });
+
+      return gists
+        .filter((gist: any) => gist.description?.includes('Focus Pulse Sync'))
+        .map((gist: any) => {
+          const files = Object.values(gist.files);
+          const filename = files.length > 0 ? Object.keys(gist.files)[0] : '';
+          const versionMatch = filename.match(/focus-pulse-data-(.+)\.json/);
+          const version = versionMatch ? versionMatch[1] : 'unknown';
+
+          return {
+            id: gist.id,
+            timestamp: gist.created_at,
+            version
+          };
+        });
+    } catch (error) {
+      throw new Error(`Failed to list GitHub Gists: ${error}`);
+    }
   }
 
   async delete(syncId: string): Promise<void> {
-    throw new Error('GitHub sync not yet implemented');
+    if (!this.octokit) {
+      throw new Error('Not authenticated with GitHub');
+    }
+
+    try {
+      await this.octokit.rest.gists.delete({
+        gist_id: syncId
+      });
+    } catch (error) {
+      throw new Error(`Failed to delete GitHub Gist: ${error}`);
+    }
+  }
+
+  public context: vscode.ExtensionContext | null = null;
+  
+  setContext(context: vscode.ExtensionContext): void {
+    this.context = context;
+  }
+
+  public async storeToken(token: string): Promise<void> {
+    if (this.context?.secrets) {
+      await this.context.secrets.store('focusPulse.githubToken', token);
+    }
+  }
+
+  public async loadStoredToken(): Promise<string | null> {
+    if (this.context?.secrets) {
+      const token = await this.context.secrets.get('focusPulse.githubToken');
+      return token || null;
+    }
+    return null;
+  }
+
+  public async authenticateWithStoredToken(): Promise<UserAccount | null> {
+    const storedToken = await this.loadStoredToken();
+    if (!storedToken) {
+      return null;
+    }
+
+    try {
+      this.token = storedToken;
+      const { Octokit } = await import('@octokit/rest');
+      this.octokit = new Octokit({ auth: storedToken });
+
+      const { data: githubUser } = await this.octokit.rest.users.getAuthenticated();
+
+      this.user = {
+        id: githubUser.id.toString(),
+        email: githubUser.email || `${githubUser.login}@users.noreply.github.com`,
+        name: githubUser.name || githubUser.login,
+        createdAt: githubUser.created_at,
+      };
+
+      return this.user;
+    } catch (error) {
+      // Token is invalid, clear it
+      await this.clearStoredToken();
+      return null;
+    }
+  }
+
+  public async clearStoredToken(): Promise<void> {
+    if (this.context?.secrets) {
+      await this.context.secrets.delete('focusPulse.githubToken');
+    }
   }
 }

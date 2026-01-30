@@ -23,6 +23,12 @@ export interface DashboardData {
     allDone: boolean;
   };
   allAchievements?: (Achievement & { unlocked: boolean })[];
+  sync?: {
+    isAuthenticated: boolean;
+    userEmail?: string;
+    lastSync?: number;
+    autoSyncEnabled: boolean;
+  };
 }
 
 export interface FocusSummary {

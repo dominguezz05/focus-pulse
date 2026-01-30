@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Track your focus level per file with Pomodoro timers, XP progression, achievements, and a real-time dashboard.",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -40,6 +40,7 @@
     "onCommand:focusPulse.exportAsJSON",
     "onCommand:focusPulse.exportAsXML",
     "onCommand:focusPulse.authenticate",
+    "onCommand:focusPulse.createGitHubToken",
     "onCommand:focusPulse.enableAutoSync",
     "onCommand:focusPulse.disableAutoSync",
     "onCommand:focusPulse.manualSync",
@@ -103,6 +104,10 @@
       {
         "command": "focusPulse.authenticate",
         "title": "Focus Pulse: Autenticar cuenta"
+      },
+      {
+        "command": "focusPulse.createGitHubToken",
+        "title": "Focus Pulse: Crear/Gestionar Token de GitHub"
       },
       {
         "command": "focusPulse.enableAutoSync",
@@ -226,20 +231,31 @@
           "default": 150,
           "minimum": 0,
           "description": "XP extra al completar una sesión de Deep Work."
+        },
+        "focusPulse.githubToken": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub Personal Access Token para sincronización (se guarda de forma segura)."
         }
       }
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "pnpm run bundle",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "bundle": "esbuild ./src/extension-refactored.ts --bundle --outfile=out/extension-refactored.js --external:vscode --format=cjs --platform=node",
     "lint": "echo \"No lint configured\"",
-    "test": "echo \"No tests\""
+    "test": "echo \"No tests\"",
+    "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.90.0",
-    "typescript": "^5.5.0"
+    "esbuild": "^0.27.2",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1"
   }
 }
