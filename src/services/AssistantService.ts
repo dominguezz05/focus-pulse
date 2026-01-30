@@ -5,10 +5,10 @@ import { FOCUS_EVENTS } from "../events/EventTypes";
 import { DashboardData, FocusSummary } from "../webview/types";
 
 export interface AssistantInsight {
-  type: 'fatigue' | 'drift' | 'motivation' | 'celebration' | 'warning' | 'tip';
+  type: "fatigue" | "drift" | "motivation" | "celebration" | "warning" | "tip";
   message: string;
-  priority: 'low' | 'medium' | 'high';
-  state: 'IDLE' | 'FOCUSED' | 'WARNING';
+  priority: "low" | "medium" | "high";
+  state: "IDLE" | "FOCUSED" | "WARNING" | "SUCCESS";
   data?: any;
 }
 
@@ -52,26 +52,26 @@ export class AssistantService {
       sessionTimeThreshold: 90, // 90 minutes
       driftThreshold: 2, // 2 switches per minute
       motivationThreshold: 80, // 80+ focus score
-      messageCooldown: 5 // 5 minutes between messages
+      messageCooldown: 5, // 5 minutes between messages
     };
   }
 
   private setupEventListeners(): void {
-    // Listen for achievement unlocks
+    // Escuchar desbloqueo de logros
     this.eventBus.on(FOCUS_EVENTS.ACHIEVEMENT_UNLOCKED, (data: any) => {
       if (this.config.enableCelebrations) {
-        this.triggerCelebration('achievement', data);
+        this.triggerCelebration("achievement", data);
       }
     });
 
-    // Listen for level ups
+    // Escuchar subidas de nivel
     this.eventBus.on(FOCUS_EVENTS.LEVEL_UP, (data: any) => {
       if (this.config.enableCelebrations) {
-        this.triggerCelebration('level', data);
+        this.triggerCelebration("level", data);
       }
     });
 
-    // Listen for deep work events
+    // Escuchar eventos de Deep Work
     this.eventBus.on(FOCUS_EVENTS.DEEP_WORK_STARTED, (data: any) => {
       this.triggerDeepWorkStart(data);
     });
@@ -80,12 +80,12 @@ export class AssistantService {
       this.triggerDeepWorkComplete(data);
     });
 
-    // Listen for pomodoro events
+    // Escuchar eventos de Pomodoro
     this.eventBus.on(FOCUS_EVENTS.POMODORO_COMPLETED, (data: any) => {
       this.triggerPomodoroComplete(data);
     });
 
-    // Listen for session updates
+    // Escuchar actualizaciones de sesión
     this.eventBus.on(FOCUS_EVENTS.SESSION_UPDATED, (data: any) => {
       this.analyzeSessionData(data);
     });
@@ -99,79 +99,83 @@ export class AssistantService {
     if (this.webviewPanel) {
       this.webviewPanel.webview.postMessage({
         type: `assistant:${type}`,
-        data
+        data,
       });
     }
   }
 
-  private triggerCelebration(type: 'achievement' | 'level' | 'streak', details: any): void {
+  private triggerCelebration(
+    type: "achievement" | "level" | "streak",
+    details: any,
+  ): void {
     const celebrationMessages = {
       achievement: [
         "🎉 ¡Increíble! Has desbloqueado un nuevo logro",
         "🏆 ¡Eres una máquina! Nuevo logro conseguido",
-        "⭐ ¡Brillante! Tu esfuerzo ha sido recompensado"
+        "⭐ ¡Brillante! Tu esfuerzo ha sido recompensado",
       ],
       level: [
         "🚀 ¡Nivel superior! Sigue creciendo",
         "⬆️ ¡Subiendo de nivel! Tu progreso es impresionante",
-        "📈 ¡Nuevo nivel alcanzado! No te detengas ahora"
+        "📈 ¡Nuevo nivel alcanzado! No te detengas ahora",
       ],
       streak: [
         "🔥 ¡Racha intacta! Tu constancia es admirable",
         "💪 ¡Sigue así! Tu racha continúa",
-        "⚡ ¡Imparable! Tu racha sigue creciendo"
-      ]
+        "⚡ ¡Imparable! Tu racha sigue creciendo",
+      ],
     };
 
     const messages = celebrationMessages[type];
     const message = messages[Math.floor(Math.random() * messages.length)];
 
-    this.sendMessage('celebrate', {
-      type,
+    // Usamos el estado SUCCESS para activar la animación de Level Up
+    this.sendMessage("show", {
       message,
-      details
+      state: "SUCCESS",
+      duration: 5000,
     });
   }
 
   private triggerDeepWorkStart(data: any): void {
-    this.sendMessage('show', {
-      message: "🧠 ¡Modo Deep Work activado! Cero distracciones, máximo enfoque",
-      state: 'FOCUSED',
-      duration: 3000
+    this.sendMessage("show", {
+      message:
+        "🧠 ¡Modo Deep Work activado! Cero distracciones, máximo enfoque",
+      state: "FOCUSED",
+      duration: 3000,
     });
   }
 
   private triggerDeepWorkComplete(data: any): void {
     const duration = data.duration || 60;
     const score = data.score || 0;
-    
-    this.sendMessage('show', {
+
+    this.sendMessage("show", {
       message: `✅ ¡Deep Work completado! ${duration}min de concentración pura (Score: ${score})`,
-      state: 'FOCUSED',
-      duration: 5000
+      state: "SUCCESS", // Animación de éxito al terminar
+      duration: 5000,
     });
   }
 
   private triggerPomodoroComplete(data: any): void {
     const cycle = data.cycle || 1;
-    this.sendMessage('show', {
+    this.sendMessage("show", {
       message: `🍅 ¡Pomodoro #${cycle} completado! Tiempo de un pequeño descanso`,
-      state: 'IDLE',
-      duration: 4000
+      state: "IDLE",
+      duration: 4000,
     });
   }
 
   private analyzeSessionData(sessionData: any): void {
     const state = this.stateManager.getState();
     const insights = this.generateInsights(state, sessionData);
-    
-    // Send insights to webview
-    insights.forEach(insight => {
+
+    insights.forEach((insight) => {
       if (this.shouldSendMessage(insight)) {
-        this.sendMessage('show', {
+        this.sendMessage("show", {
           message: insight.message,
           state: insight.state,
-          duration: this.getDurationForType(insight.type)
+          duration: this.getDurationForType(insight.type),
         });
       }
     });
@@ -181,30 +185,28 @@ export class AssistantService {
     const insights: AssistantInsight[] = [];
     const currentTime = Date.now();
 
-    // Check cooldown
-    if (currentTime - this.lastMessageTime < this.config.messageCooldown * 60 * 1000) {
+    if (
+      currentTime - this.lastMessageTime <
+      this.config.messageCooldown * 60 * 1000
+    ) {
       return insights;
     }
 
-    // Fatigue detection
     if (this.config.enableFatigueDetection) {
       const fatigueInsight = this.detectFatigue(state);
       if (fatigueInsight) insights.push(fatigueInsight);
     }
 
-    // Drift detection
     if (this.config.enableDriftDetection) {
       const driftInsight = this.detectDrift(state);
       if (driftInsight) insights.push(driftInsight);
     }
 
-    // Motivation messages
     if (this.config.enableMotivationMessages) {
       const motivationInsight = this.detectMotivation(state);
       if (motivationInsight) insights.push(motivationInsight);
     }
 
-    // Goal progress
     const goalInsight = this.analyzeGoalProgress(state);
     if (goalInsight) insights.push(goalInsight);
 
@@ -215,25 +217,25 @@ export class AssistantService {
     const session = state.session;
     if (!session || !session.startTime) return null;
 
-    const sessionDuration = (Date.now() - session.startTime) / (1000 * 60); // minutes
+    const sessionDuration = (Date.now() - session.startTime) / (1000 * 60);
 
     if (sessionDuration > this.config.sessionTimeThreshold) {
       const fatigueMessages = [
         "⏰ Llevas más de 90 minutos trabajando. ¿Un descanso?",
-        "😴 ¿Tus ojos necesitan un break? Un pomodoro de 5min te ayudará",
+        "😴 ¿Tus ojos necesitan un break? Un descanso te ayudará",
         "🧘‍♂️ Tu cerebro agradece pausas. ¿Estiramiento o café?",
-        "⚡ Recarga energías. Un descanso corto te hará más productivo"
+        "⚡ Recarga energías. Un descanso corto te hará más productivo",
       ];
 
       return {
-        type: 'fatigue',
-        message: fatigueMessages[Math.floor(Math.random() * fatigueMessages.length)],
-        priority: 'medium',
-        state: 'WARNING',
-        data: { sessionDuration }
+        type: "fatigue",
+        message:
+          fatigueMessages[Math.floor(Math.random() * fatigueMessages.length)],
+        priority: "medium",
+        state: "WARNING",
+        data: { sessionDuration },
       };
     }
-
     return null;
   }
 
@@ -241,26 +243,27 @@ export class AssistantService {
     const session = state.session;
     if (!session) return null;
 
-    const sessionDuration = (Date.now() - session.startTime) / (1000 * 60); // minutes
-    const switchesPerMinute = sessionDuration > 0 ? session.totalSwitches / sessionDuration : 0;
+    const sessionDuration = (Date.now() - session.startTime) / (1000 * 60);
+    const switchesPerMinute =
+      sessionDuration > 0 ? session.totalSwitches / sessionDuration : 0;
 
     if (switchesPerMinute > this.config.driftThreshold) {
       const driftMessages = [
-        "🔄 Muchos cambios de archivo detectados. Intenta enfocarte en una tarea",
-        "📂 ¿Saltando mucho? Elige un archivo y concéntrate 25min en él",
+        "🔄 Muchos cambios de archivo detectados. Intenta enfocarte",
+        "📂 ¿Saltando mucho? Elige un archivo y concéntrate en él",
         "🎯 El multitasking reduce tu productividad. Una tarea a la vez",
-        "🧠 Tu cerebro prefiere el enfoque profundo. Evita los cambios constantes"
+        "🧠 Tu cerebro prefiere el enfoque profundo.",
       ];
 
       return {
-        type: 'drift',
-        message: driftMessages[Math.floor(Math.random() * driftMessages.length)],
-        priority: 'medium',
-        state: 'WARNING',
-        data: { switchesPerMinute, totalSwitches: session.totalSwitches }
+        type: "drift",
+        message:
+          driftMessages[Math.floor(Math.random() * driftMessages.length)],
+        priority: "medium",
+        state: "WARNING",
+        data: { switchesPerMinute, totalSwitches: session.totalSwitches },
       };
     }
-
     return null;
   }
 
@@ -268,25 +271,25 @@ export class AssistantService {
     const focus = state.focus;
     if (!focus || !focus.averageScore) return null;
 
-    const avgScore = focus.averageScore;
-
-    if (avgScore >= this.config.motivationThreshold) {
+    if (focus.averageScore >= this.config.motivationThreshold) {
       const motivationMessages = [
         "🔥 ¡Estás en la zona! No te detengas ahora",
         "⚡ ¡Excelente enfoque! Sigue con ese ritmo",
-        "🚀 ¡Productividad máxima! Tu concentración es impresionante",
-        "💪 ¡Increíble! Estás rindiendo al máximo nivel"
+        "🚀 ¡Productividad máxima! Concentración impresionante",
+        "💪 ¡Increíble! Estás rindiendo al máximo",
       ];
 
       return {
-        type: 'motivation',
-        message: motivationMessages[Math.floor(Math.random() * motivationMessages.length)],
-        priority: 'low',
-        state: 'FOCUSED',
-        data: { avgScore }
+        type: "motivation",
+        message:
+          motivationMessages[
+            Math.floor(Math.random() * motivationMessages.length)
+          ],
+        priority: "low",
+        state: "FOCUSED",
+        data: { avgScore: focus.averageScore },
       };
     }
-
     return null;
   }
 
@@ -295,139 +298,108 @@ export class AssistantService {
     if (!goals || !goals.enabled) return null;
 
     const minutesProgress = (goals.minutesDone / goals.targetMinutes) * 100;
-    const pomodorosProgress = goals.targetPomodoros > 0 
-      ? (goals.pomodorosDone / goals.targetPomodoros) * 100 
-      : 100;
+    const pomodorosProgress =
+      goals.targetPomodoros > 0
+        ? (goals.pomodorosDone / goals.targetPomodoros) * 100
+        : 100;
 
-    // Near completion
     if (minutesProgress > 80 && pomodorosProgress > 80 && !goals.allDone) {
       return {
-        type: 'tip',
-        message: "🎯 ¡Casi completas los objetivos de hoy! Un último esfuerzo 💪",
-        priority: 'medium',
-        state: 'FOCUSED',
-        data: { minutesProgress, pomodorosProgress }
+        type: "tip",
+        message:
+          "🎯 ¡Casi completas los objetivos de hoy! Un último esfuerzo 💪",
+        priority: "medium",
+        state: "FOCUSED",
+        data: { minutesProgress, pomodorosProgress },
       };
     }
 
-    // Halfway there
     if (minutesProgress > 40 && minutesProgress < 60 && !goals.doneMinutes) {
       return {
-        type: 'tip',
-        message: "📈 ¡Vas por buen camino! Ya completaste más del 50% de tus minutos",
-        priority: 'low',
-        state: 'IDLE',
-        data: { minutesProgress }
+        type: "tip",
+        message: "📈 ¡Vas por buen camino! Ya pasaste del 50%",
+        priority: "low",
+        state: "IDLE",
+        data: { minutesProgress },
       };
     }
-
     return null;
   }
 
   private shouldSendMessage(insight: AssistantInsight): boolean {
-    // Don't send messages during deep work unless high priority
     const state = this.stateManager.getState();
-    if (state.deepWork?.active && insight.priority !== 'high') {
+    if (state.deepWork?.active && insight.priority !== "high") {
       return false;
     }
 
-    // Check cooldown
     const currentTime = Date.now();
-    if (currentTime - this.lastMessageTime < this.config.messageCooldown * 60 * 1000) {
+    if (
+      currentTime - this.lastMessageTime <
+      this.config.messageCooldown * 60 * 1000
+    ) {
       return false;
     }
 
-    // Update last message time
     this.lastMessageTime = currentTime;
     return true;
   }
 
   private getDurationForType(type: string): number {
     const durations: Record<string, number> = {
-      'fatigue': 4000,
-      'drift': 4000,
-      'motivation': 3000,
-      'celebration': 5000,
-      'warning': 4000,
-      'tip': 3000
+      fatigue: 4000,
+      drift: 4000,
+      motivation: 3000,
+      celebration: 5000,
+      warning: 4000,
+      tip: 3000,
     };
-
     return durations[type] || 3000;
   }
 
-  // Public API methods
   analyzeDashboardData(data: DashboardData): void {
     const insights = this.generateInsightsFromDashboard(data);
-    
-    insights.forEach(insight => {
+    insights.forEach((insight) => {
       if (this.shouldSendMessage(insight)) {
-        this.sendMessage('show', {
+        this.sendMessage("show", {
           message: insight.message,
           state: insight.state,
-          duration: this.getDurationForType(insight.type)
+          duration: this.getDurationForType(insight.type),
         });
       }
     });
   }
 
-  private generateInsightsFromDashboard(data: DashboardData): AssistantInsight[] {
+  private generateInsightsFromDashboard(
+    data: DashboardData,
+  ): AssistantInsight[] {
     const insights: AssistantInsight[] = [];
+    if (!data.stats || data.stats.length === 0) return insights;
 
-    if (!data.stats || data.stats.length === 0) {
-      return insights;
-    }
-
-    // Analyze focus scores
-    const avgScore = data.stats.reduce((sum, stat) => sum + stat.score, 0) / data.stats.length;
+    const avgScore =
+      data.stats.reduce((sum, stat) => sum + stat.score, 0) / data.stats.length;
     if (avgScore >= this.config.motivationThreshold) {
       insights.push({
-        type: 'motivation',
-        message: "🔥 ¡Excelente enfoque general! Tu productividad está en su punto máximo",
-        priority: 'low',
-        state: 'FOCUSED',
-        data: { avgScore }
+        type: "motivation",
+        message: "🔥 ¡Excelente enfoque general! Productividad al máximo",
+        priority: "low",
+        state: "FOCUSED",
+        data: { avgScore },
       });
     }
 
-    // Analyze file switching
-    const totalSwitches = data.stats.reduce((sum, stat) => sum + stat.switches, 0);
-    const totalTime = data.stats.reduce((sum, stat) => sum + this.parseTimeToMinutes(stat.timeText), 0);
-    const switchesPerMinute = totalTime > 0 ? totalSwitches / totalTime : 0;
-
-    if (switchesPerMinute > this.config.driftThreshold) {
-      insights.push({
-        type: 'drift',
-        message: "🔄 Detectados muchos cambios de archivo. Intenta bloques de enfoque más largos",
-        priority: 'medium',
-        state: 'WARNING',
-        data: { switchesPerMinute }
-      });
-    }
-
-    // Check streak
     if (data.streak > 0 && data.streak % 7 === 0) {
       insights.push({
-        type: 'celebration',
-        message: `🔥 ¡${data.streak} días de racha! Eres increíblemente constante`,
-        priority: 'high',
-        state: 'FOCUSED',
-        data: { streak: data.streak }
+        type: "celebration",
+        message: `🔥 ¡${data.streak} días de racha! Eres constante`,
+        priority: "high",
+        state: "SUCCESS",
+        data: { streak: data.streak },
       });
     }
 
     return insights;
   }
 
-  private parseTimeToMinutes(timeText: string): number {
-    const match = timeText.match(/(\d+)m?\s*(\d*)s?/);
-    if (!match) return 0;
-    
-    const minutes = parseInt(match[1]) || 0;
-    const seconds = parseInt(match[2]) || 0;
-    return minutes + seconds / 60;
-  }
-
-  // Configuration methods
   updateConfig(newConfig: Partial<AssistantConfig>): void {
     this.config = { ...this.config, ...newConfig };
   }
@@ -436,28 +408,25 @@ export class AssistantService {
     return { ...this.config };
   }
 
-  // Manual trigger methods
   triggerManualInsight(type: string, customMessage?: string): void {
     const insights: Record<string, string> = {
-      'fatigue': "⏰ Recuerda tomar pausas regulares para mantener tu productividad",
-      'drift': "🎯 Concéntrate en una tarea a la vez para mejores resultados",
-      'motivation': "💪 ¡Tú puedes! Cada línea de código te acerca a tu meta",
-      'tip': "💡 El trabajo profundo es donde ocurre la magia"
+      fatigue: "⏰ Recuerda tomar pausas regulares",
+      drift: "🎯 Concéntrate en una tarea a la vez",
+      motivation: "💪 ¡Tú puedes! Falta poco",
+      tip: "💡 El trabajo profundo es la clave",
     };
 
-    const message = customMessage || insights[type] || "🤖 Deepy está aquí para ayudarte";
-    const state = type === 'fatigue' || type === 'drift' ? 'WARNING' : 'IDLE';
+    const message = customMessage || insights[type] || "🤖 Deepy está aquí";
+    const state = type === "fatigue" || type === "drift" ? "WARNING" : "IDLE";
 
-    this.sendMessage('show', {
+    this.sendMessage("show", {
       message,
       state,
-      duration: 4000
+      duration: 4000,
     });
   }
 
   destroy(): void {
-    // Cleanup event listeners
-    // Note: In the current implementation, event listeners are not automatically cleaned up
-    // This would need to be enhanced in a production environment
+    // Cleanup opcional
   }
 }

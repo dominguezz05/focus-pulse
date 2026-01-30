@@ -1,6 +1,6 @@
-import { DashboardData, DashboardComponent } from '../types';
+import { DashboardData, DashboardComponent } from "../types";
 
-export type AssistantState = 'IDLE' | 'FOCUSED' | 'WARNING';
+export type AssistantState = "IDLE" | "FOCUSED" | "WARNING" | "SUCCESS";
 
 export interface AssistantMessage {
   text: string;
@@ -10,21 +10,46 @@ export interface AssistantMessage {
 
 export class AssistantComponent implements DashboardComponent {
   private container: any;
-  private currentState: AssistantState = 'IDLE';
+  private currentState: AssistantState = "IDLE";
   private speechBubble: HTMLElement | null = null;
   private character: HTMLElement | null = null;
+  private characterImg: HTMLImageElement | null = null;
   private messageQueue: AssistantMessage[] = [];
   private isShowingMessage = false;
   private factsClickCount = 0;
 
-  // Productivity facts for click interaction
+  // Lógica de Animación
+  private animationInterval: any = null;
+  private frameIndex = 0;
+  private readonly animationMap = {
+    IDLE: ["normal/normal1.png", "normal/normal2.png"],
+    FOCUSED: [
+      "thinking/pensar1.png",
+      "thinking/pensar2.png",
+      "thinking/pensar3.png",
+      "thinking/pensar4.png",
+    ],
+    WARNING: [
+      "fatigue/fatiga1.png",
+      "fatigue/fatiga2.png",
+      "fatigue/fatiga3.png",
+      "fatigue/fatiga4.png",
+    ],
+    SUCCESS: [
+      "levelup/xp1.png",
+      "levelup/xp2.png",
+      "levelup/xp3.png",
+      "levelup/xp4.png",
+    ],
+  };
+
   private productivityFacts = [
     "¿Sabías que tardas 23 minutos en recuperar el foco tras una interrupción?",
     "El cerebro humano mantiene el foco máximo por ~45 minutos seguidos",
     "Trabajar en bloques de 90min + 15min de descanso es óptimo para productividad",
     "Hacer pausas cada 25 minutos aumenta un 13% tu productividad diaria",
     "La música sin letra puede mejorar tu concentración hasta en un 15%",
-    "El multitasking reduce tu productividad en un 40% comparado con el trabajo enfocado"
+    "El multitasking reduce tu productividad en un 40% comparado con el trabajo enfocado",
   ];
 
   constructor() {
@@ -33,25 +58,24 @@ export class AssistantComponent implements DashboardComponent {
 
   render(container: any, data: DashboardData): void {
     this.container = container;
-    
-    // Create floating assistant container
-    const assistantContainer = document.createElement('div');
-    assistantContainer.id = 'assistant-container';
-    assistantContainer.className = 'fixed bottom-4 right-4 z-50 pointer-events-none';
+
+    const assistantContainer = document.createElement("div");
+    assistantContainer.id = "assistant-container";
+    assistantContainer.className =
+      "fixed bottom-4 right-4 z-50 pointer-events-none";
     assistantContainer.innerHTML = `
-      <!-- Deepy Character -->
       <div id="deepy-character" class="relative pointer-events-auto cursor-pointer transform transition-all duration-300 hover:scale-110">
-        <div class="pixel-art-character w-16 h-16 bg-slate-800 rounded-lg border-4 border-slate-600 shadow-xl flex items-center justify-center text-2xl select-none hover:shadow-purple-500/50">
-          😊
-        </div>
-        <div id="deepy-aura" class="absolute -inset-2 rounded-lg opacity-0 transition-opacity duration-500 pointer-events-none"></div>
+        <img id="assistant-sprite" 
+             src="media/assistant/normal/normal1.png" 
+             class="w-20 h-20 object-contain drop-shadow-xl select-none" 
+             alt="Deepy" />
+        <div id="deepy-aura" class="absolute -inset-2 rounded-full opacity-0 transition-opacity duration-500 pointer-events-none"></div>
       </div>
       
-      <!-- Speech Bubble -->
-      <div id="speech-bubble" class="absolute bottom-20 right-0 max-w-xs bg-white/90 backdrop-blur-md border border-slate-300 rounded-xl p-3 shadow-xl opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
+      <div id="speech-bubble" class="absolute bottom-24 right-0 max-w-xs bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-4 shadow-2xl opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
         <div class="relative">
-          <p id="speech-text" class="text-sm text-slate-800 font-medium"></p>
-          <div class="absolute -bottom-2 right-4 w-0 h-0 border-l-8 border-l-transparent border-t-8 border-t-white/90 border-r-8 border-r-transparent"></div>
+          <p id="speech-text" class="text-sm text-slate-800 font-bold leading-relaxed"></p>
+          <div class="absolute -bottom-6 right-6 w-4 h-4 bg-white/95 rotate-45 border-r border-b border-slate-200"></div>
         </div>
       </div>
     `;
@@ -59,307 +83,252 @@ export class AssistantComponent implements DashboardComponent {
     container.appendChild(assistantContainer);
 
     // Cache DOM elements
-    this.character = document.getElementById('deepy-character');
-    this.speechBubble = document.getElementById('speech-bubble');
+    this.character = document.getElementById("deepy-character");
+    this.characterImg = document.getElementById(
+      "assistant-sprite",
+    ) as HTMLImageElement;
+    this.speechBubble = document.getElementById("speech-bubble");
 
-    // Setup event listeners
     this.setupEventListeners();
+    this.startAnimationLoop();
 
-    // Show welcome message
-    this.showMessage("¡Hola! Soy Deepy, tu compañero de Deep Work 💪", 'IDLE', 4000);
+    // Welcome message
+    this.showMessage(
+      "¡Hola! Soy Deepy, tu compañero de Deep Work 💪",
+      "IDLE",
+      4000,
+    );
+  }
+
+  private startAnimationLoop(): void {
+    if (this.animationInterval) clearInterval(this.animationInterval);
+
+    this.animationInterval = setInterval(() => {
+      const frames = this.animationMap[this.currentState];
+      this.frameIndex = (this.frameIndex + 1) % frames.length;
+
+      if (this.characterImg) {
+        this.characterImg.src = `media/assistant/${frames[this.frameIndex]}`;
+      }
+    }, 450); // Velocidad de animación
   }
 
   private setupEventListeners(): void {
     if (!this.character) return;
 
-    this.character.addEventListener('click', () => {
+    this.character.addEventListener("click", () => {
       this.showProductivityFact();
     });
 
-    this.character.addEventListener('mouseenter', () => {
+    this.character.addEventListener("mouseenter", () => {
       this.setCharacterHover(true);
     });
 
-    this.character.addEventListener('mouseleave', () => {
+    this.character.addEventListener("mouseleave", () => {
       this.setCharacterHover(false);
     });
   }
 
   private showProductivityFact(): void {
-    const fact = this.productivityFacts[this.factsClickCount % this.productivityFacts.length];
+    const fact =
+      this.productivityFacts[
+        this.factsClickCount % this.productivityFacts.length
+      ];
     this.factsClickCount++;
-    this.showMessage(fact, 'IDLE', 5000);
-    
-    // Animate character when clicked
-    this.animateCharacter('bounce');
+    this.showMessage(fact, "IDLE", 5000);
+    this.animateCharacter("bounce");
   }
 
   private setCharacterHover(isHovering: boolean): void {
     if (!this.character) return;
-    
-    const characterDiv = this.character.querySelector('.pixel-art-character');
-    const aura = document.getElementById('deepy-aura');
-    
+    const aura = document.getElementById("deepy-aura");
+
     if (isHovering) {
-      characterDiv?.classList.add('border-purple-500');
-      characterDiv?.classList.remove('border-slate-600');
       if (aura) {
-        aura.className = 'absolute -inset-2 rounded-lg bg-purple-500/20 transition-opacity duration-300 pointer-events-none';
-        aura.style.opacity = '1';
+        aura.className =
+          "absolute -inset-2 rounded-full bg-purple-500/20 blur-xl transition-opacity duration-300 pointer-events-none";
+        aura.style.opacity = "1";
       }
     } else {
-      characterDiv?.classList.remove('border-purple-500');
-      characterDiv?.classList.add('border-slate-600');
-      if (aura) {
-        aura.style.opacity = '0';
-      }
+      this.updateCharacterVisual(); // Restaura el aura según el estado actual
     }
   }
 
-  private animateCharacter(animation: 'bounce' | 'wiggle' | 'pulse'): void {
+  private animateCharacter(animation: "bounce" | "wiggle" | "pulse"): void {
     if (!this.character) return;
+    const el = this.character;
 
-    const characterDiv = this.character.querySelector('.pixel-art-character');
-    
-    switch (animation) {
-      case 'bounce':
-        characterDiv?.classList.add('animate-bounce');
-        setTimeout(() => characterDiv?.classList.remove('animate-bounce'), 600);
-        break;
-      case 'wiggle':
-        characterDiv?.classList.add('animate-pulse');
-        setTimeout(() => characterDiv?.classList.remove('animate-pulse'), 600);
-        break;
-      case 'pulse':
-        characterDiv?.classList.add('animate-ping');
-        setTimeout(() => characterDiv?.classList.remove('animate-ping'), 600);
-        break;
-    }
+    const animClass =
+      animation === "bounce"
+        ? "animate-bounce"
+        : animation === "wiggle"
+          ? "pixel-wiggle"
+          : "animate-pulse";
+
+    el.classList.add(animClass);
+    setTimeout(() => el.classList.remove(animClass), 1000);
   }
 
-  showMessage(text: string, state: AssistantState, duration: number = 3000): void {
-    // Add to queue if currently showing message
+  showMessage(
+    text: string,
+    state: AssistantState,
+    duration: number = 3000,
+  ): void {
     if (this.isShowingMessage) {
       this.messageQueue.push({ text, state, duration });
       return;
     }
-
     this.showImmediateMessage(text, state, duration);
   }
 
-  private showImmediateMessage(text: string, state: AssistantState, duration: number): void {
+  private showImmediateMessage(
+    text: string,
+    state: AssistantState,
+    duration: number,
+  ): void {
     this.isShowingMessage = true;
     this.setState(state);
 
-    if (!this.speechBubble || !this.character) return;
+    if (!this.speechBubble) return;
 
-    const speechText = document.getElementById('speech-text');
-    if (speechText) {
-      speechText.textContent = text;
-    }
+    const speechText = document.getElementById("speech-text");
+    if (speechText) speechText.textContent = text;
 
-    // Show speech bubble with animation
-    this.speechBubble.classList.remove('opacity-0', 'translate-y-2');
-    this.speechBubble.classList.add('opacity-100', 'translate-y-0');
+    this.speechBubble.classList.remove("opacity-0", "translate-y-2");
+    this.speechBubble.classList.add("opacity-100", "translate-y-0");
 
-    // Hide after duration
-    setTimeout(() => {
-      this.hideMessage();
-    }, duration);
+    setTimeout(() => this.hideMessage(), duration);
   }
 
   private hideMessage(): void {
     if (!this.speechBubble) return;
 
-    this.speechBubble.classList.add('opacity-0', 'translate-y-2');
-    this.speechBubble.classList.remove('opacity-100', 'translate-y-0');
+    this.speechBubble.classList.add("opacity-0", "translate-y-2");
+    this.speechBubble.classList.remove("opacity-100", "translate-y-0");
 
     setTimeout(() => {
       this.isShowingMessage = false;
-      
-      // Process next message in queue
       if (this.messageQueue.length > 0) {
-        const nextMessage = this.messageQueue.shift()!;
-        this.showImmediateMessage(nextMessage.text, nextMessage.state, nextMessage.duration || 3000);
+        const next = this.messageQueue.shift()!;
+        this.showImmediateMessage(next.text, next.state, next.duration || 3000);
       } else {
-        this.setState('IDLE');
+        this.setState("IDLE");
       }
     }, 300);
   }
 
   setState(state: AssistantState): void {
-    this.currentState = state;
-    this.updateCharacterVisual();
+    if (this.currentState !== state) {
+      this.currentState = state;
+      this.frameIndex = 0; // Reiniciar animación al cambiar estado
+      this.updateCharacterVisual();
+    }
   }
 
   private updateCharacterVisual(): void {
-    if (!this.character) return;
+    const aura = document.getElementById("deepy-aura");
+    if (!aura) return;
 
-    const characterDiv = this.character.querySelector('.pixel-art-character');
-    const aura = document.getElementById('deepy-aura');
-
+    // Actualizamos el aura según el estado
     switch (this.currentState) {
-      case 'IDLE':
-        if (characterDiv) {
-          characterDiv.textContent = '😊';
-          characterDiv.className = 'pixel-art-character w-16 h-16 bg-slate-800 rounded-lg border-4 border-slate-600 shadow-xl flex items-center justify-center text-2xl select-none hover:shadow-purple-500/50';
-        }
-        if (aura) {
-          aura.style.opacity = '0';
-          aura.className = 'absolute -inset-2 rounded-lg opacity-0 transition-opacity duration-500 pointer-events-none';
-        }
+      case "IDLE":
+        aura.style.opacity = "0";
         break;
-
-      case 'FOCUSED':
-        if (characterDiv) {
-          characterDiv.textContent = '🧠';
-          characterDiv.className = 'pixel-art-character w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg border-4 border-blue-400 shadow-xl shadow-blue-500/50 flex items-center justify-center text-2xl select-none animate-pulse';
-        }
-        if (aura) {
-          aura.className = 'absolute -inset-2 rounded-lg bg-gradient-to-r from-orange-400 to-red-500 opacity-30 blur-md transition-opacity duration-500 pointer-events-none animate-pulse';
-          aura.style.opacity = '0.7';
-        }
+      case "FOCUSED":
+        aura.className =
+          "absolute -inset-4 rounded-full bg-blue-500/30 blur-2xl animate-pulse pointer-events-none";
+        aura.style.opacity = "1";
         break;
-
-      case 'WARNING':
-        if (characterDiv) {
-          characterDiv.textContent = '😰';
-          characterDiv.className = 'pixel-art-character w-16 h-16 bg-gradient-to-br from-red-600 to-orange-600 rounded-lg border-4 border-red-400 shadow-xl shadow-red-500/50 flex items-center justify-center text-2xl select-none animate-bounce';
-        }
-        if (aura) {
-          aura.className = 'absolute -inset-2 rounded-lg bg-red-500/40 transition-opacity duration-500 pointer-events-none';
-          aura.style.opacity = '0.6';
-        }
+      case "WARNING":
+        aura.className =
+          "absolute -inset-4 rounded-full bg-red-500/20 blur-xl pointer-events-none";
+        aura.style.opacity = "1";
+        break;
+      case "SUCCESS":
+        aura.className =
+          "absolute -inset-4 rounded-full bg-yellow-400/40 blur-2xl animate-ping pointer-events-none";
+        aura.style.opacity = "1";
         break;
     }
   }
 
   private setupGlobalStyles(): void {
-    // Add custom animations if not already present
-    if (document.getElementById('deepy-styles')) return;
+    if (document.getElementById("deepy-styles")) return;
 
-    const style = document.createElement('style');
-    style.id = 'deepy-styles';
+    const style = document.createElement("style");
+    style.id = "deepy-styles";
     style.textContent = `
       @keyframes pixel-wiggle {
         0%, 100% { transform: rotate(0deg); }
-        25% { transform: rotate(2deg); }
-        75% { transform: rotate(-2deg); }
+        25% { transform: rotate(5deg); }
+        75% { transform: rotate(-5deg); }
       }
-      
-      @keyframes float-sweat {
-        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-        50% { transform: translateY(-4px) rotate(10deg); opacity: 0.8; }
-        100% { transform: translateY(-8px) rotate(-10deg); opacity: 0; }
-      }
-      
-      .pixel-wiggle {
-        animation: pixel-wiggle 0.5s ease-in-out infinite;
-      }
-      
-      .sweat-drop {
-        position: absolute;
-        width: 4px;
-        height: 6px;
-        background: #60A5FA;
-        border-radius: 50%;
-        animation: float-sweat 2s ease-in-out infinite;
-      }
+      .pixel-wiggle { animation: pixel-wiggle 0.3s ease-in-out infinite; }
     `;
     document.head.appendChild(style);
   }
 
-  // Public methods for external control
-  showCelebration(type: 'achievement' | 'level' | 'streak', details?: any): void {
-    let message = '';
-    
+  // API Pública
+  showCelebration(
+    type: "achievement" | "level" | "streak",
+    details?: any,
+  ): void {
+    let msg = "";
     switch (type) {
-      case 'achievement':
-        message = `🎉 ¡Nuevo logro desbloqueado: ${details?.title || 'Increíble'}!`;
+      case "achievement":
+        msg = `🎉 ¡Logro: ${details?.title || "conseguido"}!`;
         break;
-      case 'level':
-        message = `🚀 ¡Nivel ${details?.level || 'superior'} alcanzado! Sigue así 💪`;
+      case "level":
+        msg = `🚀 ¡Nivel ${details?.level || "UP"} alcanzado!`;
         break;
-      case 'streak':
-        message = `🔥 ¡${details?.days || 'varios'} días de racha! No pierdas el ritmo`;
+      case "streak":
+        msg = `🔥 ¡${details?.days || "Nueva"} racha activa!`;
         break;
     }
-    
-    this.showMessage(message, 'FOCUSED', 5000);
-    this.animateCharacter('bounce');
+    this.showMessage(msg, "SUCCESS", 5000);
+    this.animateCharacter("bounce");
   }
 
   showWarning(message: string): void {
-    this.showMessage(message, 'WARNING', 4000);
-    this.animateCharacter('wiggle');
+    this.showMessage(message, "WARNING", 4000);
+    this.animateCharacter("wiggle");
   }
 
   showInsight(message: string): void {
-    this.showMessage(message, 'IDLE', 4000);
+    this.showMessage(message, "IDLE", 4000);
   }
 
   update(data: DashboardData): void {
-    // Analyze data and provide context-aware messages
     this.analyzeAndProvideInsights(data);
   }
 
   private analyzeAndProvideInsights(data: DashboardData): void {
-    // This is where we implement the smart assistant logic
-    // Will be enhanced with the AssistantService integration
-    
-    if (!data.stats || data.stats.length === 0) return;
+    if (!data.stats || data.stats.length === 0 || data.deepWork?.active) return;
 
-    // Check for deep work session
-    if (data.deepWork?.active) {
-      // Don't disturb during deep work unless critical
-      return;
+    const avgScore =
+      data.stats.reduce((sum, stat) => sum + stat.score, 0) / data.stats.length;
+    if (avgScore > 80 && Math.random() > 0.9) {
+      this.showInsight("¡Foco impecable! Sigue así.");
+      this.setState("FOCUSED");
     }
 
-    // Check focus score
-    const avgScore = data.stats.reduce((sum, stat) => sum + stat.score, 0) / data.stats.length;
-    
-    if (avgScore > 80 && Math.random() > 0.8) {
-      this.showInsight("¡Excelente enfoque! Estás en la zona de productividad máxima");
-      this.setState('FOCUSED');
-    }
-
-    // Check for too many switches (potential distraction)
-    const totalSwitches = data.stats.reduce((sum, stat) => sum + stat.switches, 0);
-    const totalTime = data.stats.reduce((sum, stat) => sum + this.parseTimeToMinutes(stat.timeText), 0);
-    const switchesPerMinute = totalTime > 0 ? totalSwitches / totalTime : 0;
-
-    if (switchesPerMinute > 2 && Math.random() > 0.7) {
-      this.showWarning("🔄 Muchos cambios de archivo detectados. Intenta enfocarte en una tarea a la vez.");
-    }
-
-    // Check for long sessions (potential fatigue)
-    if (totalTime > 90) {
-      this.showWarning("⏰ Llevas más de 90 minutos trabajando. ¿Un descanso?");
-    }
+    const totalTime = data.stats.reduce(
+      (sum, stat) => sum + this.parseTimeToMinutes(stat.timeText),
+      0,
+    );
+    if (totalTime > 90)
+      this.showWarning("⏰ Llevas mucho tiempo. ¿Descansamos?");
   }
 
   private parseTimeToMinutes(timeText: string): number {
-    // Parse time like "25m 13s" to minutes
     const match = timeText.match(/(\d+)m?\s*(\d*)s?/);
     if (!match) return 0;
-    
-    const minutes = parseInt(match[1]) || 0;
-    const seconds = parseInt(match[2]) || 0;
-    return minutes + seconds / 60;
+    return (parseInt(match[1]) || 0) + (parseInt(match[2]) || 0) / 60;
   }
 
   destroy(): void {
-    // Cleanup event listeners and elements
-    if (this.character) {
-      this.character.removeEventListener('click', this.showProductivityFact);
-      this.character.removeEventListener('mouseenter', () => this.setCharacterHover(true));
-      this.character.removeEventListener('mouseleave', () => this.setCharacterHover(false));
-    }
-
-    // Remove styles
-    const styles = document.getElementById('deepy-styles');
-    if (styles) {
-      styles.remove();
-    }
+    if (this.animationInterval) clearInterval(this.animationInterval);
+    const styles = document.getElementById("deepy-styles");
+    if (styles) styles.remove();
   }
 }
