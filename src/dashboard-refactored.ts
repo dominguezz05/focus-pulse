@@ -1,11 +1,13 @@
 import * as vscode from "vscode";
 import { DashboardData } from "./webview/types";
 import { DashboardRenderer } from "./webview/DashboardRenderer";
+import { UserSyncManager } from "./export/UserSyncManager";
 import { getStateManager } from "./state/StateManager";
 import { getEventBus } from "./events";
 import { FOCUS_EVENTS } from "./events/EventTypes";
 import { debounceDashboardUpdate } from "./utils/Debouncer";
 import { openDashboard, updateDashboard } from "./dashboard";
+import { AssistantService } from "./services/AssistantService";
 import {
   handleEditorChange,
   handleTextDocumentChange,
@@ -42,6 +44,7 @@ import {
 import type { DeepWorkState as StateTypesDeepWorkState } from "./state/StateTypes";
 
 let currentPanel: vscode.WebviewPanel | undefined;
+let assistantService: AssistantService | undefined;
 
 // Type guard to distinguish between DeepWorkState types
 function isStateTypesDeepWorkState(obj: any): obj is StateTypesDeepWorkState {
@@ -836,15 +839,353 @@ setupEventListeners() {
 
         // Initialize dashboard when DOM is ready
         let dashboardRenderer;
+        let assistantRenderer;
         
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
                 dashboardRenderer = new RefactoredDashboardRenderer();
                 dashboardRenderer.init();
+                initAssistant();
             });
         } else {
             dashboardRenderer = new RefactoredDashboardRenderer();
             dashboardRenderer.init();
+            initAssistant();
+        }
+
+        // Assistant Component Implementation
+        function initAssistant() {
+            const AssistantRenderer = function() {
+                this.container = null;
+                this.currentState = 'IDLE';
+                this.speechBubble = null;
+                this.character = null;
+                this.messageQueue = [];
+                this.isShowingMessage = false;
+                this.factsClickCount = 0;
+                this.productivityFacts = [
+                    "¿Sabías que tardas 23 minutos en recuperar el foco tras una interrupción?",
+                    "El cerebro humano mantiene el foco máximo por ~45 minutos seguidos",
+                    "Trabajar en bloques de 90min + 15min de descanso es óptimo para productividad",
+                    "Hacer pausas cada 25 minutos aumenta un 13% tu productividad diaria",
+                    "La música sin letra puede mejorar tu concentración hasta en un 15%",
+                    "El multitasking reduce tu productividad en un 40% comparado con el trabajo enfocado"
+                ];
+
+                this.setupGlobalStyles();
+                this.render();
+                this.setupEventListeners();
+                
+                // Notify extension that assistant is ready
+                vscode.postMessage({ type: 'assistant:ready' });
+            };
+
+            AssistantRenderer.prototype.setupGlobalStyles = function() {
+                if (document.getElementById('deepy-styles')) return;
+
+                const style = document.createElement('style');
+                style.id = 'deepy-styles';
+                style.textContent = \`
+                    @keyframes pixel-wiggle {
+                        0%, 100% { transform: rotate(0deg); }
+                        25% { transform: rotate(2deg); }
+                        75% { transform: rotate(-2deg); }
+                    }
+                    
+                    @keyframes float-sweat {
+                        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                        50% { transform: translateY(-4px) rotate(10deg); opacity: 0.8; }
+                        100% { transform: translateY(-8px) rotate(-10deg); opacity: 0; }
+                    }
+                    
+                    .pixel-wiggle {
+                        animation: pixel-wiggle 0.5s ease-in-out infinite;
+                    }
+                    
+                    .sweat-drop {
+                        position: absolute;
+                        width: 4px;
+                        height: 6px;
+                        background: #60A5FA;
+                        border-radius: 50%;
+                        animation: float-sweat 2s ease-in-out infinite;
+                    }
+                \`;
+                document.head.appendChild(style);
+            };
+
+            AssistantRenderer.prototype.render = function() {
+                // Create floating assistant container
+                const assistantContainer = document.createElement('div');
+                assistantContainer.id = 'assistant-container';
+                assistantContainer.className = 'fixed bottom-4 right-4 z-50 pointer-events-none';
+                assistantContainer.innerHTML = \`
+                    <!-- Deepy Character -->
+                    <div id="deepy-character" class="relative pointer-events-auto cursor-pointer transform transition-all duration-300 hover:scale-110">
+                        <div class="pixel-art-character w-16 h-16 bg-slate-800 rounded-lg border-4 border-slate-600 shadow-xl flex items-center justify-center text-2xl select-none hover:shadow-purple-500/50">
+                            😊
+                        </div>
+                        <div id="deepy-aura" class="absolute -inset-2 rounded-lg opacity-0 transition-opacity duration-500 pointer-events-none"></div>
+                    </div>
+                    
+                    <!-- Speech Bubble -->
+                    <div id="speech-bubble" class="absolute bottom-20 right-0 max-w-xs bg-white/90 backdrop-blur-md border border-slate-300 rounded-xl p-3 shadow-xl opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
+                        <div class="relative">
+                            <p id="speech-text" class="text-sm text-slate-800 font-medium"></p>
+                            <div class="absolute -bottom-2 right-4 w-0 h-0 border-l-8 border-l-transparent border-t-8 border-t-white/90 border-r-8 border-r-transparent"></div>
+                        </div>
+                    </div>
+                \`;
+
+                document.body.appendChild(assistantContainer);
+
+                // Cache DOM elements
+                this.character = document.getElementById('deepy-character');
+                this.speechBubble = document.getElementById('speech-bubble');
+                this.container = assistantContainer;
+
+                // Show welcome message
+                this.showMessage("¡Hola! Soy Deepy, tu compañero de Deep Work 💪", 'IDLE', 4000);
+            };
+
+            AssistantRenderer.prototype.setupEventListeners = function() {
+                if (!this.character) return;
+
+                this.character.addEventListener('click', () => {
+                    this.showProductivityFact();
+                });
+
+                this.character.addEventListener('mouseenter', () => {
+                    this.setCharacterHover(true);
+                });
+
+                this.character.addEventListener('mouseleave', () => {
+                    this.setCharacterHover(false);
+                });
+            };
+
+            AssistantRenderer.prototype.showProductivityFact = function() {
+                const fact = this.productivityFacts[this.factsClickCount % this.productivityFacts.length];
+                this.factsClickCount++;
+                this.showMessage(fact, 'IDLE', 5000);
+                this.animateCharacter('bounce');
+                
+                // Notify extension about click
+                vscode.postMessage({ 
+                    type: 'assistant:click',
+                    data: { factIndex: this.factsClickCount - 1 }
+                });
+            };
+
+            AssistantRenderer.prototype.setCharacterHover = function(isHovering) {
+                if (!this.character) return;
+                
+                const characterDiv = this.character.querySelector('.pixel-art-character');
+                const aura = document.getElementById('deepy-aura');
+                
+                if (isHovering) {
+                    characterDiv?.classList.add('border-purple-500');
+                    characterDiv?.classList.remove('border-slate-600');
+                    if (aura) {
+                        aura.className = 'absolute -inset-2 rounded-lg bg-purple-500/20 transition-opacity duration-300 pointer-events-none';
+                        aura.style.opacity = '1';
+                    }
+                } else {
+                    characterDiv?.classList.remove('border-purple-500');
+                    characterDiv?.classList.add('border-slate-600');
+                    if (aura) {
+                        aura.style.opacity = '0';
+                    }
+                }
+            };
+
+            AssistantRenderer.prototype.animateCharacter = function(animation) {
+                if (!this.character) return;
+
+                const characterDiv = this.character.querySelector('.pixel-art-character');
+                
+                switch (animation) {
+                    case 'bounce':
+                        characterDiv?.classList.add('animate-bounce');
+                        setTimeout(() => characterDiv?.classList.remove('animate-bounce'), 600);
+                        break;
+                    case 'wiggle':
+                        characterDiv?.classList.add('animate-pulse');
+                        setTimeout(() => characterDiv?.classList.remove('animate-pulse'), 600);
+                        break;
+                    case 'pulse':
+                        characterDiv?.classList.add('animate-ping');
+                        setTimeout(() => characterDiv?.classList.remove('animate-ping'), 600);
+                        break;
+                }
+            };
+
+            AssistantRenderer.prototype.showMessage = function(text, state, duration) {
+                duration = duration || 3000;
+                
+                if (this.isShowingMessage) {
+                    this.messageQueue.push({ text, state, duration });
+                    return;
+                }
+
+                this.showImmediateMessage(text, state, duration);
+            };
+
+            AssistantRenderer.prototype.showImmediateMessage = function(text, state, duration) {
+                this.isShowingMessage = true;
+                this.setState(state);
+
+                if (!this.speechBubble || !this.character) return;
+
+                const speechText = document.getElementById('speech-text');
+                if (speechText) {
+                    speechText.textContent = text;
+                }
+
+                this.speechBubble.classList.remove('opacity-0', 'translate-y-2');
+                this.speechBubble.classList.add('opacity-100', 'translate-y-0');
+
+                setTimeout(() => {
+                    this.hideMessage();
+                }, duration);
+            };
+
+            AssistantRenderer.prototype.hideMessage = function() {
+                if (!this.speechBubble) return;
+
+                this.speechBubble.classList.add('opacity-0', 'translate-y-2');
+                this.speechBubble.classList.remove('opacity-100', 'translate-y-0');
+
+                setTimeout(() => {
+                    this.isShowingMessage = false;
+                    
+                    if (this.messageQueue.length > 0) {
+                        const nextMessage = this.messageQueue.shift();
+                        this.showImmediateMessage(nextMessage.text, nextMessage.state, nextMessage.duration || 3000);
+                    } else {
+                        this.setState('IDLE');
+                    }
+                }, 300);
+            };
+
+            AssistantRenderer.prototype.setState = function(state) {
+                this.currentState = state;
+                this.updateCharacterVisual();
+            };
+
+            AssistantRenderer.prototype.updateCharacterVisual = function() {
+                if (!this.character) return;
+
+                const characterDiv = this.character.querySelector('.pixel-art-character');
+                const aura = document.getElementById('deepy-aura');
+
+                switch (this.currentState) {
+                    case 'IDLE':
+                        if (characterDiv) {
+                            characterDiv.textContent = '😊';
+                            characterDiv.className = 'pixel-art-character w-16 h-16 bg-slate-800 rounded-lg border-4 border-slate-600 shadow-xl flex items-center justify-center text-2xl select-none hover:shadow-purple-500/50';
+                        }
+                        if (aura) {
+                            aura.style.opacity = '0';
+                            aura.className = 'absolute -inset-2 rounded-lg opacity-0 transition-opacity duration-500 pointer-events-none';
+                        }
+                        break;
+
+                    case 'FOCUSED':
+                        if (characterDiv) {
+                            characterDiv.textContent = '🧠';
+                            characterDiv.className = 'pixel-art-character w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg border-4 border-blue-400 shadow-xl shadow-blue-500/50 flex items-center justify-center text-2xl select-none animate-pulse';
+                        }
+                        if (aura) {
+                            aura.className = 'absolute -inset-2 rounded-lg bg-gradient-to-r from-orange-400 to-red-500 opacity-30 blur-md transition-opacity duration-500 pointer-events-none animate-pulse';
+                            aura.style.opacity = '0.7';
+                        }
+                        break;
+
+                    case 'WARNING':
+                        if (characterDiv) {
+                            characterDiv.textContent = '😰';
+                            characterDiv.className = 'pixel-art-character w-16 h-16 bg-gradient-to-br from-red-600 to-orange-600 rounded-lg border-4 border-red-400 shadow-xl shadow-red-500/50 flex items-center justify-center text-2xl select-none animate-bounce';
+                        }
+                        if (aura) {
+                            aura.className = 'absolute -inset-2 rounded-lg bg-red-500/40 transition-opacity duration-500 pointer-events-none';
+                            aura.style.opacity = '0.6';
+                        }
+                        break;
+                }
+            };
+
+            AssistantRenderer.prototype.handleAssistantMessage = function(type, data) {
+                switch (type) {
+                    case 'show':
+                        this.showMessage(data.message, data.state, data.duration);
+                        break;
+                    case 'celebrate':
+                        this.showCelebration(data.type, data.details);
+                        break;
+                    case 'hide':
+                        this.hideMessage();
+                        break;
+                }
+            };
+
+            AssistantRenderer.prototype.showCelebration = function(type, details) {
+                let message = '';
+                
+                switch (type) {
+                    case 'achievement':
+                        message = \`🎉 ¡Nuevo logro desbloqueado: \${details?.title || 'Increíble'}!\`;
+                        break;
+                    case 'level':
+                        message = \`🚀 ¡Nivel \${details?.level || 'superior'} alcanzado! Sigue así 💪\`;
+                        break;
+                    case 'streak':
+                        message = \`🔥 ¡\${details?.days || 'varios'} días de racha! No pierdas el ritmo\`;
+                        break;
+                }
+                
+                this.showMessage(message, 'FOCUSED', 5000);
+                this.animateCharacter('bounce');
+            };
+
+            AssistantRenderer.prototype.destroy = function() {
+                if (this.character) {
+                    this.character.removeEventListener('click', this.showProductivityFact);
+                    this.character.removeEventListener('mouseenter', () => this.setCharacterHover(true));
+                    this.character.removeEventListener('mouseleave', () => this.setCharacterHover(false));
+                }
+
+                // Remove styles
+                const styles = document.getElementById('deepy-styles');
+                if (styles) {
+                    styles.remove();
+                }
+
+                // Remove container
+                if (this.container) {
+                    this.container.remove();
+                }
+            };
+
+            // Initialize assistant
+            assistantRenderer = new AssistantRenderer();
+
+            // Listen for assistant messages from extension
+            window.addEventListener('message', function(event) {
+                const msg = event.data;
+                
+                switch (msg.type) {
+                    case 'assistant:show':
+                        assistantRenderer.showMessage(msg.data.message, msg.data.state, msg.data.duration);
+                        break;
+                    case 'assistant:celebrate':
+                        assistantRenderer.showCelebration(msg.data.type, msg.data.details);
+                        break;
+                    case 'assistant:hide':
+                        assistantRenderer.hideMessage();
+                        break;
+                }
+            });
         }
         
         // Listen for data updates
@@ -873,6 +1214,10 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   }
 
   console.log("Creando nuevo panel de dashboard");
+  
+  // Initialize assistant service
+  assistantService = AssistantService.getInstance();
+  
   currentPanel = vscode.window.createWebviewPanel(
     "focusPulseDashboardV2",
     "Focus Pulse Dashboard ",
@@ -882,6 +1227,9 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
       retainContextWhenHidden: true,
     },
   );
+
+  // Set webview panel for assistant service
+  assistantService.setWebviewPanel(currentPanel);
 
   console.log("Estableciendo HTML del dashboard");
   currentPanel.webview.html = getRefactoredHtml();
@@ -936,6 +1284,16 @@ currentPanel.webview.onDidReceiveMessage(
 
         const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
+        // Get sync information
+        const syncManager = UserSyncManager.getInstance();
+        const currentUser = syncManager.getCurrentUser();
+        const syncInfo = {
+          isAuthenticated: !!currentUser,
+          userEmail: currentUser?.email,
+          lastSync: syncManager.getLastSyncTime(),
+          autoSyncEnabled: syncManager.isAutoSyncEnabled(),
+        };
+
         const dashboardData: DashboardData = {
           stats: statsArray,
           history7,
@@ -948,6 +1306,7 @@ currentPanel.webview.onDidReceiveMessage(
           allAchievements,
           weeklySummary: [], // TODO: Implement weekly summary
           goals: undefined, // TODO: Implement goals
+          sync: syncInfo,
         };
 
         console.log(
@@ -1006,6 +1365,25 @@ currentPanel.webview.onDidReceiveMessage(
           await vscode.commands.executeCommand("focusPulse.manualSync");
           break;
         }
+        case "authenticate": {
+          await vscode.commands.executeCommand("focusPulse.authenticate");
+          break;
+        }
+        case "create-github-token": {
+          await vscode.commands.executeCommand("focusPulse.createGitHubToken");
+          break;
+        }
+        case "assistant:ready": {
+          console.log("Assistant component is ready");
+          if (assistantService) {
+            assistantService.setWebviewPanel(currentPanel!);
+          }
+          break;
+        }
+        case "assistant:click": {
+          console.log("Assistant clicked");
+          break;
+        }
         default: {
           console.warn("Unknown message type:", msg.type || msg.command);
         }
@@ -1018,6 +1396,7 @@ currentPanel.webview.onDidReceiveMessage(
   currentPanel.onDidDispose(
     () => {
       currentPanel = undefined;
+      assistantService = undefined;
     },
     null,
     context.subscriptions,
@@ -1027,6 +1406,11 @@ currentPanel.webview.onDidReceiveMessage(
 export function updateRefactoredDashboard(data: DashboardData) {
   // Check if panel exists before debouncing
   if (!currentPanel) return;
+
+  // Update assistant service with new data
+  if (assistantService) {
+    assistantService.analyzeDashboardData(data);
+  }
 
   // Debounce dashboard updates for performance
   debounceDashboardUpdate(() => {
@@ -1094,6 +1478,16 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
 
     const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
+    // Get sync information
+    const syncManager = UserSyncManager.getInstance();
+    const currentUser = syncManager.getCurrentUser();
+    const syncInfo = {
+      isAuthenticated: !!currentUser,
+      userEmail: currentUser?.email,
+      lastSync: syncManager.getLastSyncTime(),
+      autoSyncEnabled: syncManager.isAutoSyncEnabled(),
+    };
+
     const dashboardData: DashboardData = {
       stats: statsArray,
       history7,
@@ -1106,6 +1500,7 @@ export function setupDashboardEventListeners(context: vscode.ExtensionContext) {
       allAchievements,
       weeklySummary: [], // TODO: Implement weekly summary
       goals: undefined, // TODO: Implement goals
+      sync: syncInfo,
     };
 
     updateRefactoredDashboard(dashboardData);

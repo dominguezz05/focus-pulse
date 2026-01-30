@@ -1,7 +1,7 @@
 # ⚡ Focus Pulse — Productivity Tracking for Developers
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.3.0-informational)
+![Version](https://img.shields.io/badge/version-2.4.0-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Status](https://img.shields.io/badge/status-Experimental-orange)
@@ -11,6 +11,7 @@
 
 **Gamified productivity system for VS Code** that measures your **real focus while coding** through:
 
+- **AI-Powered Virtual Assistant** (New!) — A reactive companion that guides your focus.
 - real-time dashboard
 - integrated Pomodoro
 - XP + levels + achievements
@@ -58,6 +59,31 @@ Based on 3 key signals:
 4 **Data Portability** (New!) — Your progress is yours. Export, import, or sync your stats anytime.
 
 Result: Focus Score (0-100) for each file + session.
+
+---
+
+## 🤖 Meet Your Focus Assistant (v2.4+)
+
+Your coding journey now has a companion. Integrated directly into the dashboard, the **Focus Pulse Assistant** tracks your state and talks to you in real-time.
+
+### Reactive Visual States
+
+The assistant changes its appearance based on your performance:
+
+- **IDLE**: Resting and ready for your next session.
+- **FOCUSED**: Active coding mode—keeping pace with your rhythm.
+- **WARNING**: Noticing fatigue or attention drift.
+
+### 🧠 Intelligent Suggestion Engine
+
+Get proactive advice while you work:
+
+- **Fatigue Detection**: "You've been at it for a while. How about a 5-minute break?"
+- **Drift Alerts**: "Too much tab switching! Let's get back to the main file."
+- **Motivational Sparks**: Celebrates your high Focus Scores and XP level-ups.
+- **Daily Insights**: Automatic summaries based on your coding history and trends.
+
+> **Pro-Tip:** Click on the assistant to get a "Productivity Fun Fact" or a personalized tip based on your past 30 days.
 
 ---
 
@@ -145,15 +171,16 @@ Quick deltas:
 
 Includes:
 
-| Block        | Metric             |
-| ------------ | ------------------ |
-| Level + XP   | Progression bar    |
-| Pomodoros    | Today + total      |
-| Steak        | Active days        |
-| Heatmap      | Last 30 days       |
-| Insights     | Today vs yesterday |
-| Achievements | Live + catalog     |
-| Score table  | File breakdown     |
+| Block            | Metric                    |
+| ---------------- | ------------------------- |
+| Assistant Widget | Real-time advice & status |
+| Level + XP       | Progression bar           |
+| Pomodoros        | Today + total             |
+| Steak            | Active days               |
+| Heatmap          | Last 30 days              |
+| Insights         | Today vs yesterday        |
+| Achievements     | Live + catalog            |
+| Score table      | File breakdown            |
 
 Runs **locally** and updates while coding.
 
@@ -213,10 +240,10 @@ From Settings (Focus Pulse):
 > v2.1 → Refactor and improve UI ✔
 > v2.2 → Personalized achievements and badges ✔
 > v2.3 → Github Sync & Import/Export Data ✔
-> v2.3 → Friends
-> v2.3 → MultiLanguaje
+> v2.4 → AI Virtual Assistant & Real-time Suggestions ✔
+> v2.4. → Friends
+> v2.4. → MultiLanguaje
 > v3.0 → Personal analytics (local only) ...
-> v3.1 → Assistant widget
 
 ---
 
