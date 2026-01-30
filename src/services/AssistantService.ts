@@ -110,19 +110,19 @@ export class AssistantService {
   ): void {
     const celebrationMessages = {
       achievement: [
-        "🎉 ¡Increíble! Has desbloqueado un nuevo logro",
-        "🏆 ¡Eres una máquina! Nuevo logro conseguido",
-        "⭐ ¡Brillante! Tu esfuerzo ha sido recompensado",
+        `¡Increíble! Has desbloqueado: ${details?.title || "nuevo logro"}`,
+        "¡Eres una máquina! Nuevo logro conseguido",
+        "¡Brillante! Tu esfuerzo ha sido recompensado",
       ],
       level: [
-        "🚀 ¡Nivel superior! Sigue creciendo",
-        "⬆️ ¡Subiendo de nivel! Tu progreso es impresionante",
-        "📈 ¡Nuevo nivel alcanzado! No te detengas ahora",
+        `¡Nivel ${details?.level || "superior"} alcanzado! Sigue creciendo`,
+        "¡Subiendo de nivel! Tu progreso es impresionante",
+        "¡Nuevo nivel alcanzado! No te detengas ahora",
       ],
       streak: [
-        "🔥 ¡Racha intacta! Tu constancia es admirable",
-        "💪 ¡Sigue así! Tu racha continúa",
-        "⚡ ¡Imparable! Tu racha sigue creciendo",
+        `¡Racha de ${details?.days || "varios"} días intacta! Tu constancia es admirable`,
+        "¡Sigue así! Tu racha continúa firme",
+        "¡Imparable! Tu racha sigue creciendo",
       ],
     };
 
@@ -138,9 +138,9 @@ export class AssistantService {
   }
 
   private triggerDeepWorkStart(data: any): void {
+    const duration = data.duration || "ilimitado";
     this.sendMessage("show", {
-      message:
-        "🧠 ¡Modo Deep Work activado! Cero distracciones, máximo enfoque",
+      message: `¡Modo Deep Work activado! Sesión de ${duration} minutos sin distracciones`,
       state: "FOCUSED",
       duration: 3000,
     });
@@ -151,8 +151,8 @@ export class AssistantService {
     const score = data.score || 0;
 
     this.sendMessage("show", {
-      message: `✅ ¡Deep Work completado! ${duration}min de concentración pura (Score: ${score})`,
-      state: "SUCCESS", // Animación de éxito al terminar
+      message: `¡Deep Work completado! ${duration} minutos de concentración pura (Score: ${score})`,
+      state: "SUCCESS",
       duration: 5000,
     });
   }
@@ -160,7 +160,7 @@ export class AssistantService {
   private triggerPomodoroComplete(data: any): void {
     const cycle = data.cycle || 1;
     this.sendMessage("show", {
-      message: `🍅 ¡Pomodoro #${cycle} completado! Tiempo de un pequeño descanso`,
+      message: `¡Pomodoro número ${cycle} completado! Tiempo de un pequeño descanso`,
       state: "IDLE",
       duration: 4000,
     });
@@ -221,10 +221,10 @@ export class AssistantService {
 
     if (sessionDuration > this.config.sessionTimeThreshold) {
       const fatigueMessages = [
-        "⏰ Llevas más de 90 minutos trabajando. ¿Un descanso?",
-        "😴 ¿Tus ojos necesitan un break? Un descanso te ayudará",
-        "🧘‍♂️ Tu cerebro agradece pausas. ¿Estiramiento o café?",
-        "⚡ Recarga energías. Un descanso corto te hará más productivo",
+        `Llevas ${Math.round(sessionDuration)} minutos trabajando. ¿Un descanso?`,
+        "Tus ojos necesitan un break. Un descanso te ayudará",
+        "Tu cerebro agradece pausas. ¿Estiramiento o café?",
+        "Recarga energías. Un descanso corto te hará más productivo",
       ];
 
       return {
@@ -249,10 +249,10 @@ export class AssistantService {
 
     if (switchesPerMinute > this.config.driftThreshold) {
       const driftMessages = [
-        "🔄 Muchos cambios de archivo detectados. Intenta enfocarte",
-        "📂 ¿Saltando mucho? Elige un archivo y concéntrate en él",
-        "🎯 El multitasking reduce tu productividad. Una tarea a la vez",
-        "🧠 Tu cerebro prefiere el enfoque profundo.",
+        `${Math.round(switchesPerMinute)} cambios por minuto detectados. Intenta enfocarte`,
+        `¿Saltando mucho? ${session.totalSwitches} cambios en ${Math.round(sessionDuration)} minutos. Elige un archivo`,
+        "El multitasking reduce tu productividad. Una tarea a la vez",
+        "Tu cerebro prefiere el enfoque profundo",
       ];
 
       return {
@@ -273,10 +273,10 @@ export class AssistantService {
 
     if (focus.averageScore >= this.config.motivationThreshold) {
       const motivationMessages = [
-        "🔥 ¡Estás en la zona! No te detengas ahora",
-        "⚡ ¡Excelente enfoque! Sigue con ese ritmo",
-        "🚀 ¡Productividad máxima! Concentración impresionante",
-        "💪 ¡Increíble! Estás rindiendo al máximo",
+        "¡Estás en la zona! No te detengas ahora",
+        `¡Excelente enfoque! Score de ${Math.round(focus.averageScore)}/100`,
+        "¡Productividad máxima! Concentración impresionante",
+        "¡Increíble! Estás rindiendo al máximo",
       ];
 
       return {
@@ -306,8 +306,7 @@ export class AssistantService {
     if (minutesProgress > 80 && pomodorosProgress > 80 && !goals.allDone) {
       return {
         type: "tip",
-        message:
-          "🎯 ¡Casi completas los objetivos de hoy! Un último esfuerzo 💪",
+        message: `¡Casi completas los objetivos de hoy! ${Math.round(minutesProgress)}% minutos y ${Math.round(pomodorosProgress)}% pomodoros`,
         priority: "medium",
         state: "FOCUSED",
         data: { minutesProgress, pomodorosProgress },
@@ -317,7 +316,7 @@ export class AssistantService {
     if (minutesProgress > 40 && minutesProgress < 60 && !goals.doneMinutes) {
       return {
         type: "tip",
-        message: "📈 ¡Vas por buen camino! Ya pasaste del 50%",
+        message: `¡Vas por buen camino! ${Math.round(minutesProgress)}% del tiempo objetivo completado`,
         priority: "low",
         state: "IDLE",
         data: { minutesProgress },
@@ -380,7 +379,7 @@ export class AssistantService {
     if (avgScore >= this.config.motivationThreshold) {
       insights.push({
         type: "motivation",
-        message: "🔥 ¡Excelente enfoque general! Productividad al máximo",
+        message: `¡Excelente enfoque general! Score promedio: ${Math.round(avgScore)}/100`,
         priority: "low",
         state: "FOCUSED",
         data: { avgScore },
@@ -390,7 +389,7 @@ export class AssistantService {
     if (data.streak > 0 && data.streak % 7 === 0) {
       insights.push({
         type: "celebration",
-        message: `🔥 ¡${data.streak} días de racha! Eres constante`,
+        message: `¡${data.streak} días seguidos de productividad! Eres constante`,
         priority: "high",
         state: "SUCCESS",
         data: { streak: data.streak },
@@ -410,13 +409,13 @@ export class AssistantService {
 
   triggerManualInsight(type: string, customMessage?: string): void {
     const insights: Record<string, string> = {
-      fatigue: "⏰ Recuerda tomar pausas regulares",
-      drift: "🎯 Concéntrate en una tarea a la vez",
-      motivation: "💪 ¡Tú puedes! Falta poco",
-      tip: "💡 El trabajo profundo es la clave",
+      fatigue: "Recuerda tomar pausas regulares",
+      drift: "Concéntrate en una tarea a la vez",
+      motivation: "¡Tú puedes! Falta poco",
+      tip: "El trabajo profundo es la clave",
     };
 
-    const message = customMessage || insights[type] || "🤖 Deepy está aquí";
+    const message = customMessage || insights[type] || "Deepy está aquí para ayudarte";
     const state = type === "fatigue" || type === "drift" ? "WARNING" : "IDLE";
 
     this.sendMessage("show", {
