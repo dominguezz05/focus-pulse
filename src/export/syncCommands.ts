@@ -102,34 +102,89 @@ export function registerSyncCommands(context: vscode.ExtensionContext): void {
     'focusPulse.manualSync',
     async () => {
       try {
-        // Auto-authenticate if not already authenticated
-        if (!syncManager.getCurrentUser()) {
-          const shouldAuthenticate = await vscode.window.showQuickPick(
-            ['Yes', 'No'],
-            {
-              placeHolder: 'Not authenticated. Do you want to authenticate for sync?',
-            }
-          );
-          
-          if (shouldAuthenticate === 'Yes') {
-            const provider = new GitHubSyncProvider();
-            await syncManager.authenticate(provider);
-          } else {
-            vscode.window.showInformationMessage('Sync cancelled. Authentication required.');
-            return;
-          }
+        // Check if user is already authenticated
+        if (syncManager.getCurrentUser()) {
+          // User is authenticated, proceed with normal sync
+          const options: SyncOptions = {
+            includeHistory: true,
+            includeState: true,
+            includeConfiguration: true,
+          };
+
+          const syncId = await syncManager.performSync(options);
+          vscode.window.showInformationMessage(`✅ Sincronización completada (ID: ${syncId})`);
+          return;
         }
 
-        const options: SyncOptions = {
-          includeHistory: true,
-          includeState: true,
-          includeConfiguration: true,
-        };
+        // User is not authenticated, show options
+        const action = await vscode.window.showQuickPick(
+          [
+            {
+              label: "Sí, autenticar y sincronizar",
+              description: "Te mostraremos cómo crear tu token de GitHub",
+              value: "auth-and-sync"
+            },
+            {
+              label: "No, solo autenticar",
+              description: "Sin sincronización automática después",
+              value: "auth-only"
+            },
+            {
+              label: "Cancelar",
+              value: "cancel"
+            }
+          ],
+          {
+            placeHolder: "Para sincronizar necesitas autenticarte con GitHub"
+          }
+        );
 
-        const syncId = await syncManager.performSync(options);
-        vscode.window.showInformationMessage(`Sync completed (ID: ${syncId})`);
+        if (!action || action.value === "cancel") {
+          return;
+        }
+
+        // Show detailed help for both authentication options
+        const helpMessage = `📋 PASOS PARA CREAR TU TOKEN DE GITHUB:
+
+1️⃣ Ve a github.com/settings/tokens
+2️⃣ Haz clic en "Generate new token" → "Generate new token (classic)"
+3️⃣ Dale un nombre (ej: "Focus Pulse Sync")
+4️⃣ Selecciona "No expiration" o elige una duración
+5️⃣ Marca SOLO el permiso "gist"
+6️⃣ Haz clic en "Generate token"
+7️⃣ Copia el token (no podrás volver a verlo)
+
+Luego pégalo cuando te lo pidamos.`;
+
+        const openAction = await vscode.window.showInformationMessage(
+          helpMessage,
+          "Abrir GitHub Tokens",
+          "Entendido, continuar"
+        );
+
+        if (openAction === "Abrir GitHub Tokens") {
+          vscode.env.openExternal(vscode.Uri.parse('https://github.com/settings/tokens'));
+        }
+
+        // Proceed with authentication
+        const provider = new GitHubSyncProvider();
+        const user = await syncManager.authenticate(provider);
+
+        if (action.value === "auth-and-sync") {
+          // Now sync after authentication
+          const options: SyncOptions = {
+            includeHistory: true,
+            includeState: true,
+            includeConfiguration: true,
+          };
+
+          const syncId = await syncManager.performSync(options);
+          vscode.window.showInformationMessage(`✅ Autenticado como ${user.email} y sincronización completada (ID: ${syncId})`);
+        } else if (action.value === "auth-only") {
+          vscode.window.showInformationMessage(`✅ Autenticado como ${user.email}`);
+        }
       } catch (error) {
-        vscode.window.showErrorMessage(`Manual sync failed: ${error}`);
+        vscode.window.showErrorMessage(`❌ Error: ${error}`);
       }
     }
   );
