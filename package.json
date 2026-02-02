@@ -236,6 +236,22 @@
           "type": "string",
           "default": "",
           "description": "GitHub Personal Access Token para sincronización (se guarda de forma segura)."
+        },
+        "focusPulse.assistant.personality": {
+          "type": "string",
+          "enum": ["motivador", "neutro", "zen", "humorístico"],
+          "default": "motivador",
+          "description": "Personalidad del asistente virtual (afecta el tono de los mensajes)."
+        },
+        "focusPulse.assistant.flowProtection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Proteger el Flow State: evitar interrupciones cuando estás muy concentrado."
+        },
+        "focusPulse.assistant.contextualMessages": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mensajes contextuales según el tipo de archivo que estás editando."
         }
       }
     }
