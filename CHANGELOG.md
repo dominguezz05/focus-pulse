@@ -4,6 +4,62 @@ All notable versions of **Focus Pulse**.
 
 ---
 
+## [2.4.2] - 2026-02-04
+
+### Added
+
+- **🔮 Predictive Fatigue Detection**: AI-powered fatigue prediction using linear regression on score history. The assistant now warns you 10-15 minutes BEFORE fatigue hits, not after.
+- **🎯 Peak Performance Analysis**: Automatic analysis of your productivity patterns to identify your best working hours and most productive days.
+- **📊 Git Activity Insights**: Real-time celebration and tracking of git commits, merges, PRs, and coding streaks.
+  - Detects commit types (feature, fix, test, docs, merge)
+  - Celebrates massive commits (>10 files or >500 changes)
+  - Tracks commit streaks (3+, 5+ commits per hour)
+  - Detects PR merges with epic celebrations
+- **⏰ Optimal Work Time Recommendations**: Based on historical data, the assistant suggests the best times for deep work and alerts when working during non-optimal hours.
+- **📈 Smart Session Analytics**: Advanced metrics including score decline rate, variance analysis, and hourly performance tracking.
+
+### Improved
+
+- **Enhanced Assistant Intelligence**:
+  - **Predictive Analysis**: Score decline detection using 10-minute sliding window with linear regression
+  - **Time-Aware Recommendations**: "You'll be fatigued in ~10 min" instead of "You're fatigued now"
+  - **Git Integration**: Automatic monitoring every 30 seconds with intelligent event detection
+  - **Peak Hour Analysis**: Only shown once per day to avoid spam
+  - **Contextual Tips**: File-type specific messages now include performance context
+- **Message Quality**:
+  - Added 30+ new contextual messages for different coding scenarios
+  - Improved message timing (predictive vs reactive)
+  - Better celebration triggers for achievements and git milestones
+- **Configuration Sync**: Assistant config now syncs automatically with VS Code settings changes in real-time.
+
+### Fixed
+
+- **Configuration Loading**: Assistant now properly reads personality, flowProtection, and contextualMessages from VS Code settings on startup.
+- **Resource Cleanup**: Added proper `deactivate()` function to clean up git monitoring intervals and prevent memory leaks.
+
+### New Commands
+
+```
+Focus Pulse: Ver estadísticas de Git
+```
+
+Shows your git activity stats for the last 7 days (commits, avg per day, most productive day).
+
+### Technical Improvements
+
+- **Services Architecture**:
+  - New `GitAnalysisService`: Analyzes git activity and generates insights
+  - New `PeakPerformanceAnalyzer`: Identifies optimal work hours and patterns
+  - Enhanced `AssistantService`: Integrates all analysis services
+- **Predictive Algorithm**:
+  - Calculates score decline rate using linear regression
+  - Maintains 30-minute rolling score history
+  - Triggers alerts based on decline velocity + current score
+- **Performance**: Git monitoring runs async every 30s without blocking UI
+- **Type Safety**: Full TypeScript typing for all new services and interfaces
+
+---
+
 ## [2.4.1] - 2026-02-02
 
 ### Added
@@ -38,6 +94,7 @@ All notable versions of **Focus Pulse**.
 ### Configuration
 
 New settings available:
+
 ```json
 "focusPulse.assistant.personality": "motivador", // motivador | neutro | zen | humorístico
 "focusPulse.assistant.flowProtection": true,

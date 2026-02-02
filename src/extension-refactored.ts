@@ -46,6 +46,7 @@ import { getStateManager, type AppState } from "./state/StateManager";
 import { CustomAchievementManager } from "./webview/CustomAchievementManager";
 import { registerExportCommands } from "./export/exportCommands";
 import { registerSyncCommands } from "./export/syncCommands";
+import { AssistantService } from "./services/AssistantService";
 
 // ---------------- Objetivos diarios ----------------
 
@@ -162,6 +163,12 @@ async function updateAll(context: vscode.ExtensionContext) {
     unlocked: unlockedAchievements.some((u) => u.id === a.id),
   }));
 
+  // Análisis de picos de rendimiento del asistente (una vez al día)
+  const assistantService = AssistantService.getInstance();
+  if (fullHistory.length >= 5) {
+    assistantService.analyzeAndShowPeakPerformance(fullHistory);
+  }
+
   updateRefactoredDashboard({
     stats: statsArray,
     history7,
@@ -227,10 +234,27 @@ export function activate(context: vscode.ExtensionContext) {
   initStatusBar(context);
   initPomodoro(context);
   initDeepWork(context);
-  
+
+  // Initialize Assistant Service with configuration
+  const assistantService = AssistantService.getInstance();
+  const config = vscode.workspace.getConfiguration("focusPulse");
+  assistantService.updateConfig({
+    personality: config.get<"motivador" | "neutro" | "zen" | "humorístico">("assistant.personality", "motivador"),
+    flowProtection: config.get<boolean>("assistant.flowProtection", true),
+    contextualMessages: config.get<boolean>("assistant.contextualMessages", true),
+    enableFatigueDetection: true,
+    enableDriftDetection: true,
+    enableMotivationMessages: true,
+    enableCelebrations: true,
+    sessionTimeThreshold: 90,
+    driftThreshold: 2,
+    motivationThreshold: 80,
+    messageCooldown: 5,
+  });
+
   // Register export/import commands
   registerExportCommands(context);
-  
+
   // Register sync commands
   registerSyncCommands(context);
 
@@ -268,6 +292,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("focusPulse.manageCustomAchievements", () => {
       CustomAchievementManager.show(context);
     }),
+    vscode.commands.registerCommand("focusPulse.showGitStats", async () => {
+      const assistantService = AssistantService.getInstance();
+      await assistantService.showGitStats(7);
+    }),
   ];
 
   const watchers = [
@@ -279,6 +307,19 @@ export function activate(context: vscode.ExtensionContext) {
       handleTextDocumentChange(event);
       updateAll(context);
     }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      // Actualizar configuración del asistente cuando cambie en settings
+      if (event.affectsConfiguration("focusPulse.assistant")) {
+        const assistantService = AssistantService.getInstance();
+        const config = vscode.workspace.getConfiguration("focusPulse");
+        assistantService.updateConfig({
+          personality: config.get<"motivador" | "neutro" | "zen" | "humorístico">("assistant.personality", "motivador"),
+          flowProtection: config.get<boolean>("assistant.flowProtection", true),
+          contextualMessages: config.get<boolean>("assistant.contextualMessages", true),
+        });
+        console.log("Configuración del asistente actualizada");
+      }
+    }),
   ];
 
   context.subscriptions.push(...handlers, ...watchers);
@@ -287,4 +328,11 @@ export function activate(context: vscode.ExtensionContext) {
   setInterval(() => {
     updateAll(context);
   }, 2000);
+}
+
+export function deactivate() {
+  // Limpiar recursos del asistente
+  const assistantService = AssistantService.getInstance();
+  assistantService.destroy();
+  console.log("Focus Pulse desactivado - recursos liberados");
 }
