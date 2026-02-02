@@ -88,3 +88,6 @@ $RECYCLE.BIN/                  # Recycle bin
 *.backup                       # Backup files
 *.bak                          # Backup files
 *.old                          # Old versions
+
+# ─────────────── Claude Code CLI ───────────────
+.claude/                       # Claude Code configuration
