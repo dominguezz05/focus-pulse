@@ -238,6 +238,8 @@ The assistant now understands what you're working on:
 🎨 "Diseño requiere creatividad fresca. Break te traerá nuevas ideas"
 ```
 
+> 📋 **See full changelog:** [CHANGELOG.md](CHANGELOG.md)
+
 ---
 
 ## 📦 Installation
