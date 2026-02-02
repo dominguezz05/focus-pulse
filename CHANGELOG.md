@@ -6,6 +6,13 @@ All notable versions of **Focus Pulse**.
 
 ## [2.4.1] - 2026-02-02
 
+### Added
+
+- **🎭 Personality System**: Choose your assistant's personality: Motivador, Neutro, Zen, or Humorístico.
+- **🌊 Flow State Protection**: The assistant now detects when you're in "the zone" (high focus, low switching) and avoids interrupting.
+- **📁 Contextual Messages**: File-type aware messages (test files, documentation, frontend/backend code).
+- **⏱️ Adaptive Cooldown**: Smart message timing based on context (longer during flow, shorter for celebrations).
+
 ### Fixed
 
 - **Assistant Visual System**: The assistant now correctly displays animated PNG sprites from `media/assistant/` instead of static emojis.
@@ -16,12 +23,26 @@ All notable versions of **Focus Pulse**.
 
 ### Improved
 
+- **Assistant Intelligence**:
+  - **Flow Detection**: Score ≥75 + low switching + active editing + 15+ min session = Flow State
+  - **Smart Interruptions**: Only high-priority messages during Deep Work or Flow State
+  - **Personality-Driven Messages**: 12+ unique messages per personality per insight type
+  - **Context Awareness**: Detects test files, config, documentation, frontend, and backend code
 - **Assistant States**: Each state now displays its corresponding sprite set:
   - `IDLE`: normal1.png → normal2.png (2 frames)
   - `FOCUSED`: pensar1.png → pensar4.png (4 frames)
   - `WARNING`: Fatiga1.png → fatiga4.png (4 frames)
   - `SUCCESS`: xp1.png → xp4.png (4 frames)
 - **Visual Polish**: Updated aura effects and character animations to match the pixel-art style of the sprites.
+
+### Configuration
+
+New settings available:
+```json
+"focusPulse.assistant.personality": "motivador", // motivador | neutro | zen | humorístico
+"focusPulse.assistant.flowProtection": true,
+"focusPulse.assistant.contextualMessages": true
+```
 
 ---
 

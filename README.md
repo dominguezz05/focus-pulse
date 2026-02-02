@@ -85,8 +85,21 @@ Get proactive advice while you work:
 - **Drift Alerts**: "Too much tab switching! Let's get back to the main file."
 - **Motivational Sparks**: Celebrates your high Focus Scores and XP level-ups.
 - **Daily Insights**: Automatic summaries based on your coding history and trends.
+- **🌊 Flow State Protection** (New!): Detects when you're in "the zone" and avoids interrupting.
+- **🎭 Personality System** (New!): Choose between Motivador, Neutro, Zen, or Humorístico tones.
+- **📁 Context Awareness** (New!): Gives relevant advice based on the file type you're editing.
 
 > **Pro-Tip:** Click on the assistant to get a "Productivity Fun Fact" or a personalized tip based on your past 30 days.
+
+#### Personality Examples
+
+**Motivador**: "¡Campeón! Has trabajado duro. Una pausa corta te hará más productivo 💪"
+
+**Zen**: "El descanso es parte del trabajo. Respira hondo, camina 5 minutos 🍃"
+
+**Humorístico**: "Tu cerebro está pidiendo café a gritos ☕️ (o un power nap)"
+
+**Neutro**: "Llevas tiempo trabajando. Considera tomar un descanso breve"
 
 ---
 
@@ -193,19 +206,21 @@ Runs **locally** and updates while coding.
 
 From Settings (Focus Pulse):
 
+### Core Settings
 - minMinutesForScore — minimum minutes to stabilize the score
-
 - focusPulse.score.timeWeight — weight of time
-
 - focusPulse.score.editsWeight — weight of editions per minute
-
 - focusPulse.score.switchPenalty — penalty for file change
 
+### Pomodoro
 - focusPulse.enablePomodoro — turn Pomodoro on/off
-
 - focusPulse.pomodoro.workMinutes — work duration
-
 - focusPulse.pomodoro.breakMinutes — rest duration
+
+### Assistant (New!) 🤖
+- focusPulse.assistant.personality — Choose: "motivador", "neutro", "zen", "humorístico"
+- focusPulse.assistant.flowProtection — Protect Flow State from interruptions
+- focusPulse.assistant.contextualMessages — Enable file-type aware messages
 
 ---
 

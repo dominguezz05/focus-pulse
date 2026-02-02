@@ -21,6 +21,9 @@ export interface AssistantConfig {
   driftThreshold: number; // switches per minute
   motivationThreshold: number; // focus score
   messageCooldown: number; // minutes between messages
+  personality: "motivador" | "neutro" | "zen" | "humorístico";
+  flowProtection: boolean; // Don't interrupt during flow state
+  contextualMessages: boolean; // File-type specific messages
 }
 
 export class AssistantService {
@@ -53,6 +56,9 @@ export class AssistantService {
       driftThreshold: 2, // 2 switches per minute
       motivationThreshold: 80, // 80+ focus score
       messageCooldown: 5, // 5 minutes between messages
+      personality: "motivador",
+      flowProtection: true,
+      contextualMessages: true,
     };
   }
 
@@ -220,17 +226,9 @@ export class AssistantService {
     const sessionDuration = (Date.now() - session.startTime) / (1000 * 60);
 
     if (sessionDuration > this.config.sessionTimeThreshold) {
-      const fatigueMessages = [
-        `Llevas ${Math.round(sessionDuration)} minutos trabajando. ¿Un descanso?`,
-        "Tus ojos necesitan un break. Un descanso te ayudará",
-        "Tu cerebro agradece pausas. ¿Estiramiento o café?",
-        "Recarga energías. Un descanso corto te hará más productivo",
-      ];
-
       return {
         type: "fatigue",
-        message:
-          fatigueMessages[Math.floor(Math.random() * fatigueMessages.length)],
+        message: this.getPersonalityMessage("fatigue"),
         priority: "medium",
         state: "WARNING",
         data: { sessionDuration },
@@ -248,17 +246,9 @@ export class AssistantService {
       sessionDuration > 0 ? session.totalSwitches / sessionDuration : 0;
 
     if (switchesPerMinute > this.config.driftThreshold) {
-      const driftMessages = [
-        `${Math.round(switchesPerMinute)} cambios por minuto detectados. Intenta enfocarte`,
-        `¿Saltando mucho? ${session.totalSwitches} cambios en ${Math.round(sessionDuration)} minutos. Elige un archivo`,
-        "El multitasking reduce tu productividad. Una tarea a la vez",
-        "Tu cerebro prefiere el enfoque profundo",
-      ];
-
       return {
         type: "drift",
-        message:
-          driftMessages[Math.floor(Math.random() * driftMessages.length)],
+        message: this.getPersonalityMessage("drift"),
         priority: "medium",
         state: "WARNING",
         data: { switchesPerMinute, totalSwitches: session.totalSwitches },
@@ -272,19 +262,9 @@ export class AssistantService {
     if (!focus || !focus.averageScore) return null;
 
     if (focus.averageScore >= this.config.motivationThreshold) {
-      const motivationMessages = [
-        "¡Estás en la zona! No te detengas ahora",
-        `¡Excelente enfoque! Score de ${Math.round(focus.averageScore)}/100`,
-        "¡Productividad máxima! Concentración impresionante",
-        "¡Increíble! Estás rindiendo al máximo",
-      ];
-
       return {
         type: "motivation",
-        message:
-          motivationMessages[
-            Math.floor(Math.random() * motivationMessages.length)
-          ],
+        message: this.getPersonalityMessage("motivation"),
         priority: "low",
         state: "FOCUSED",
         data: { avgScore: focus.averageScore },
@@ -327,20 +307,206 @@ export class AssistantService {
 
   private shouldSendMessage(insight: AssistantInsight): boolean {
     const state = this.stateManager.getState();
+
+    // Deep Work protection
     if (state.deepWork?.active && insight.priority !== "high") {
       return false;
     }
 
+    // Flow State protection
+    if (this.config.flowProtection && this.isInFlowState(state)) {
+      // Only allow high priority messages and celebrations during flow
+      if (insight.priority !== "high" && insight.type !== "celebration") {
+        return false;
+      }
+    }
+
+    // Adaptive cooldown based on insight type
+    const cooldown = this.getAdaptiveCooldown(insight);
     const currentTime = Date.now();
-    if (
-      currentTime - this.lastMessageTime <
-      this.config.messageCooldown * 60 * 1000
-    ) {
+    if (currentTime - this.lastMessageTime < cooldown) {
       return false;
     }
 
     this.lastMessageTime = currentTime;
     return true;
+  }
+
+  private isInFlowState(state: any): boolean {
+    const focus = state.focus;
+    const session = state.session;
+
+    if (!focus || !session) return false;
+
+    // Flow state criteria:
+    // 1. High focus score (>= 75)
+    // 2. Recent activity (edits in last 5 min)
+    // 3. Low context switching (< 3 switches in last 10 min)
+    // 4. Minimum session duration (>= 15 min)
+    const sessionDuration = (Date.now() - (session.startTime || 0)) / (1000 * 60);
+
+    return (
+      focus.averageScore >= 75 &&
+      focus.sessionEdits >= 10 &&
+      focus.sessionSwitches < 3 &&
+      sessionDuration >= 15
+    );
+  }
+
+  private getAdaptiveCooldown(insight: AssistantInsight): number {
+    const baseTime = this.config.messageCooldown * 60 * 1000;
+
+    // Celebrations: short cooldown (don't want to miss achievements)
+    if (insight.type === "celebration") {
+      return baseTime * 0.3;
+    }
+
+    // Fatigue/Warning: long cooldown (already bothered user)
+    if (insight.type === "fatigue" || insight.type === "warning") {
+      return baseTime * 2;
+    }
+
+    // Motivation: medium cooldown
+    if (insight.type === "motivation") {
+      return baseTime * 1.5;
+    }
+
+    // During flow: extra long cooldown
+    const state = this.stateManager.getState();
+    if (this.isInFlowState(state)) {
+      return baseTime * 3;
+    }
+
+    return baseTime;
+  }
+
+  private detectFileContext(fileName: string): string {
+    if (!fileName) return "general";
+
+    const lower = fileName.toLowerCase();
+
+    // Test files
+    if (lower.includes(".test.") || lower.includes(".spec.") || lower.includes("test/") || lower.includes("__tests__/")) {
+      return "test";
+    }
+
+    // Configuration files
+    if (lower.includes("config") || lower.endsWith(".json") || lower.endsWith(".yaml") || lower.endsWith(".yml") || lower.endsWith(".toml")) {
+      return "config";
+    }
+
+    // Documentation
+    if (lower.endsWith(".md") || lower.endsWith(".txt") || lower.includes("readme") || lower.includes("doc")) {
+      return "documentation";
+    }
+
+    // Frontend files
+    if (lower.endsWith(".tsx") || lower.endsWith(".jsx") || lower.endsWith(".vue") || lower.endsWith(".svelte") || lower.endsWith(".html") || lower.endsWith(".css") || lower.endsWith(".scss")) {
+      return "frontend";
+    }
+
+    // Backend files
+    if (lower.includes("api/") || lower.includes("server/") || lower.includes("backend/") || lower.includes("service")) {
+      return "backend";
+    }
+
+    return "general";
+  }
+
+  private getPersonalityMessage(
+    type: "fatigue" | "drift" | "motivation" | "tip",
+    context?: string
+  ): string {
+    const messages = {
+      motivador: {
+        fatigue: [
+          "¡Campeón! Has trabajado duro. Una pausa corta te hará más productivo 💪",
+          "¡Gran esfuerzo! Tu cerebro necesita recargarse. Un descanso y vuelves con todo 🔋",
+          "¡Excelente sesión! Tómate 5 minutos, te los has ganado 🌟"
+        ],
+        drift: [
+          "¡Enfoca esa energía! Vuelve al archivo principal y destroza esa tarea 🎯",
+          "¡Tú puedes! Elige un archivo y dale con todo. Un paso a la vez 🚀",
+          "¡Concentración! Sé que puedes mantener el foco. Vamos 💪"
+        ],
+        motivation: [
+          "¡INCREÍBLE! Estás arrasando. Sigue así, campeón 🔥",
+          "¡WOW! Tu nivel de concentración es épico. No pares ahora 🚀",
+          "¡BESTIAL! Estás en tu mejor momento. A por más 💪"
+        ],
+        tip: [
+          "💡 Pro tip: Los breaks de 5 min cada 25 min potencian tu rendimiento",
+          "🎯 Secreto: Una tarea a la vez. Multitasking = enemigo del foco"
+        ]
+      },
+      zen: {
+        fatigue: [
+          "El descanso es parte del trabajo. Respira hondo, camina 5 minutos 🍃",
+          "Tu mente necesita espacio. Una pausa consciente restaura la claridad 🧘",
+          "Observa el cansancio sin juzgar. Un break te devolverá al presente 🌊"
+        ],
+        drift: [
+          "La mente divaga. Observa sin juzgar, luego regresa al presente 🧘",
+          "Como agua que fluye, vuelve suavemente al cauce principal 🌊",
+          "Nota la distracción, respira, regresa al foco con compasión 🍃"
+        ],
+        motivation: [
+          "Fluyes con el trabajo. Esta es la esencia del flow 🌊",
+          "Presente y enfocado. El camino se revela paso a paso 🍃",
+          "En equilibrio con la tarea. Continúa con esta presencia 🧘"
+        ],
+        tip: [
+          "🍃 Respiración consciente: 3 respiros profundos antes de cada tarea",
+          "🌊 El foco es un músculo. Se entrena con paciencia y constancia"
+        ]
+      },
+      humorístico: {
+        fatigue: [
+          "Tu cerebro está pidiendo café a gritos ☕️ (o un power nap)",
+          "Alerta: Niveles de café peligrosamente bajos. ¡Break time! ☕",
+          "¿Cansado? Yo también... y soy una IA. Imagínate tú 😅"
+        ],
+        drift: [
+          "¿Perdido en tabs? Pareces yo buscando las llaves del coche 🔑",
+          "Tab switching nivel: DJ haciendo scratch 🎵 Vuelve al beat principal",
+          "Houston, tenemos un problema de focus 🚀 ¡A tierra otra vez!"
+        ],
+        motivation: [
+          "¡MODO BESTIA ACTIVADO! 🦁 Sigues imparable",
+          "¿Eres humano o máquina? Porque estás ON FIRE 🔥",
+          "Plot twist: Tú eres el protagonista y estás ganando 🎮"
+        ],
+        tip: [
+          "🍕 Break = recarga de superpoderes. No lo saltes, héroe",
+          "🎮 Productividad es un juego. Tú vs. Distracciones. Estás ganando"
+        ]
+      },
+      neutro: {
+        fatigue: [
+          "Llevas tiempo trabajando. Considera tomar un descanso breve",
+          "Tu sesión ha sido larga. Un break de 5-10 minutos es recomendable",
+          "Tiempo de descanso. Las pausas mejoran el rendimiento general"
+        ],
+        drift: [
+          "Detectados múltiples cambios de archivo. Concéntrate en uno principal",
+          "Alto nivel de context switching. Reduce cambios para mejor foco",
+          "Considera trabajar en un archivo por vez para mantener concentración"
+        ],
+        motivation: [
+          "Excelente nivel de concentración. Continúa con este ritmo",
+          "Tu score de foco es alto. Buen trabajo",
+          "Rendimiento óptimo detectado. Mantén este enfoque"
+        ],
+        tip: [
+          "Técnica Pomodoro: 25 min trabajo + 5 min break = productividad",
+          "Un archivo a la vez reduce carga cognitiva y mejora resultados"
+        ]
+      }
+    };
+
+    const personality = this.config.personality;
+    const messageSet = messages[personality][type];
+    return messageSet[Math.floor(Math.random() * messageSet.length)];
   }
 
   private getDurationForType(type: string): number {
