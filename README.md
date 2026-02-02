@@ -1,7 +1,7 @@
 # ⚡ Focus Pulse — Productivity Tracking for Developers
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.4.0-informational)
+![Version](https://img.shields.io/badge/version-2.4.1-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Status](https://img.shields.io/badge/status-Experimental-orange)
@@ -68,11 +68,14 @@ Your coding journey now has a companion. Integrated directly into the dashboard,
 
 ### Reactive Visual States
 
-The assistant changes its appearance based on your performance:
+The assistant changes its appearance based on your performance with **animated pixel-art sprites**:
 
-- **IDLE**: Resting and ready for your next session.
-- **FOCUSED**: Active coding mode—keeping pace with your rhythm.
-- **WARNING**: Noticing fatigue or attention drift.
+- **IDLE**: Resting and ready for your next session (gentle breathing animation).
+- **FOCUSED**: Active coding mode—keeping pace with your rhythm (thinking animation).
+- **WARNING**: Noticing fatigue or attention drift (tired/concerned animation).
+- **SUCCESS**: Celebrating achievements and level-ups (level-up animation with effects).
+
+Each state features **frame-by-frame sprite animations** that bring Deepy to life, creating a more engaging and responsive companion experience.
 
 ### 🧠 Intelligent Suggestion Engine
 

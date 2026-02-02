@@ -4,6 +4,27 @@ All notable versions of **Focus Pulse**.
 
 ---
 
+## [2.4.1] - 2026-02-02
+
+### Fixed
+
+- **Assistant Visual System**: The assistant now correctly displays animated PNG sprites from `media/assistant/` instead of static emojis.
+- **Sprite Animation Engine**: Implemented frame-by-frame animation loop (350ms intervals) for all assistant states (IDLE, FOCUSED, WARNING, SUCCESS).
+- **Webview Resource URIs**: Fixed image loading by properly converting local file paths to webview URIs using `webview.asWebviewUri()`.
+- **State Transition Animations**: Enhanced visual feedback with smooth opacity transitions between sprite frames.
+- **Animation Cleanup**: Added proper cleanup of animation intervals to prevent memory leaks when dashboard is closed.
+
+### Improved
+
+- **Assistant States**: Each state now displays its corresponding sprite set:
+  - `IDLE`: normal1.png → normal2.png (2 frames)
+  - `FOCUSED`: pensar1.png → pensar4.png (4 frames)
+  - `WARNING`: Fatiga1.png → fatiga4.png (4 frames)
+  - `SUCCESS`: xp1.png → xp4.png (4 frames)
+- **Visual Polish**: Updated aura effects and character animations to match the pixel-art style of the sprites.
+
+---
+
 ## [2.4.0] - 2026-01-30
 
 ### Added
