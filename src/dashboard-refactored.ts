@@ -67,7 +67,39 @@ function convertToDeepWorkState(state: StateTypesDeepWorkState): DeepWorkState {
   };
 }
 
-function getRefactoredHtml(): string {
+function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {
+  // Generate URIs for assistant sprites
+  const getAssistantImageUri = (state: string, frame: string) => {
+    const imagePath = vscode.Uri.joinPath(context.extensionUri, 'media', 'assistant', state, frame);
+    return webview.asWebviewUri(imagePath).toString();
+  };
+
+  // Create animation map with proper URIs
+  const animationMapJson = JSON.stringify({
+    IDLE: [
+      getAssistantImageUri('normal', 'normal1.png'),
+      getAssistantImageUri('normal', 'normal2.png')
+    ],
+    FOCUSED: [
+      getAssistantImageUri('thinking', 'pensar1.png'),
+      getAssistantImageUri('thinking', 'pensar2.png'),
+      getAssistantImageUri('thinking', 'pensar3.png'),
+      getAssistantImageUri('thinking', 'pensar4.png')
+    ],
+    WARNING: [
+      getAssistantImageUri('fatigue', 'Fatiga1.png'),
+      getAssistantImageUri('fatigue', 'fatiga2.png'),
+      getAssistantImageUri('fatigue', 'fatiga3.png'),
+      getAssistantImageUri('fatigue', 'fatiga4.png')
+    ],
+    SUCCESS: [
+      getAssistantImageUri('levelup', 'xp1.png'),
+      getAssistantImageUri('levelup', 'xp2.png'),
+      getAssistantImageUri('levelup', 'xp3.png'),
+      getAssistantImageUri('levelup', 'xp4.png')
+    ]
+  });
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -81,6 +113,8 @@ function getRefactoredHtml(): string {
 
   <script>
     const vscode = acquireVsCodeApi();
+    // Assistant animation map with proper URIs
+    const ASSISTANT_ANIMATION_MAP = ${animationMapJson};
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -860,22 +894,25 @@ setupEventListeners() {
                 this.currentState = 'IDLE';
                 this.speechBubble = null;
                 this.character = null;
+                this.characterImg = null;
                 this.messageQueue = [];
                 this.isShowingMessage = false;
                 this.factsClickCount = 0;
+                this.animationInterval = null;
+                this.frameIndex = 0;
                 this.productivityFacts = [
                     "¿Sabías que tardas 23 minutos en recuperar el foco tras una interrupción?",
                     "El cerebro humano mantiene el foco máximo por ~45 minutos seguidos",
                     "Trabajar en bloques de 90min + 15min de descanso es óptimo para productividad",
                     "Hacer pausas cada 25 minutos aumenta un 13% tu productividad diaria",
                     "La música sin letra puede mejorar tu concentración hasta en un 15%",
-                    "El multitasking reduce tu productividad en un 40% comparado con el trabajo enfocado"
+                    "El multitasking reduce tu productividad en un 40% comparado con el trabajo enfocto"
                 ];
 
                 this.setupGlobalStyles();
                 this.render();
                 this.setupEventListeners();
-                
+
                 // Notify extension that assistant is ready
                 vscode.postMessage({ type: 'assistant:ready' });
             };
@@ -888,30 +925,97 @@ setupEventListeners() {
                 style.textContent = \`
                     @keyframes pixel-wiggle {
                         0%, 100% { transform: rotate(0deg); }
-                        25% { transform: rotate(2deg); }
-                        75% { transform: rotate(-2deg); }
+                        25% { transform: rotate(5deg); }
+                        75% { transform: rotate(-5deg); }
                     }
-                    
-                    @keyframes float-sweat {
-                        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-                        50% { transform: translateY(-4px) rotate(10deg); opacity: 0.8; }
-                        100% { transform: translateY(-8px) rotate(-10deg); opacity: 0; }
+                    .pixel-wiggle { animation: pixel-wiggle 0.3s ease-in-out infinite; }
+
+                    @keyframes celebration-pulse {
+                        0% { transform: scale(1) rotate(0deg); opacity: 1; }
+                        25% { transform: scale(1.3) rotate(5deg); opacity: 0.9; }
+                        50% { transform: scale(1.1) rotate(-3deg); opacity: 1; }
+                        75% { transform: scale(1.2) rotate(2deg); opacity: 0.95; }
+                        100% { transform: scale(1) rotate(0deg); opacity: 1; }
                     }
-                    
-                    .pixel-wiggle {
-                        animation: pixel-wiggle 0.5s ease-in-out infinite;
+                    .celebration-pulse { animation: celebration-pulse 1.2s ease-in-out; }
+
+                    @keyframes warning-shake {
+                        0%, 100% { transform: translateX(0); }
+                        10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+                        20%, 40%, 60%, 80% { transform: translateX(3px); }
                     }
-                    
-                    .sweat-drop {
-                        position: absolute;
-                        width: 4px;
-                        height: 6px;
-                        background: #60A5FA;
-                        border-radius: 50%;
-                        animation: float-sweat 2s ease-in-out infinite;
+                    .warning-shake { animation: warning-shake 0.6s ease-in-out; }
+
+                    @keyframes focus-glow {
+                        0%, 100% { filter: brightness(1) drop-shadow(0 0 8px rgba(59, 130, 246, 0.5)); }
+                        50% { filter: brightness(1.2) drop-shadow(0 0 16px rgba(59, 130, 246, 0.8)); }
+                    }
+                    .focus-glow { animation: focus-glow 2s ease-in-out infinite; }
+
+                    @keyframes gentle-pulse {
+                        0%, 100% { transform: scale(1); opacity: 0.3; }
+                        50% { transform: scale(1.05); opacity: 0.5; }
+                    }
+
+                    @keyframes focus-aura {
+                        0%, 100% { transform: scale(1); opacity: 0.8; }
+                        50% { transform: scale(1.15); opacity: 1; }
+                    }
+
+                    @keyframes warning-pulse {
+                        0%, 100% { transform: scale(1); opacity: 0.7; }
+                        50% { transform: scale(1.2); opacity: 0.9; }
+                    }
+
+                    @keyframes celebration-burst {
+                        0% { transform: scale(0.5); opacity: 0; }
+                        50% { transform: scale(1.3); opacity: 1; }
+                        100% { transform: scale(1); opacity: 0.9; }
                     }
                 \`;
                 document.head.appendChild(style);
+            };
+
+            AssistantRenderer.prototype.startAnimationLoop = function() {
+                if (this.animationInterval) clearInterval(this.animationInterval);
+
+                this.frameIndex = 0;
+
+                // Animation loop for sprite frames
+                this.animationInterval = setInterval(() => {
+                    const frames = ASSISTANT_ANIMATION_MAP[this.currentState];
+                    if (!frames || frames.length === 0) return;
+
+                    this.frameIndex = (this.frameIndex + 1) % frames.length;
+
+                    if (this.characterImg) {
+                        // Smooth fade transition between frames
+                        this.characterImg.style.opacity = '0.8';
+                        setTimeout(() => {
+                            if (this.characterImg) {
+                                this.characterImg.src = frames[this.frameIndex];
+                                this.characterImg.style.opacity = '1';
+                            }
+                        }, 50);
+                    }
+
+                    // Micro-animations occasionally when IDLE
+                    if (Math.random() > 0.95 && this.currentState === 'IDLE') {
+                        this.triggerMicroAnimation();
+                    }
+                }, 350); // Frame rate
+            };
+
+            AssistantRenderer.prototype.triggerMicroAnimation = function() {
+                if (!this.character) return;
+
+                const microAnimations = ['animate-bounce', 'animate-pulse', 'scale-110'];
+                const randomAnimation = microAnimations[Math.floor(Math.random() * microAnimations.length)];
+
+                this.character.classList.add(randomAnimation);
+                setTimeout(() => {
+                    this.character?.classList.remove(randomAnimation);
+                }, 800);
             };
 
             AssistantRenderer.prototype.render = function() {
@@ -922,17 +1026,18 @@ setupEventListeners() {
                 assistantContainer.innerHTML = \`
                     <!-- Deepy Character -->
                     <div id="deepy-character" class="relative pointer-events-auto cursor-pointer transform transition-all duration-300 hover:scale-110">
-                        <div class="pixel-art-character w-16 h-16 bg-slate-800 rounded-lg border-4 border-slate-600 shadow-xl flex items-center justify-center text-2xl select-none hover:shadow-purple-500/50">
-                            😊
-                        </div>
-                        <div id="deepy-aura" class="absolute -inset-2 rounded-lg opacity-0 transition-opacity duration-500 pointer-events-none"></div>
+                        <img id="assistant-sprite"
+                             src="\${ASSISTANT_ANIMATION_MAP.IDLE[0]}"
+                             class="w-20 h-20 object-contain drop-shadow-xl select-none"
+                             alt="Deepy Assistant" />
+                        <div id="deepy-aura" class="absolute -inset-2 rounded-full opacity-0 transition-opacity duration-500 pointer-events-none"></div>
                     </div>
-                    
+
                     <!-- Speech Bubble -->
-                    <div id="speech-bubble" class="absolute bottom-20 right-0 max-w-xs bg-white/90 backdrop-blur-md border border-slate-300 rounded-xl p-3 shadow-xl opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
+                    <div id="speech-bubble" class="absolute bottom-24 right-0 max-w-xs bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-4 shadow-2xl opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
                         <div class="relative">
-                            <p id="speech-text" class="text-sm text-slate-800 font-medium"></p>
-                            <div class="absolute -bottom-2 right-4 w-0 h-0 border-l-8 border-l-transparent border-t-8 border-t-white/90 border-r-8 border-r-transparent"></div>
+                            <p id="speech-text" class="text-sm text-slate-800 font-bold leading-relaxed"></p>
+                            <div class="absolute -bottom-6 right-6 w-4 h-4 bg-white/95 rotate-45 border-r border-b border-slate-200"></div>
                         </div>
                     </div>
                 \`;
@@ -941,11 +1046,17 @@ setupEventListeners() {
 
                 // Cache DOM elements
                 this.character = document.getElementById('deepy-character');
+                this.characterImg = document.getElementById('assistant-sprite');
                 this.speechBubble = document.getElementById('speech-bubble');
                 this.container = assistantContainer;
 
+                // Start animation loop
+                this.startAnimationLoop();
+
                 // Show welcome message
-                this.showMessage("¡Hola! Soy Deepy, tu compañero de Deep Work 💪", 'IDLE', 4000);
+                setTimeout(() => {
+                    this.showMessage("¡Hola! Soy Deepy, tu compañero de Deep Work", 'IDLE', 4000);
+                }, 500);
             };
 
             AssistantRenderer.prototype.setupEventListeners = function() {
@@ -1002,22 +1113,21 @@ setupEventListeners() {
             AssistantRenderer.prototype.animateCharacter = function(animation) {
                 if (!this.character) return;
 
-                const characterDiv = this.character.querySelector('.pixel-art-character');
-                
-                switch (animation) {
-                    case 'bounce':
-                        characterDiv?.classList.add('animate-bounce');
-                        setTimeout(() => characterDiv?.classList.remove('animate-bounce'), 600);
-                        break;
-                    case 'wiggle':
-                        characterDiv?.classList.add('animate-pulse');
-                        setTimeout(() => characterDiv?.classList.remove('animate-pulse'), 600);
-                        break;
-                    case 'pulse':
-                        characterDiv?.classList.add('animate-ping');
-                        setTimeout(() => characterDiv?.classList.remove('animate-ping'), 600);
-                        break;
-                }
+                const animClass =
+                    animation === 'bounce' ? 'animate-bounce' :
+                    animation === 'wiggle' ? 'pixel-wiggle' :
+                    animation === 'pulse' ? 'animate-pulse' :
+                    animation === 'celebrate' ? 'celebration-pulse' :
+                    animation === 'shake' ? 'warning-shake' :
+                    animation === 'glow' ? 'focus-glow' :
+                    'animate-pulse';
+
+                this.character.classList.add(animClass);
+                setTimeout(() => {
+                    if (this.character) {
+                        this.character.classList.remove(animClass);
+                    }
+                }, 1200);
             };
 
             AssistantRenderer.prototype.showMessage = function(text, state, duration) {
@@ -1074,43 +1184,53 @@ setupEventListeners() {
             };
 
             AssistantRenderer.prototype.updateCharacterVisual = function() {
-                if (!this.character) return;
+                if (!this.character || !this.characterImg) return;
 
-                const characterDiv = this.character.querySelector('.pixel-art-character');
                 const aura = document.getElementById('deepy-aura');
+
+                // Reset frame index when changing state
+                this.frameIndex = 0;
+
+                // Update sprite image to first frame of new state
+                const frames = ASSISTANT_ANIMATION_MAP[this.currentState];
+                if (frames && frames.length > 0) {
+                    this.characterImg.src = frames[0];
+                }
+
+                // Update aura based on state
+                if (!aura) return;
+
+                // Clear previous classes
+                aura.className = 'absolute rounded-full pointer-events-none transition-all duration-500';
 
                 switch (this.currentState) {
                     case 'IDLE':
-                        if (characterDiv) {
-                            characterDiv.textContent = '😊';
-                            characterDiv.className = 'pixel-art-character w-16 h-16 bg-slate-800 rounded-lg border-4 border-slate-600 shadow-xl flex items-center justify-center text-2xl select-none hover:shadow-purple-500/50';
-                        }
-                        if (aura) {
-                            aura.style.opacity = '0';
-                            aura.className = 'absolute -inset-2 rounded-lg opacity-0 transition-opacity duration-500 pointer-events-none';
-                        }
+                        aura.className += ' -inset-2 bg-purple-500/10 blur-sm';
+                        aura.style.opacity = '0.3';
+                        aura.style.animation = 'gentle-pulse 4s ease-in-out infinite';
                         break;
 
                     case 'FOCUSED':
-                        if (characterDiv) {
-                            characterDiv.textContent = '🧠';
-                            characterDiv.className = 'pixel-art-character w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg border-4 border-blue-400 shadow-xl shadow-blue-500/50 flex items-center justify-center text-2xl select-none animate-pulse';
-                        }
-                        if (aura) {
-                            aura.className = 'absolute -inset-2 rounded-lg bg-gradient-to-r from-orange-400 to-red-500 opacity-30 blur-md transition-opacity duration-500 pointer-events-none animate-pulse';
-                            aura.style.opacity = '0.7';
-                        }
+                        aura.className += ' -inset-6 bg-blue-500/40 blur-2xl';
+                        aura.style.opacity = '0.8';
+                        aura.style.animation = 'focus-aura 2s ease-in-out infinite';
                         break;
 
                     case 'WARNING':
-                        if (characterDiv) {
-                            characterDiv.textContent = '😰';
-                            characterDiv.className = 'pixel-art-character w-16 h-16 bg-gradient-to-br from-red-600 to-orange-600 rounded-lg border-4 border-red-400 shadow-xl shadow-red-500/50 flex items-center justify-center text-2xl select-none animate-bounce';
-                        }
-                        if (aura) {
-                            aura.className = 'absolute -inset-2 rounded-lg bg-red-500/40 transition-opacity duration-500 pointer-events-none';
-                            aura.style.opacity = '0.6';
-                        }
+                        aura.className += ' -inset-5 bg-orange-500/30 blur-xl';
+                        aura.style.opacity = '0.7';
+                        aura.style.animation = 'warning-pulse 1.5s ease-in-out infinite';
+                        break;
+
+                    case 'SUCCESS':
+                        aura.className += ' -inset-8 bg-gradient-to-r from-yellow-400/50 via-orange-400/50 to-pink-400/50 blur-2xl';
+                        aura.style.opacity = '0.9';
+                        aura.style.animation = 'celebration-burst 1s ease-out';
+                        setTimeout(() => {
+                            if (aura && this.currentState === 'SUCCESS') {
+                                aura.style.animation = 'gentle-pulse 3s ease-in-out infinite';
+                            }
+                        }, 1000);
                         break;
                 }
             };
@@ -1131,24 +1251,30 @@ setupEventListeners() {
 
             AssistantRenderer.prototype.showCelebration = function(type, details) {
                 let message = '';
-                
+
                 switch (type) {
                     case 'achievement':
-                        message = \`🎉 ¡Nuevo logro desbloqueado: \${details?.title || 'Increíble'}!\`;
+                        message = \`¡Logro desbloqueado: \${details?.title || 'Increíble'}!\`;
                         break;
                     case 'level':
-                        message = \`🚀 ¡Nivel \${details?.level || 'superior'} alcanzado! Sigue así 💪\`;
+                        message = \`¡Nivel \${details?.level || 'superior'} alcanzado! Sigue así\`;
                         break;
                     case 'streak':
-                        message = \`🔥 ¡\${details?.days || 'varios'} días de racha! No pierdas el ritmo\`;
+                        message = \`¡\${details?.days || 'varios'} días de racha! No pierdas el ritmo\`;
                         break;
                 }
-                
-                this.showMessage(message, 'FOCUSED', 5000);
-                this.animateCharacter('bounce');
+
+                this.showMessage(message, 'SUCCESS', 5000);
+                this.animateCharacter('celebrate');
             };
 
             AssistantRenderer.prototype.destroy = function() {
+                // Clear animation interval
+                if (this.animationInterval) {
+                    clearInterval(this.animationInterval);
+                }
+
+                // Remove event listeners
                 if (this.character) {
                     this.character.removeEventListener('click', this.showProductivityFact);
                     this.character.removeEventListener('mouseenter', () => this.setCharacterHover(true));
@@ -1208,16 +1334,16 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   console.log("openRefactoredDashboard llamado");
   if (currentPanel) {
     console.log("Reutilizando panel existente");
-    currentPanel.webview.html = getRefactoredHtml();
+    currentPanel.webview.html = getRefactoredHtml(context, currentPanel.webview);
     currentPanel.reveal(vscode.ViewColumn.One);
     return;
   }
 
   console.log("Creando nuevo panel de dashboard");
-  
+
   // Initialize assistant service
   assistantService = AssistantService.getInstance();
-  
+
   currentPanel = vscode.window.createWebviewPanel(
     "focusPulseDashboardV2",
     "Focus Pulse Dashboard ",
@@ -1232,7 +1358,7 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   assistantService.setWebviewPanel(currentPanel);
 
   console.log("Estableciendo HTML del dashboard");
-  currentPanel.webview.html = getRefactoredHtml();
+  currentPanel.webview.html = getRefactoredHtml(context, currentPanel.webview);
 
 currentPanel.webview.onDidReceiveMessage(
     async (msg) => {

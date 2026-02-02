@@ -11,16 +11,83 @@ dist/
 .vscode/.cache
 .vscode/launch.json
 .vscode/tasks.json
+.vscode/settings.json          # Configuración local de usuario
+*.code-workspace               # Workspaces
 
 # ─────────────── npm / pnpm / yarn ───────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.pnpm-store/                   # Cache de pnpm
 
 # ─────────────── TypeScript ───────────────
 *.tsbuildinfo
+.tscache/                      # Cache incremental
+
+# ─────────────── Build & Bundle ───────────────
+.esbuild/                      # Cache de esbuild
+*.tmp
+*.temp
+*.cache
+
+# ─────────────── Testing ───────────────
+coverage/                      # Coverage reports
+.nyc_output/                   # NYC coverage
+*.lcov                         # Coverage format
+test-results/                  # Test results
+junit.xml                      # JUnit reports
+
+# ─────────────── Environment & Secrets ───────────────
+.env                           # Variables de entorno
+.env.local                     # Local overrides
+.env.*.local                   # Environment-specific
+*.token                        # Token files
+.github-token                  # GitHub tokens
+
+# ─────────────── Focus Pulse Data Exports ───────────────
+exports/                       # Directorio de exportaciones
+*.focus-pulse.json             # Exportaciones JSON
+*.focus-pulse.xml              # Exportaciones XML
+
+# ─────────────── IDEs ───────────────
+# JetBrains
+.idea/                         # WebStorm/IntelliJ
+*.iml                          # IntelliJ modules
+*.iws                          # IntelliJ workspace
+
+# Sublime Text
+*.sublime-workspace            # Sublime workspace
+*.sublime-project              # Sublime projects
+
+# Vim
+*.swp                          # Vim swap files
+*.swo                          # Vim swap files
+*~                             # Vim backups
 
 # ─────────────── Sistema ───────────────
+# macOS
 .DS_Store
+.AppleDouble                   # macOS resource forks
+.LSOverride                    # macOS icon position
+._*                            # macOS metadata
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable          # Windows encrypted thumbs
+ehthumbs.db                    # Windows explorer
+ehthumbs_vista.db              # Windows Vista thumbs
+Desktop.ini                    # Windows folder config
+$RECYCLE.BIN/                  # Recycle bin
+
+# Linux
+.directory                     # Dolphin folder settings
+.Trash-*                       # Linux trash
+
+# ─────────────── Backups ───────────────
+*.backup                       # Backup files
+*.bak                          # Backup files
+*.old                          # Old versions
+
+# ─────────────── Claude Code CLI ───────────────
+.claude/                       # Claude Code configuration
