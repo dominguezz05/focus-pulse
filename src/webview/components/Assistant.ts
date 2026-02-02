@@ -35,9 +35,9 @@ export class AssistantComponent implements DashboardComponent {
       "thinking/pensar4.png",
     ],
     WARNING: [
-      "fatigue/fatiga1.png",
+      "fatigue/Fatiga1.png",
       "fatigue/fatiga2.png",
-      "fatigue/fatiga3.png", 
+      "fatigue/fatiga3.png",
       "fatigue/fatiga4.png",
     ],
     SUCCESS: [
