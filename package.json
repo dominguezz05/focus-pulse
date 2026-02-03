@@ -267,18 +267,38 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run bundle",
+    "vscode:prepublish": "npm run bundle",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "bundle": "esbuild ./src/extension-refactored.ts --bundle --outfile=out/extension-refactored.js --external:vscode --format=cjs --platform=node",
     "lint": "echo \"No lint configured\"",
     "test": "echo \"No tests\"",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package --no-dependencies",
+    "commit": "cz",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:patch": "standard-version --release-as patch",
+    "publish:vsce": "vsce publish",
+    "publish:ovsx": "ovsx publish",
+    "publish:all": "pnpm run publish:vsce && pnpm run publish:ovsx"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.7.1",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
     "esbuild": "^0.27.2",
+    "ovsx": "^0.10.8",
+    "standard-version": "^9.5.0",
     "typescript": "^5.6.3"
   },
   "dependencies": {
