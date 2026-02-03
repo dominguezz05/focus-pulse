@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import type { PomodoroStats } from "./xp";
+import { getEventBus } from "./events";
+import { FOCUS_EVENTS } from "./events/EventTypes";
 
 let statusItem: vscode.StatusBarItem;
 let timer: NodeJS.Timeout | undefined;
@@ -131,6 +133,11 @@ function startTimer(durationMinutes: number, newMode: Mode) {
       if (mode === "work") {
         // AQUÍ: pomodoro completado
         registerPomodoroCompleted();
+        getEventBus().emit(FOCUS_EVENTS.POMODORO_COMPLETED, {
+          duration: getConfig().workMinutes * 60,
+          success: true,
+          timestamp: Date.now()
+        });
         vscode.window.showInformationMessage(
           "Focus Pulse: fin de bloque de trabajo. ¡Descanso!",
         );
@@ -163,10 +170,12 @@ export function togglePomodoro(context: vscode.ExtensionContext) {
 
   if (mode === "idle") {
     startTimer(cfg.workMinutes, "work");
+    getEventBus().emit(FOCUS_EVENTS.POMODORO_STARTED, { timestamp: Date.now() });
   } else {
     mode = "idle";
     stopTimer();
     remainingSeconds = 0;
     updateText();
+    getEventBus().emit(FOCUS_EVENTS.POMODORO_RESET, { timestamp: Date.now() });
   }
 }

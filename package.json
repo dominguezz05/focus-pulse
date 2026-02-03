@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Track your focus level per file with Pomodoro timers, XP progression, achievements, and a real-time dashboard.",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -49,7 +49,10 @@
     "onCommand:focusPulse.deleteSync",
     "onCommand:focusPulse.signOut",
     "onCommand:focusPulse.syncStatus",
-    "onCommand:focusPulse.showGitStats"
+    "onCommand:focusPulse.showGitStats",
+    "onCommand:focusPulse.testNotification",
+    "onCommand:focusPulse.toggleNotifications",
+    "onCommand:focusPulse.notificationSettings"
   ],
   "main": "./out/extension-refactored.js",
   "contributes": {
@@ -145,6 +148,18 @@
       {
         "command": "focusPulse.showGitStats",
         "title": "Focus Pulse: Ver estadísticas de Git"
+      },
+      {
+        "command": "focusPulse.testNotification",
+        "title": "Focus Pulse: Probar notificación"
+      },
+      {
+        "command": "focusPulse.toggleNotifications",
+        "title": "Focus Pulse: Activar/Desactivar notificaciones"
+      },
+      {
+        "command": "focusPulse.notificationSettings",
+        "title": "Focus Pulse: Configurar notificaciones"
       }
     ],
     "configuration": {
@@ -262,6 +277,69 @@
           "type": "boolean",
           "default": true,
           "description": "Mensajes contextuales según el tipo de archivo que estás editando."
+        },
+        "focusPulse.notifications.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activar el sistema de notificaciones de Focus Pulse."
+        },
+        "focusPulse.notifications.style": {
+          "type": "string",
+          "enum": [
+            "native",
+            "toast",
+            "both"
+          ],
+          "default": "toast",
+          "description": "Estilo de las notificaciones: nativas de VS Code, toast en dashboard, o ambas."
+        },
+        "focusPulse.notifications.position": {
+          "type": "string",
+          "enum": [
+            "top-right",
+            "bottom-right",
+            "top-left",
+            "bottom-left"
+          ],
+          "default": "top-right",
+          "description": "Posición de las notificaciones toast en el dashboard."
+        },
+        "focusPulse.notifications.duration": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1000,
+          "maximum": 30000,
+          "description": "Duración de las notificaciones toast en milisegundos."
+        },
+        "focusPulse.notifications.sound": {
+          "type": "boolean",
+          "default": false,
+          "description": "Reproducir sonido con las notificaciones (experimental)."
+        },
+        "focusPulse.notifications.types.achievements": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mostrar notificaciones cuando se desbloquean logros."
+        },
+        "focusPulse.notifications.types.levelUp": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mostrar notificaciones cuando subes de nivel."
+        },
+        "focusPulse.notifications.types.pomodoro": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mostrar notificaciones cuando completas pomodoros."
+        },
+        "focusPulse.notifications.types.goals": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mostrar notificaciones cuando completas objetivos diarios."
+        },
+        "focusPulse.notifications.types.deepWork": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mostrar notificaciones de sesiones Deep Work."
         }
       }
     }

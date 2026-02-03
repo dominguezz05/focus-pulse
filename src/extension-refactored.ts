@@ -47,6 +47,11 @@ import { CustomAchievementManager } from "./webview/CustomAchievementManager";
 import { registerExportCommands } from "./export/exportCommands";
 import { registerSyncCommands } from "./export/syncCommands";
 import { AssistantService } from "./services/AssistantService";
+import { NotificationService } from "./notifications/NotificationService";
+import { getEventBus } from "./events";
+import { FOCUS_EVENTS } from "./events/EventTypes";
+
+let previousGoals: DailyGoalProgress | undefined;
 
 // ---------------- Objetivos diarios ----------------
 
@@ -126,6 +131,9 @@ async function exportHistory(format: "json" | "csv", target: vscode.Uri) {
 
 async function updateAll(context: vscode.ExtensionContext) {
   refreshStatusBar();
+  
+  // Initialize eventBus early for notification events
+  const eventBus = getEventBus();
 
   const statsArray = getStatsArray();
   await updateHistoryFromStats(statsArray);
@@ -138,14 +146,38 @@ async function updateAll(context: vscode.ExtensionContext) {
   const pomodoroStats = getPomodoroStats();
   const goals = computeDailyGoals(fullHistory, pomodoroStats);
 
+  const currentState = getStateManager().getState();
+  const previousLevel = currentState.xp.level;
+  const previousUnlocked = new Set(currentState.achievements.unlocked);
+  
   const xp = computeXpState(fullHistory, pomodoroStats, deepWorkState);
+  
+  // Emit XP earned event if XP increased
+  if (xp.totalXp > currentState.xp.totalXp) {
+    eventBus.emit(FOCUS_EVENTS.XP_EARNED, {
+      amount: xp.totalXp - currentState.xp.totalXp,
+      source: 'session',
+      totalXp: xp.totalXp,
+      timestamp: Date.now()
+    });
+  }
+
+  // Emit level up event if level increased
+  if (xp.level > previousLevel) {
+    eventBus.emit(FOCUS_EVENTS.LEVEL_UP, {
+      newLevel: xp.level,
+      totalXp: xp.totalXp,
+      timestamp: Date.now()
+    });
+  }
+  
   const weeklySummary = buildWeeklySummaryFromHistory(fullHistory);
   const history7 = getLastDays(7);
   const streakDaysArray = getStreakDays(fullHistory);
   const streakCount = Array.isArray(streakDaysArray)
     ? streakDaysArray.length
     : streakDaysArray;
-
+  
   const unlockedAchievements = computeAchievements(
     streakCount,
     history7,
@@ -156,6 +188,55 @@ async function updateAll(context: vscode.ExtensionContext) {
     deepWorkState,
     context,
   );
+
+  // Emit achievement unlocked events for newly unlocked achievements
+  const newUnlocked = unlockedAchievements.filter(a => !previousUnlocked.has(a.id));
+  
+  newUnlocked.forEach(achievement => {
+    eventBus.emit(FOCUS_EVENTS.ACHIEVEMENT_UNLOCKED, {
+      achievement: {
+        title: achievement.title,
+        description: achievement.description,
+        id: achievement.id
+      },
+      timestamp: Date.now()
+    });
+    
+    // Update state with new achievement
+    getStateManager().setState({
+      achievements: {
+        ...currentState.achievements,
+        unlocked: [...currentState.achievements.unlocked, achievement.id],
+        lastUnlocked: achievement.id,
+        lastCheckTime: Date.now()
+      }
+    });
+  });
+
+  // Emit goal events on state transitions
+  if (goals) {
+    if (previousGoals) {
+      if (goals.doneMinutes && !previousGoals.doneMinutes) {
+        eventBus.emit(FOCUS_EVENTS.GOAL_COMPLETED, {
+          type: 'minutes',
+          current: goals.minutesDone,
+          target: goals.targetMinutes,
+          completed: true,
+          timestamp: Date.now()
+        });
+      }
+      if (goals.donePomodoros && !previousGoals.donePomodoros) {
+        eventBus.emit(FOCUS_EVENTS.GOAL_COMPLETED, {
+          type: 'pomodoros',
+          current: goals.pomodorosDone,
+          target: goals.targetPomodoros,
+          completed: true,
+          timestamp: Date.now()
+        });
+      }
+    }
+    previousGoals = goals;
+  }
 
   const allDefs = getAllAchievementsDefinitions();
   const mergedAll = allDefs.map((a) => ({
@@ -235,6 +316,12 @@ export function activate(context: vscode.ExtensionContext) {
   initPomodoro(context);
   initDeepWork(context);
 
+  // Initialize Notification Service  
+  const notificationService = new NotificationService(getEventBus());
+  context.subscriptions.push({
+    dispose: () => notificationService.dispose()
+  });
+
   // Initialize Assistant Service with configuration
   const assistantService = AssistantService.getInstance();
   const config = vscode.workspace.getConfiguration("focusPulse");
@@ -257,6 +344,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register sync commands
   registerSyncCommands(context);
+
+  // Register notification commands
+  const { registerNotificationCommands } = require('./notifications/NotificationCommands');
+  registerNotificationCommands(context);
 
   const handlers = [
     vscode.commands.registerCommand("focusPulse.openDashboard", () => {

@@ -2,57 +2,67 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.1] - 2026-02-04
+
+### Fixed
+
+- **PeakPerformanceAnalyzer crash** — `day.sessions.forEach is not a function`. The analyzer expected session objects with `start`/`end` timestamps, but `HistoryDay.sessions` is a plain number (count). Rewrote both `analyzePeakPerformance()` and `getHourlyStats()` to work with the actual stored data model.
+- **NotificationService crash on startup** — `eventBus` was used directly in `activate()` without being in scope. Changed to `getEventBus()`.
+- **Dead notification listeners** — `NotificationService` registered handlers for `POMODORO_COMPLETED`, `GOAL_COMPLETED`, `DEEP_WORK_STARTED`, and `DEEP_WORK_ENDED`, but none of those events were ever emitted. Wired up all missing emissions:
+  - `pomodoro.ts` → `POMODORO_STARTED`, `POMODORO_COMPLETED`, `POMODORO_RESET`
+  - `deepWork.ts` → `DEEP_WORK_STARTED`, `DEEP_WORK_ENDED` (on manual stop and on session completion)
+  - `extension-refactored.ts` → `XP_EARNED`, `GOAL_COMPLETED` (on state transitions in the update loop)
+
+---
+
 ## 2.5.0 (2026-02-03)
 
+### Features
 
-###  Features
+- add daily goals panel and achievements (v1.2.0) ([7f514ba](https://github.com/dominguezz05/focus-pulse/commit/7f514ba814671813bd5dd59ef425574420262ff2))
+- add heatmap, export, insights and new achievements to Focus Pulse ([6ebf6aa](https://github.com/dominguezz05/focus-pulse/commit/6ebf6aa494da5439c6645821e6e490bf1c8ec6f0))
+- add pomodoro, history tracking and achievements to Focus Pulse ([249c2de](https://github.com/dominguezz05/focus-pulse/commit/249c2de635a4ee01b3f52416c75cda8e3ee17d7a))
+- add XP levels and progress bar to live dashboard ([7aaeb3e](https://github.com/dominguezz05/focus-pulse/commit/7aaeb3eaabd589e096a1f70691ae8eec56a9a861))
+- configurable focus score and reset command for history and XP ([5123d2a](https://github.com/dominguezz05/focus-pulse/commit/5123d2abe87fa658736c1decfa570591b62c435a))
+- integrate pomodoro into XP system and achievements ([865a29c](https://github.com/dominguezz05/focus-pulse/commit/865a29cdece7ea94ab1c2c6b5b6fc12f40626980))
+- live dashboard with realtime focus stats updates ([14db491](https://github.com/dominguezz05/focus-pulse/commit/14db4912c6e1b8f261e0f856aa60940f4e213b8d))
+- release Focus Pulse 2.0.0 (Deep Work + weekly insights) ([1ef72f0](https://github.com/dominguezz05/focus-pulse/commit/1ef72f08483044bba04a1794a0505430048b2253))
+- show level in status bar and add XP-based achievements ([88a0771](https://github.com/dominguezz05/focus-pulse/commit/88a0771c8899a9454e13d41287942d21589cceee))
+- ver todos los logros ([35a86d2](https://github.com/dominguezz05/focus-pulse/commit/35a86d2be64a32c21dd27eb8d081995b6b463e27))
 
-* add daily goals panel and achievements (v1.2.0) ([7f514ba](https://github.com/dominguezz05/focus-pulse/commit/7f514ba814671813bd5dd59ef425574420262ff2))
-* add heatmap, export, insights and new achievements to Focus Pulse ([6ebf6aa](https://github.com/dominguezz05/focus-pulse/commit/6ebf6aa494da5439c6645821e6e490bf1c8ec6f0))
-* add pomodoro, history tracking and achievements to Focus Pulse ([249c2de](https://github.com/dominguezz05/focus-pulse/commit/249c2de635a4ee01b3f52416c75cda8e3ee17d7a))
-* add XP levels and progress bar to live dashboard ([7aaeb3e](https://github.com/dominguezz05/focus-pulse/commit/7aaeb3eaabd589e096a1f70691ae8eec56a9a861))
-* configurable focus score and reset command for history and XP ([5123d2a](https://github.com/dominguezz05/focus-pulse/commit/5123d2abe87fa658736c1decfa570591b62c435a))
-* integrate pomodoro into XP system and achievements ([865a29c](https://github.com/dominguezz05/focus-pulse/commit/865a29cdece7ea94ab1c2c6b5b6fc12f40626980))
-* live dashboard with realtime focus stats updates ([14db491](https://github.com/dominguezz05/focus-pulse/commit/14db4912c6e1b8f261e0f856aa60940f4e213b8d))
-* release Focus Pulse 2.0.0 (Deep Work + weekly insights) ([1ef72f0](https://github.com/dominguezz05/focus-pulse/commit/1ef72f08483044bba04a1794a0505430048b2253))
-* show level in status bar and add XP-based achievements ([88a0771](https://github.com/dominguezz05/focus-pulse/commit/88a0771c8899a9454e13d41287942d21589cceee))
-* ver todos los logros ([35a86d2](https://github.com/dominguezz05/focus-pulse/commit/35a86d2be64a32c21dd27eb8d081995b6b463e27))
+### Chores
 
+- +added / -deleted in dashboard ([79b9348](https://github.com/dominguezz05/focus-pulse/commit/79b9348226df08f3360e8afc548435dcb690b03a))
+- assistant widget ([8f1ef9a](https://github.com/dominguezz05/focus-pulse/commit/8f1ef9acfb2c48e677887432a1a3bf0f0b2b6449))
+- button ui ([9367a29](https://github.com/dominguezz05/focus-pulse/commit/9367a2917496e3a22ae0e19e637a789a19f955b3))
+- Importacion y exportacion de datso de la cuenta ([4748a8a](https://github.com/dominguezz05/focus-pulse/commit/4748a8aa3958d378c40b479864883916ef15d526))
+- new functions assistant ([fa3766b](https://github.com/dominguezz05/focus-pulse/commit/fa3766b22f375a48219b1577025c57f2490c0020))
+- new logic functions assistant ([2692249](https://github.com/dominguezz05/focus-pulse/commit/2692249648856c19ce47496d4883817af7835a40))
+- new version config ([5d2d97b](https://github.com/dominguezz05/focus-pulse/commit/5d2d97b2c27673a894374370b1dcf2bba94ac57c))
+- prepare Focus Pulse 1.0.0 for Marketplace ([0eb2fd6](https://github.com/dominguezz05/focus-pulse/commit/0eb2fd60b3fb53eac84582fec8a5b67a92b19b3d))
+- prepare Focus Pulse for VS Code packaging ([7c0534c](https://github.com/dominguezz05/focus-pulse/commit/7c0534c5aeab2d03d26a5c0d2068db79488e32d2))
 
-###  Chores
+### Bug Fixes
 
-* +added / -deleted in dashboard ([79b9348](https://github.com/dominguezz05/focus-pulse/commit/79b9348226df08f3360e8afc548435dcb690b03a))
-* assistant widget ([8f1ef9a](https://github.com/dominguezz05/focus-pulse/commit/8f1ef9acfb2c48e677887432a1a3bf0f0b2b6449))
-* button ui ([9367a29](https://github.com/dominguezz05/focus-pulse/commit/9367a2917496e3a22ae0e19e637a789a19f955b3))
-* Importacion y exportacion de datso de la cuenta ([4748a8a](https://github.com/dominguezz05/focus-pulse/commit/4748a8aa3958d378c40b479864883916ef15d526))
-* new functions assistant ([fa3766b](https://github.com/dominguezz05/focus-pulse/commit/fa3766b22f375a48219b1577025c57f2490c0020))
-* new logic  functions assistant ([2692249](https://github.com/dominguezz05/focus-pulse/commit/2692249648856c19ce47496d4883817af7835a40))
-* new version config ([5d2d97b](https://github.com/dominguezz05/focus-pulse/commit/5d2d97b2c27673a894374370b1dcf2bba94ac57c))
-* prepare Focus Pulse 1.0.0 for Marketplace ([0eb2fd6](https://github.com/dominguezz05/focus-pulse/commit/0eb2fd60b3fb53eac84582fec8a5b67a92b19b3d))
-* prepare Focus Pulse for VS Code packaging ([7c0534c](https://github.com/dominguezz05/focus-pulse/commit/7c0534c5aeab2d03d26a5c0d2068db79488e32d2))
-
-
-###  Bug Fixes
-
-* assistant images ([b0d8028](https://github.com/dominguezz05/focus-pulse/commit/b0d8028d7d63471c8d912e54c3c3db16df07518a))
-* assitant animation ([13fa87b](https://github.com/dominguezz05/focus-pulse/commit/13fa87b1f89bd9aeef33e5863bad2391932d6463))
-* auth user ([2615c0c](https://github.com/dominguezz05/focus-pulse/commit/2615c0c23fd6b9cc5151ddff274c9abe4cdfcbd0))
-* better readme ([710c590](https://github.com/dominguezz05/focus-pulse/commit/710c59035b0b5367fb8255b748b659a88fb13380))
-* button ([016f960](https://github.com/dominguezz05/focus-pulse/commit/016f9603aac1f06a993963fa941de3438a148d6d))
-* cambios ([1abbe1c](https://github.com/dominguezz05/focus-pulse/commit/1abbe1c809d28d2e10be78c0f436ed4aa6c14d9a))
-* changelog implementation on readme ([80ce1ee](https://github.com/dominguezz05/focus-pulse/commit/80ce1ee42c349b719788c34c55e469532e62c5d5))
-* commands in the button ([858b06e](https://github.com/dominguezz05/focus-pulse/commit/858b06e3d77cc629a84faeb4c0f6d083c7f6b8a7))
-* correct typo in README ([46f360b](https://github.com/dominguezz05/focus-pulse/commit/46f360be18e9200d44bdb38727bfd11b67b9be45))
-* details ([25dab7d](https://github.com/dominguezz05/focus-pulse/commit/25dab7d0ce9046b975e398171528c7cc6380d40f))
-* gitnore ([9aacdca](https://github.com/dominguezz05/focus-pulse/commit/9aacdca52722cd6032564111cbd98934646f6dd7))
-* image ([6ded27d](https://github.com/dominguezz05/focus-pulse/commit/6ded27d54f9a309fb03346fde5cdf1d1caa92c90))
-* image assistant ([8432921](https://github.com/dominguezz05/focus-pulse/commit/8432921afecc91f84735ce3cc73bf49de13d8bd9))
-* import y sincronización ([a9cae55](https://github.com/dominguezz05/focus-pulse/commit/a9cae55e2b1fdd7027dbfe1089042dc16fd04e7b))
-* layout ([531036d](https://github.com/dominguezz05/focus-pulse/commit/531036da40df699eef3dcfa747a666fa5b2eb112))
-* readme and chagelog ([1525c72](https://github.com/dominguezz05/focus-pulse/commit/1525c723d83a5f91878bd13f72bb76d147482cdb))
-* readme and changelog ([8ba0d49](https://github.com/dominguezz05/focus-pulse/commit/8ba0d49242fa248d8df3ad766c3117a11f11f41e))
-* repository ([95a5b50](https://github.com/dominguezz05/focus-pulse/commit/95a5b50b689004ef3b1f499b28e350df0bca095e))
-* sync ([f2bc46c](https://github.com/dominguezz05/focus-pulse/commit/f2bc46c8292656459c077b90e7a5ef3d7d75dc79))
+- assistant images ([b0d8028](https://github.com/dominguezz05/focus-pulse/commit/b0d8028d7d63471c8d912e54c3c3db16df07518a))
+- assitant animation ([13fa87b](https://github.com/dominguezz05/focus-pulse/commit/13fa87b1f89bd9aeef33e5863bad2391932d6463))
+- auth user ([2615c0c](https://github.com/dominguezz05/focus-pulse/commit/2615c0c23fd6b9cc5151ddff274c9abe4cdfcbd0))
+- better readme ([710c590](https://github.com/dominguezz05/focus-pulse/commit/710c59035b0b5367fb8255b748b659a88fb13380))
+- button ([016f960](https://github.com/dominguezz05/focus-pulse/commit/016f9603aac1f06a993963fa941de3438a148d6d))
+- cambios ([1abbe1c](https://github.com/dominguezz05/focus-pulse/commit/1abbe1c809d28d2e10be78c0f436ed4aa6c14d9a))
+- changelog implementation on readme ([80ce1ee](https://github.com/dominguezz05/focus-pulse/commit/80ce1ee42c349b719788c34c55e469532e62c5d5))
+- commands in the button ([858b06e](https://github.com/dominguezz05/focus-pulse/commit/858b06e3d77cc629a84faeb4c0f6d083c7f6b8a7))
+- correct typo in README ([46f360b](https://github.com/dominguezz05/focus-pulse/commit/46f360be18e9200d44bdb38727bfd11b67b9be45))
+- details ([25dab7d](https://github.com/dominguezz05/focus-pulse/commit/25dab7d0ce9046b975e398171528c7cc6380d40f))
+- gitnore ([9aacdca](https://github.com/dominguezz05/focus-pulse/commit/9aacdca52722cd6032564111cbd98934646f6dd7))
+- image ([6ded27d](https://github.com/dominguezz05/focus-pulse/commit/6ded27d54f9a309fb03346fde5cdf1d1caa92c90))
+- image assistant ([8432921](https://github.com/dominguezz05/focus-pulse/commit/8432921afecc91f84735ce3cc73bf49de13d8bd9))
+- import y sincronización ([a9cae55](https://github.com/dominguezz05/focus-pulse/commit/a9cae55e2b1fdd7027dbfe1089042dc16fd04e7b))
+- layout ([531036d](https://github.com/dominguezz05/focus-pulse/commit/531036da40df699eef3dcfa747a666fa5b2eb112))
+- readme and chagelog ([1525c72](https://github.com/dominguezz05/focus-pulse/commit/1525c723d83a5f91878bd13f72bb76d147482cdb))
+- readme and changelog ([8ba0d49](https://github.com/dominguezz05/focus-pulse/commit/8ba0d49242fa248d8df3ad766c3117a11f11f41e))
+- repository ([95a5b50](https://github.com/dominguezz05/focus-pulse/commit/95a5b50b689004ef3b1f499b28e350df0bca095e))
+- sync ([f2bc46c](https://github.com/dominguezz05/focus-pulse/commit/f2bc46c8292656459c077b90e7a5ef3d7d75dc79))
 
 ## [2.4.2] - 2026-02-04
 

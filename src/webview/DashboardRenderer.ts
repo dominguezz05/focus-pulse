@@ -7,6 +7,7 @@ import { AchievementsComponent } from "./components/Achievements";
 import { TableComponent } from "./components/Table";
 import { AssistantComponent } from "./components/Assistant";
 import { AuthComponent } from "./components/AuthComponent";
+import { NotificationsComponent } from "./components/Notifications";
 
 export class DashboardRenderer {
   private components: Map<string, DashboardComponent> = new Map();
@@ -22,6 +23,7 @@ export class DashboardRenderer {
     this.components.set("table", new TableComponent());
     this.components.set("assistant", new AssistantComponent());
     this.components.set("auth", new AuthComponent());
+    this.components.set("notifications", new NotificationsComponent());
   }
 
   render(container: any, data: DashboardData): void {

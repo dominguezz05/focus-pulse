@@ -28,7 +28,7 @@
 - [What is Focus Pulse?](#-what-is-focus-pulse)
 - [Why Choose Focus Pulse?](#-why-choose-focus-pulse)
 - [Features](#-features)
-- [What's New in 2.4.2](#-whats-new-in-242)
+- [What's New in 2.5.0](#-whats-new-in-250)
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
 - [Dashboard Preview](#-dashboard-preview)
@@ -159,84 +159,36 @@ Your intelligent coding companion that learns your patterns and guides your focu
 
 ---
 
-## 🆕 What's New in 2.4.2
+## 🆕 What's New in 2.5.0
 
-### 🔮 Predictive AI Features
+### 🔔 Notification System
 
-<table>
-<tr>
-<td width="33%">
+Real-time notifications for every key event in your session. Fires automatically — no setup needed beyond enabling.
 
-#### 📉 Score Decline Detection
+| Event | What you see |
+| --- | --- |
+| Achievement unlocked | Badge name + "Ver Logros" action button |
+| Level up | New level number + dashboard link |
+| Pomodoro completed | End-of-block confirmation |
+| Goal completed | Fires separately for minutes and pomodoros targets |
+| Deep Work started | Session confirmation with duration |
+| Deep Work ended | Completion celebration (or manual stop notice) |
 
-Uses **linear regression** on your last 10 minutes to predict fatigue before it happens.
+Notifications support two styles: **native** VS Code dialogs and **toast** overlays in the dashboard. Both can run simultaneously.
 
-```
-Score History:
-85 → 80 → 75 → 70 → 65
-         ↓
-   Decline detected!
-   Alert in 10 min
-```
-
-</td>
-<td width="33%">
-
-#### ⏰ Peak Hour Analysis
-
-Analyzes your historical data to find when you're most productive.
-
-```
-Best Hours:
-🌅 9-11 AM: 85 avg
-🌆 2-4 PM: 78 avg
-🌙 8-10 PM: 72 avg
+```jsonc
+{
+  "focusPulse.notifications.enabled": true,
+  "focusPulse.notifications.style": "toast",       // "native" | "toast" | "both"
+  "focusPulse.notifications.duration": 5000         // toast duration in ms
+}
 ```
 
-</td>
-<td width="33%">
+### 🐛 Fixes in 2.5.1
 
-#### 🎯 Git Integration
-
-Real-time celebration of your coding milestones.
-
-```
-Detected:
-✨ Feature commit
-🐛 Bug fix
-🎉 PR merged
-🔥 5 commits/hour
-```
-
-</td>
-</tr>
-</table>
-
-### 🎭 Enhanced Personality System
-
-Choose your assistant's tone from 4 unique personalities:
-
-| Personality        | Example Message                                                        | Best For               |
-| ------------------ | ---------------------------------------------------------------------- | ---------------------- |
-| **Motivador** 💪   | "¡Campeón! Has trabajado duro. Una pausa corta te hará más productivo" | High-energy developers |
-| **Zen** 🧘         | "El descanso es parte del trabajo. Respira hondo, camina 5 minutos"    | Mindful coders         |
-| **Humorístico** 😄 | "Tu cerebro está pidiendo café a gritos ☕️ (o un power nap)"           | Fun-loving developers  |
-| **Neutro** 🤖      | "Llevas tiempo trabajando. Considera tomar un descanso breve"          | Professional tone      |
-
-### 📁 Context-Aware Insights
-
-The assistant now understands what you're working on:
-
-```typescript
-// Editing tests/*.test.ts
-💡 "Tests requieren precisión. Tu foco está bajando - break recomendado"
-
-// Editing backend/api/*.ts
-🏗️ "Lógica crítica necesita enfoque total. Score cayendo - pausa preventiva"
-
-// Editing components/*.tsx
-🎨 "Diseño requiere creatividad fresca. Break te traerá nuevas ideas"
-```
+- **PeakPerformanceAnalyzer crash** — `day.sessions.forEach is not a function`. The hourly analysis expected session objects that were never stored. Rewrote to use the actual history model.
+- **NotificationService crash on startup** — `eventBus` was referenced before initialization in `activate()`.
+- **Silent notifications** — All notification listeners were registered but the events were never emitted. Wired up `POMODORO_COMPLETED`, `GOAL_COMPLETED`, `DEEP_WORK_STARTED`, `DEEP_WORK_ENDED`, `XP_EARNED` across `pomodoro.ts`, `deepWork.ts`, and the main update loop.
 
 > 📋 **See full changelog:** [CHANGELOG.md](CHANGELOG.md)
 
@@ -974,14 +926,14 @@ Common fixes:
 - [x] **v2.4.0** — AI Virtual Assistant
 - [x] **v2.4.1** — Personality system + Flow protection
 - [x] **v2.4.2** — Predictive AI + Git integration + Peak analysis
+- [x] **v2.5.0** — Notification system + event architecture
+- [x] **v2.5.1** — Critical fixes (PeakPerformanceAnalyzer crash, event emissions)
 
-### 🚧 In Progress (v2.5.0)
+### 🚧 In Progress (v2.6.0)
 
 - [ ] **Multi-language Support** — Spanish, English, French, German
 - [ ] **Friends System** — Compare stats with coding buddies
 - [ ] **Leaderboards** — Weekly/monthly rankings (opt-in)
-- [ ] **Notification System** — Configurable desktop notifications
-- [ ] **Theme Customization** — Custom color schemes for dashboard
 
 ### 🔮 Future (v3.0+)
 
@@ -1097,6 +1049,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 - 💬 **Discussions:** [GitHub Discussions](https://github.com/dominguezz05/focus-pulse/discussions)
 - ⭐ **Star the Repo:** [GitHub](https://github.com/dominguezz05/focus-pulse)
 - 📦 **Marketplace:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
+- 📦 **Open vsx Registry:** [VSX Registry ext.](https://open-vsx.org/extension/dominguezz05/focus-pulse)
 
 ---
 
