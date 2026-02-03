@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Track your focus level per file with Pomodoro timers, XP progression, achievements, and a real-time dashboard.",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -48,7 +48,8 @@
     "onCommand:focusPulse.listSyncs",
     "onCommand:focusPulse.deleteSync",
     "onCommand:focusPulse.signOut",
-    "onCommand:focusPulse.syncStatus"
+    "onCommand:focusPulse.syncStatus",
+    "onCommand:focusPulse.showGitStats"
   ],
   "main": "./out/extension-refactored.js",
   "contributes": {
@@ -140,6 +141,10 @@
       {
         "command": "focusPulse.syncStatus",
         "title": "Focus Pulse: Estado de sincronización"
+      },
+      {
+        "command": "focusPulse.showGitStats",
+        "title": "Focus Pulse: Ver estadísticas de Git"
       }
     ],
     "configuration": {
@@ -239,7 +244,12 @@
         },
         "focusPulse.assistant.personality": {
           "type": "string",
-          "enum": ["motivador", "neutro", "zen", "humorístico"],
+          "enum": [
+            "motivador",
+            "neutro",
+            "zen",
+            "humorístico"
+          ],
           "default": "motivador",
           "description": "Personalidad del asistente virtual (afecta el tono de los mensajes)."
         },
