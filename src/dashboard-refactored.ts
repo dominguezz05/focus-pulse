@@ -1816,7 +1816,8 @@ currentPanel.webview.onDidReceiveMessage(
               const streakN = Array.isArray(streakD) ? streakD.length : streakD;
               const xpData = computeXpState(hist, pomStats, undefined);
               const statsArr = getStatsArray();
-              const unl = computeAchievements(streakN, hist, statsArr, undefined, pomStats, undefined, undefined, context);
+              const dwState = getDeepWorkState(context);
+              const unl = computeAchievements(streakN, hist, statsArr, xpData, pomStats, undefined, dwState, context);
               const last7 = hist.slice().sort((a: any, b: any) => a.date.localeCompare(b.date)).slice(-7);
               const avgSc = last7.length > 0
                 ? last7.reduce((s: number, d: any) => s + d.avgScore, 0) / last7.length

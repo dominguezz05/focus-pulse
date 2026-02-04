@@ -7,6 +7,7 @@ import { getStreakDays } from "../storage";
 import { getPomodoroStats } from "../pomodoro";
 import { computeAchievements } from "../achievements";
 import { computeXpState } from "../xp";
+import { getDeepWorkState } from "../deepWork";
 
 export function registerFriendCommands(
   context: vscode.ExtensionContext,
@@ -41,14 +42,15 @@ export function registerFriendCommands(
         // Compute unlocked achievements count
         const { getStatsArray } = require("../focusTracker");
         const statsArray = getStatsArray();
+        const deepWork = getDeepWorkState(context);
         const unlocked = computeAchievements(
           streakCount,
           historyAll,
           statsArray,
-          undefined,
+          xp,
           pomodoroStats,
           undefined,
-          undefined,
+          deepWork,
           context,
         );
 
