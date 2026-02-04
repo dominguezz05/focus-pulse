@@ -280,13 +280,8 @@ export class FocusStateManager implements StateManager {
       // This would need achievement details, which should be passed separately
     }
 
-    if (partialState.xp?.level && partialState.xp.level !== previousState.xp.level) {
-      eventBus.emit(FOCUS_EVENTS.LEVEL_UP, {
-        newLevel: partialState.xp.level,
-        totalXp: partialState.xp.totalXp,
-        timestamp: Date.now(),
-      });
-    }
+    // LEVEL_UP is emitted explicitly in updateAll after computing xp;
+    // no secondary emit here to avoid duplicates.
 
     if (partialState.deepWork?.active && partialState.deepWork.active !== previousState.deepWork.active) {
       if (partialState.deepWork.active) {

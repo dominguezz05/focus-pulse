@@ -35,28 +35,27 @@ export class PeakPerformanceAnalyzer {
     // Procesar historial
     history.forEach((day) => {
       const dayOfWeek = this.getDayOfWeek(day.date);
+      const durationMinutes = day.totalTimeMs / (1000 * 60);
 
-      day.sessions.forEach((session) => {
-        const hour = new Date(session.start).getHours();
-        const durationMinutes = (session.end - session.start) / (1000 * 60);
+      // Acumular scores por día de la semana
+      if (!dayOfWeekScores.has(dayOfWeek)) {
+        dayOfWeekScores.set(dayOfWeek, []);
+      }
+      dayOfWeekScores.get(dayOfWeek)!.push(day.avgScore);
 
-        // Acumular scores por hora
+      // Sin datos horarios en el historial, usar hora actual como referencia
+      // para que el mapa no quede vacío cuando se tiene al menos un día
+      if (day.totalTimeMs > 0) {
+        const hour = new Date(day.date + "T12:00:00").getHours();
         if (!hourlyScores.has(hour)) {
           hourlyScores.set(hour, []);
           hourlyMinutes.set(hour, 0);
           hourlySessions.set(hour, 0);
         }
-
         hourlyScores.get(hour)!.push(day.avgScore);
         hourlyMinutes.set(hour, hourlyMinutes.get(hour)! + durationMinutes);
         hourlySessions.set(hour, hourlySessions.get(hour)! + 1);
-
-        // Acumular scores por día de la semana
-        if (!dayOfWeekScores.has(dayOfWeek)) {
-          dayOfWeekScores.set(dayOfWeek, []);
-        }
-        dayOfWeekScores.get(dayOfWeek)!.push(day.avgScore);
-      });
+      }
     });
 
     // Calcular promedios por hora
@@ -122,19 +121,19 @@ export class PeakPerformanceAnalyzer {
     >();
 
     history.forEach((day) => {
-      day.sessions.forEach((session) => {
-        const hour = new Date(session.start).getHours();
-        const durationMinutes = (session.end - session.start) / (1000 * 60);
+      if (day.totalTimeMs <= 0) return;
 
-        if (!hourlyData.has(hour)) {
-          hourlyData.set(hour, { scores: [], minutes: 0, sessions: 0 });
-        }
+      const durationMinutes = day.totalTimeMs / (1000 * 60);
+      const hour = new Date(day.date + "T12:00:00").getHours();
 
-        const data = hourlyData.get(hour)!;
-        data.scores.push(day.avgScore);
-        data.minutes += durationMinutes;
-        data.sessions += 1;
-      });
+      if (!hourlyData.has(hour)) {
+        hourlyData.set(hour, { scores: [], minutes: 0, sessions: 0 });
+      }
+
+      const data = hourlyData.get(hour)!;
+      data.scores.push(day.avgScore);
+      data.minutes += durationMinutes;
+      data.sessions += 1;
     });
 
     return Array.from(hourlyData.entries())

@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import { getEventBus } from "./events";
+import { FOCUS_EVENTS } from "./events/EventTypes";
 
 export interface DeepWorkState {
   active: boolean;
@@ -62,10 +64,20 @@ export async function toggleDeepWork(
       startedAt: now,
       durationMinutes: cfg.get<number>("deepWork.durationMinutes", 60),
     };
+    getEventBus().emit(FOCUS_EVENTS.DEEP_WORK_STARTED, {
+      timestamp: Date.now(),
+      expectedDuration: state.durationMinutes,
+    });
     vscode.window.showInformationMessage(
       `Focus Pulse: Deep Work iniciado (${state.durationMinutes} min).`,
     );
   } else {
+    const elapsedMinutes = state.startedAt ? (Date.now() - state.startedAt) / 60000 : 0;
+    getEventBus().emit(FOCUS_EVENTS.DEEP_WORK_ENDED, {
+      duration: elapsedMinutes,
+      focusScore: 0,
+      timestamp: Date.now(),
+    });
     state = {
       ...state,
       active: false,
@@ -95,6 +107,11 @@ export async function checkDeepWorkCompletion(
       completedSessions: state.completedSessions + 1,
     };
     await context.globalState.update(STORAGE_KEY, state);
+    getEventBus().emit(FOCUS_EVENTS.DEEP_WORK_ENDED, {
+      duration: state.durationMinutes,
+      focusScore: 0,
+      timestamp: Date.now(),
+    });
     vscode.window.showInformationMessage(
       "Focus Pulse: sesión de Deep Work completada. 🧠",
     );

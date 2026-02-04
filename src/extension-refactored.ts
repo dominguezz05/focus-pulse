@@ -47,6 +47,19 @@ import { CustomAchievementManager } from "./webview/CustomAchievementManager";
 import { registerExportCommands } from "./export/exportCommands";
 import { registerSyncCommands } from "./export/syncCommands";
 import { AssistantService } from "./services/AssistantService";
+import { NotificationService } from "./notifications/NotificationService";
+import { getEventBus } from "./events";
+import { FOCUS_EVENTS } from "./events/EventTypes";
+
+let previousGoals: DailyGoalProgress | undefined;
+
+// Module-level tracking for event deduplication.
+// Using plain variables (not StateManager) makes this immune to async races
+// in concurrent updateAll() calls: the write happens synchronously right after
+// the emit, so the next concurrent read always sees the updated value.
+let lastEmittedLevel = 0;
+let lastEmittedXp = 0;
+const emittedAchievementIds = new Set<string>();
 
 // ---------------- Objetivos diarios ----------------
 
@@ -126,6 +139,9 @@ async function exportHistory(format: "json" | "csv", target: vscode.Uri) {
 
 async function updateAll(context: vscode.ExtensionContext) {
   refreshStatusBar();
+  
+  // Initialize eventBus early for notification events
+  const eventBus = getEventBus();
 
   const statsArray = getStatsArray();
   await updateHistoryFromStats(statsArray);
@@ -138,14 +154,41 @@ async function updateAll(context: vscode.ExtensionContext) {
   const pomodoroStats = getPomodoroStats();
   const goals = computeDailyGoals(fullHistory, pomodoroStats);
 
+  const currentState = getStateManager().getState();
+
   const xp = computeXpState(fullHistory, pomodoroStats, deepWorkState);
+
+  // Emit XP earned event if XP increased (guarded by module-level tracker)
+  if (xp.totalXp > lastEmittedXp) {
+    eventBus.emit(FOCUS_EVENTS.XP_EARNED, {
+      amount: xp.totalXp - lastEmittedXp,
+      source: 'session',
+      totalXp: xp.totalXp,
+      timestamp: Date.now()
+    });
+    lastEmittedXp = xp.totalXp;
+  }
+
+  // Emit level up event if level increased (guarded by module-level tracker)
+  if (xp.level > lastEmittedLevel) {
+    eventBus.emit(FOCUS_EVENTS.LEVEL_UP, {
+      newLevel: xp.level,
+      totalXp: xp.totalXp,
+      timestamp: Date.now()
+    });
+    lastEmittedLevel = xp.level;
+  }
+
+  // Persist xp to state for dashboard / other consumers
+  getStateManager().setState({ xp: { ...currentState.xp, ...xp } });
+  
   const weeklySummary = buildWeeklySummaryFromHistory(fullHistory);
   const history7 = getLastDays(7);
   const streakDaysArray = getStreakDays(fullHistory);
   const streakCount = Array.isArray(streakDaysArray)
     ? streakDaysArray.length
     : streakDaysArray;
-
+  
   const unlockedAchievements = computeAchievements(
     streakCount,
     history7,
@@ -156,6 +199,58 @@ async function updateAll(context: vscode.ExtensionContext) {
     deepWorkState,
     context,
   );
+
+  // Emit achievement unlocked events for truly new achievements (module-level tracker)
+  const newUnlocked = unlockedAchievements.filter(a => !emittedAchievementIds.has(a.id));
+
+  newUnlocked.forEach(achievement => {
+    emittedAchievementIds.add(achievement.id);
+    eventBus.emit(FOCUS_EVENTS.ACHIEVEMENT_UNLOCKED, {
+      achievement: {
+        title: achievement.title,
+        description: achievement.description,
+        id: achievement.id
+      },
+      timestamp: Date.now()
+    });
+  });
+
+  // Persist unlocked set to state for dashboard / other consumers
+  if (newUnlocked.length > 0) {
+    getStateManager().setState({
+      achievements: {
+        ...currentState.achievements,
+        unlocked: Array.from(emittedAchievementIds),
+        lastUnlocked: newUnlocked[newUnlocked.length - 1].id,
+        lastCheckTime: Date.now()
+      }
+    });
+  }
+
+  // Emit goal events on state transitions
+  if (goals) {
+    if (previousGoals) {
+      if (goals.doneMinutes && !previousGoals.doneMinutes) {
+        eventBus.emit(FOCUS_EVENTS.GOAL_COMPLETED, {
+          type: 'minutes',
+          current: goals.minutesDone,
+          target: goals.targetMinutes,
+          completed: true,
+          timestamp: Date.now()
+        });
+      }
+      if (goals.donePomodoros && !previousGoals.donePomodoros) {
+        eventBus.emit(FOCUS_EVENTS.GOAL_COMPLETED, {
+          type: 'pomodoros',
+          current: goals.pomodorosDone,
+          target: goals.targetPomodoros,
+          completed: true,
+          timestamp: Date.now()
+        });
+      }
+    }
+    previousGoals = goals;
+  }
 
   const allDefs = getAllAchievementsDefinitions();
   const mergedAll = allDefs.map((a) => ({
@@ -227,13 +322,26 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Initialize state and events
   const stateManager = getStateManager();
-  stateManager.load();
+  stateManager.load(); // get() is sync so state is populated immediately
+
+  // Seed dedup trackers from persisted state so we don't re-emit on restart
+  const persisted = stateManager.getState();
+  lastEmittedLevel = persisted.xp.level;
+  lastEmittedXp = persisted.xp.totalXp;
+  persisted.achievements.unlocked.forEach(id => emittedAchievementIds.add(id));
+
   setupDashboardEventListeners(context);
 
   initStorage(context);
   initStatusBar(context);
   initPomodoro(context);
   initDeepWork(context);
+
+  // Initialize Notification Service  
+  const notificationService = new NotificationService(getEventBus());
+  context.subscriptions.push({
+    dispose: () => notificationService.dispose()
+  });
 
   // Initialize Assistant Service with configuration
   const assistantService = AssistantService.getInstance();
@@ -258,6 +366,10 @@ export function activate(context: vscode.ExtensionContext) {
   // Register sync commands
   registerSyncCommands(context);
 
+  // Register notification commands (reusa la instancia ya creada)
+  const { registerNotificationCommands } = require('./notifications/NotificationCommands');
+  registerNotificationCommands(context, notificationService);
+
   const handlers = [
     vscode.commands.registerCommand("focusPulse.openDashboard", () => {
       console.log("Abriendo dashboard refactorizado");
@@ -276,6 +388,10 @@ export function activate(context: vscode.ExtensionContext) {
       resetFocusStats();
       clearHistory();
       await stateManager.reset();
+      // Reset dedup trackers so future level-ups / achievements emit correctly
+      lastEmittedLevel = 0;
+      lastEmittedXp = 0;
+      emittedAchievementIds.clear();
       vscode.window.showInformationMessage(
         "Focus Pulse: histórico y estado reiniciados.",
       );
