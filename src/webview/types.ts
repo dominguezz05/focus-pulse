@@ -29,6 +29,37 @@ export interface DashboardData {
     lastSync?: number;
     autoSyncEnabled: boolean;
   };
+  friends?: {
+    friends: Array<{
+      username: string;
+      gistId: string;
+      cachedProfile: {
+        github_login: string;
+        level: number;
+        totalXp: number;
+        totalFocusTimeMs: number;
+        currentStreak: number;
+        totalPomodoros: number;
+        totalAchievements: number;
+        avgScoreLast7Days: number;
+        lastUpdatedAt: number;
+      } | null;
+      lastFetched: number;
+    }>;
+    ownProfile: {
+      github_login: string;
+      level: number;
+      totalXp: number;
+      totalFocusTimeMs: number;
+      currentStreak: number;
+      totalPomodoros: number;
+      totalAchievements: number;
+      avgScoreLast7Days: number;
+      lastUpdatedAt: number;
+    } | null;
+    isAuthenticated: boolean;
+    ownUsername: string | null;
+  };
 }
 
 export interface FocusSummary {

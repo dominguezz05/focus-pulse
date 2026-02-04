@@ -5,7 +5,7 @@
 ### _Your AI-Powered Coding Companion for Deep Work_
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.5.0-informational)
+![Version](https://img.shields.io/badge/version-2.6.0-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
@@ -159,28 +159,43 @@ Your intelligent coding companion that learns your patterns and guides your focu
 
 ---
 
-## 🆕 What's New in 2.5.0
+## 🆕 What's New in 2.6.0
 
-### 🔔 Notification System
+### 👥 Friends System
+
+Compare your Focus Pulse stats with friends directly inside the dashboard. No backend — profiles live as public GitHub Gists.
+
+| Action             | How                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Share your profile | Run **Focus Pulse: Compartir perfil** — creates/updates one public gist with sanitized stats (no file names) |
+| Add a friend       | Click **Añadir** in the Amigos tab → enter their GitHub username or paste a gist ID                          |
+| Compare            | Scroll the comparison table: own row (highlighted green) + all friends, refreshed on tab switch              |
+| Offline            | Cached profiles (30-min TTL) keep working without a connection                                               |
+
+> 📋 **See full changelog:** [CHANGELOG.md](CHANGELOG.md)
+
+---
+
+### 🔔 Notification System (2.5.0)
 
 Real-time notifications for every key event in your session. Fires automatically — no setup needed beyond enabling.
 
-| Event | What you see |
-| --- | --- |
-| Achievement unlocked | Badge name + "Ver Logros" action button |
-| Level up | New level number + dashboard link |
-| Pomodoro completed | End-of-block confirmation |
-| Goal completed | Fires separately for minutes and pomodoros targets |
-| Deep Work started | Session confirmation with duration |
-| Deep Work ended | Completion celebration (or manual stop notice) |
+| Event                | What you see                                       |
+| -------------------- | -------------------------------------------------- |
+| Achievement unlocked | Badge name + "Ver Logros" action button            |
+| Level up             | New level number + dashboard link                  |
+| Pomodoro completed   | End-of-block confirmation                          |
+| Goal completed       | Fires separately for minutes and pomodoros targets |
+| Deep Work started    | Session confirmation with duration                 |
+| Deep Work ended      | Completion celebration (or manual stop notice)     |
 
 Notifications support two styles: **native** VS Code dialogs and **toast** overlays in the dashboard. Both can run simultaneously.
 
 ```jsonc
 {
   "focusPulse.notifications.enabled": true,
-  "focusPulse.notifications.style": "toast",       // "native" | "toast" | "both"
-  "focusPulse.notifications.duration": 5000         // toast duration in ms
+  "focusPulse.notifications.style": "toast", // "native" | "toast" | "both"
+  "focusPulse.notifications.duration": 5000, // toast duration in ms
 }
 ```
 
@@ -928,11 +943,11 @@ Common fixes:
 - [x] **v2.4.2** — Predictive AI + Git integration + Peak analysis
 - [x] **v2.5.0** — Notification system + event architecture
 - [x] **v2.5.1** — Critical fixes (PeakPerformanceAnalyzer crash, event emissions)
+- [x] **v2.6.0** — Friends system (gist-based profiles, comparison table, offline cache)
 
-### 🚧 In Progress (v2.6.0)
+### 🚧 In Progress (v2.7.0)
 
-- [ ] **Multi-language Support** — Spanish, English, French, German
-- [ ] **Friends System** — Compare stats with coding buddies
+- [ ] **English-language Support** — English languaje
 - [ ] **Leaderboards** — Weekly/monthly rankings (opt-in)
 
 ### 🔮 Future (v3.0+)
