@@ -4,9 +4,11 @@ import { getEventBus } from '../events';
 
 let notificationService: NotificationService | null = null;
 
-export function registerNotificationCommands(context: vscode.ExtensionContext) {
-  // Initialize notification service if not already done
-  if (!notificationService) {
+export function registerNotificationCommands(context: vscode.ExtensionContext, existingService?: NotificationService) {
+  // Reuse externally provided instance; only create one as fallback
+  if (existingService) {
+    notificationService = existingService;
+  } else if (!notificationService) {
     notificationService = new NotificationService(getEventBus());
   }
 
