@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.6.0] - 2026-02-05
+
+### Features
+
+- **Friends System** — Share a public GitHub Gist profile and compare stats with friends side-by-side in a new "Amigos" tab on the dashboard. Add friends by GitHub username or gist ID; profiles are cached locally with a 30-minute TTL and work offline with stale data. No backend required — leverages existing `@octokit/rest` and gist infrastructure.
+  - New commands: `focusPulse.shareProfile`, `focusPulse.addFriend`, `focusPulse.removeFriend`
+  - New files: `src/friends/FriendTypes.ts`, `src/friends/FriendService.ts`, `src/friends/friendCommands.ts`
+
+---
+
 ## [2.5.1] - 2026-02-04
 
 ### Fixed

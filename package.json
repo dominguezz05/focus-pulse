@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Track your focus level per file with Pomodoro timers, XP progression, achievements, and a real-time dashboard.",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -52,7 +52,10 @@
     "onCommand:focusPulse.showGitStats",
     "onCommand:focusPulse.testNotification",
     "onCommand:focusPulse.toggleNotifications",
-    "onCommand:focusPulse.notificationSettings"
+    "onCommand:focusPulse.notificationSettings",
+    "onCommand:focusPulse.shareProfile",
+    "onCommand:focusPulse.addFriend",
+    "onCommand:focusPulse.removeFriend"
   ],
   "main": "./out/extension-refactored.js",
   "contributes": {
@@ -160,6 +163,18 @@
       {
         "command": "focusPulse.notificationSettings",
         "title": "Focus Pulse: Configurar notificaciones"
+      },
+      {
+        "command": "focusPulse.shareProfile",
+        "title": "Focus Pulse: Compartir perfil"
+      },
+      {
+        "command": "focusPulse.addFriend",
+        "title": "Focus Pulse: Añadir amigo"
+      },
+      {
+        "command": "focusPulse.removeFriend",
+        "title": "Focus Pulse: Eliminar amigo"
       }
     ],
     "configuration": {

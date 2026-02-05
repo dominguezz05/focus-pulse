@@ -145,6 +145,13 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                 
                 root.innerHTML = \`
                     <div class="max-w-6xl mx-auto p-4 space-y-4">
+<!-- Tab bar -->
+<div class="flex gap-1 mb-3 border-b border-slate-700/50 pb-2" id="tab-bar">
+  <button class="tab-btn active-tab px-4 py-1.5 text-sm font-medium rounded-t-lg bg-slate-800 text-slate-100 border border-slate-700/60 border-b-0" data-tab="dashboard">Dashboard</button>
+  <button class="tab-btn px-4 py-1.5 text-sm font-medium rounded-t-lg text-slate-400 hover:text-slate-200 transition-colors" data-tab="friends">Amigos</button>
+</div>
+<!-- Dashboard tab content -->
+<div id="tab-content-dashboard" class="space-y-4">
 <!-- Header Component -->
                         <header class="flex flex-col gap-2" id="header-container">
                             <div class="flex justify-between items-start">
@@ -233,15 +240,17 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                                     </svg>
                                                     Estado de sincronización
                                                 </button>
-                                                <button 
+                                                <button
                                                     class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
-                                                    data-action="manual-sync"
+                                                    data-action="goto-friends"
                                                 >
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <polyline points="23,4 23,10 17,10"></polyline>
-                                                        <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"></path>
+                                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                        <circle cx="9" cy="7" r="4"></circle>
+                                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                                     </svg>
-                                                    Sincronizar ahora
+                                                    Amigos
                                                 </button>
                                             </div>
                                         </div>
@@ -403,6 +412,13 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                 </table>
                             </div>
                         </section>
+</div><!-- /tab-content-dashboard -->
+<!-- Friends tab (hidden initially) -->
+<div id="tab-content-friends" class="space-y-4 hidden">
+  <div id="friends-container" class="bg-slate-800/60 rounded-xl border border-slate-700/60 p-4">
+    <!-- populated dynamically by updateFriendsTab() -->
+  </div>
+</div>
                     </div>
                 \`;
             }
@@ -431,7 +447,24 @@ setupEventListeners() {
                         item.addEventListener('click', function(e) {
                             e.stopPropagation();
                             const action = item.getAttribute('data-action');
-                            if (action) {
+                            if (action === 'goto-friends') {
+                                var friendsTabBtn = document.querySelector('.tab-btn[data-tab="friends"]');
+                                if (friendsTabBtn) friendsTabBtn.click();
+                            } else if (action === 'sync-status') {
+                                var syncInfo = self.syncInfo || {};
+                                var statusMsg = syncInfo.isAuthenticated
+                                    ? 'Autenticado · Última sync: ' + (syncInfo.lastSync ? new Date(syncInfo.lastSync).toLocaleString() : 'Nunca') + ' · Auto-sync: ' + (syncInfo.autoSyncEnabled ? 'Activado' : 'Desactivado')
+                                    : 'No autenticado. Conecta tu cuenta de GitHub para sincronizar.';
+                                var existing = document.getElementById('sync-status-toast');
+                                if (existing) existing.remove();
+                                var toast = document.createElement('div');
+                                toast.id = 'sync-status-toast';
+                                toast.className = 'fixed top-4 right-4 z-50 bg-slate-800 border border-slate-600 rounded-lg shadow-lg p-3 text-sm text-slate-200 max-w-xs';
+                                toast.innerHTML = '<div class="flex justify-between items-start gap-2 mb-1.5"><span class="font-semibold text-slate-100">Sincronización</span><button id="sync-toast-close" class="text-slate-500 hover:text-slate-300 leading-none text-lg">&times;</button></div><p class="text-slate-300">' + statusMsg + '</p>';
+                                document.body.appendChild(toast);
+                                toast.querySelector('#sync-toast-close').addEventListener('click', function() { toast.remove(); });
+                                setTimeout(function() { if (toast.parentNode) toast.remove(); }, 5000);
+                            } else if (action) {
                                 vscode.postMessage({ command: action });
                             }
                             exportMenu.classList.add('hidden');
@@ -473,6 +506,30 @@ setupEventListeners() {
                 // Custom achievements button
                 document.getElementById('custom-achievements-btn').addEventListener('click', function() {
                     vscode.postMessage({ type: 'openCustomAchievements' });
+                });
+
+                // Tab switching
+                var tabBtns = document.querySelectorAll('.tab-btn');
+                tabBtns.forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var target = btn.getAttribute('data-tab');
+                        document.getElementById('tab-content-dashboard').classList.toggle('hidden', target !== 'dashboard');
+                        document.getElementById('tab-content-friends').classList.toggle('hidden', target !== 'friends');
+                        tabBtns.forEach(function(b) {
+                            var active = b.getAttribute('data-tab') === target;
+                            b.classList.toggle('active-tab', active);
+                            b.classList.toggle('bg-slate-800', active);
+                            b.classList.toggle('text-slate-100', active);
+                            b.classList.toggle('border', active);
+                            b.classList.toggle('border-slate-700/60', active);
+                            b.classList.toggle('border-b-0', active);
+                            b.classList.toggle('text-slate-400', !active);
+                        });
+                        if (target === 'friends') {
+                            document.getElementById('friends-container').innerHTML = '<div class="flex justify-center py-8"><div class="text-slate-400 text-sm animate-pulse">Actualizando...</div></div>';
+                            vscode.postMessage({ type: 'friends:refreshFriends' });
+                        }
+                    });
                 });
             }
             
@@ -635,8 +692,195 @@ setupEventListeners() {
                 if (data.weeklySummary) {
                     this.updateWeeklySummary(data);
                 }
+
+                if (data.sync) {
+                    this.syncInfo = data.sync;
+                }
+
+                if (data.friends) {
+                    this.updateFriendsTab(data.friends);
+                }
             }
             
+            updateFriendsTab(data) {
+                var container = document.getElementById('friends-container');
+                if (!container) return;
+
+                // Toast messages (error or share success)
+                var toastHtml = '';
+                if (data && data._error) {
+                    toastHtml = '<div class="bg-rose-900/40 border border-rose-700/60 rounded-lg p-2.5 text-rose-300 text-sm mb-3">' + data._error + '</div>';
+                }
+                if (data && data.shareComplete) {
+                    toastHtml = '<div class="bg-emerald-900/40 border border-emerald-700/60 rounded-lg p-2.5 text-emerald-300 text-sm mb-3" id="friends-share-toast">✓ Perfil compartido. Comparte tu usuario <strong>' + (data.ownUsername || '') + '</strong> con tus amigos.</div>';
+                }
+
+                if (!data || !data.isAuthenticated) {
+                    container.innerHTML =
+                        '<div class="text-center py-8">' +
+                        '<p class="text-slate-400 text-sm mb-4">Necesitas autenticarte con GitHub para usar la función de amigos.</p>' +
+                        '<button class="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg border border-blue-500/30 text-sm font-medium transition-all" id="friends-auth-btn">Autenticar cuenta</button>' +
+                        '</div>';
+                    var authBtn = container.querySelector('#friends-auth-btn');
+                    if (authBtn) {
+                        authBtn.addEventListener('click', function() {
+                            vscode.postMessage({ type: 'authenticate' });
+                        });
+                    }
+                    return;
+                }
+
+                var friends = data.friends || [];
+                var ownProfile = data.ownProfile;
+                var ownUsername = data.ownUsername || 'Tú';
+
+                // Header: Share Profile + Add Friend (username only)
+                var headerHtml =
+                    '<div class="flex flex-col sm:flex-row gap-3 mb-4">' +
+                    '<button class="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 text-emerald-300 hover:from-emerald-500/30 hover:to-blue-500/30 rounded-lg border border-emerald-500/30 text-sm font-medium transition-all" id="friends-share-btn">Compartir perfil</button>' +
+                    '<div class="flex flex-1 gap-2">' +
+                    '<input type="text" id="friends-add-input" placeholder="Nombre de usuario de GitHub" class="flex-1 bg-slate-700/40 border border-slate-600/60 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500/60">' +
+                    '<button class="px-3 py-1.5 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg border border-blue-500/30 text-sm font-medium transition-all" id="friends-add-btn">Añadir</button>' +
+                    '</div>' +
+                    '</div>';
+
+                // Build rows: own profile first, then friends
+                var rows = '';
+                if (ownProfile) {
+                    rows +=
+                        '<tr class="border-l-4 border-emerald-500" style="background:rgba(15,23,42,0.8);">' +
+                        '<td class="px-4 py-2.5 text-slate-100 font-semibold">' + ownUsername + ' <span class="text-xs text-emerald-400 ml-1">(Tú)</span></td>' +
+                        '<td class="px-4 py-2.5 text-blue-300 font-semibold">' + ownProfile.level + '</td>' +
+                        '<td class="px-4 py-2.5 text-purple-300">' + ownProfile.totalXp + '</td>' +
+                        '<td class="px-4 py-2.5 text-slate-200">' + this.formatFocusTime(ownProfile.totalFocusTimeMs) + '</td>' +
+                        '<td class="px-4 py-2.5 text-emerald-300">' + ownProfile.currentStreak + '</td>' +
+                        '<td class="px-4 py-2.5 text-slate-200">' + ownProfile.totalPomodoros + '</td>' +
+                        '<td class="px-4 py-2.5 text-slate-200">' + ownProfile.totalAchievements + '</td>' +
+                        '<td class="px-4 py-2.5"></td>' +
+                        '</tr>';
+                }
+
+                friends.forEach(function(f) {
+                    var p = f.cachedProfile;
+                    if (p) {
+                        rows +=
+                            '<tr class="hover:bg-slate-800/60 transition-colors">' +
+                            '<td class="px-4 py-2.5 text-slate-200">' + f.username + '</td>' +
+                            '<td class="px-4 py-2.5 text-blue-300">' + p.level + '</td>' +
+                            '<td class="px-4 py-2.5 text-purple-300">' + p.totalXp + '</td>' +
+                            '<td class="px-4 py-2.5 text-slate-200">' + this.formatFocusTime(p.totalFocusTimeMs) + '</td>' +
+                            '<td class="px-4 py-2.5 text-emerald-300">' + p.currentStreak + '</td>' +
+                            '<td class="px-4 py-2.5 text-slate-200">' + p.totalPomodoros + '</td>' +
+                            '<td class="px-4 py-2.5 text-slate-200">' + p.totalAchievements + '</td>' +
+                            '<td class="px-4 py-2.5"><button class="friends-remove-btn text-slate-500 hover:text-rose-400 transition-colors text-lg leading-none" data-username="' + f.username + '">&times;</button></td>' +
+                            '</tr>';
+                    } else {
+                        rows +=
+                            '<tr class="hover:bg-slate-800/60 transition-colors">' +
+                            '<td class="px-4 py-2.5 text-slate-200">' + f.username + '</td>' +
+                            '<td colspan="6" class="px-4 py-2.5 text-slate-500 text-sm italic">Sin datos disponibles</td>' +
+                            '<td class="px-4 py-2.5"><button class="friends-remove-btn text-slate-500 hover:text-rose-400 transition-colors text-lg leading-none" data-username="' + f.username + '">&times;</button></td>' +
+                            '</tr>';
+                    }
+                });
+
+                var tableHtml = '';
+                if (rows) {
+                    tableHtml =
+                        '<div class="overflow-x-auto mt-2">' +
+                        '<table class="min-w-full">' +
+                        '<thead class="bg-slate-800/60 border-b border-slate-700/50">' +
+                        '<tr class="text-left text-xs uppercase tracking-wide text-slate-400 font-semibold">' +
+                        '<th class="px-4 py-2.5">Usuario</th>' +
+                        '<th class="px-4 py-2.5">Nivel</th>' +
+                        '<th class="px-4 py-2.5">XP</th>' +
+                        '<th class="px-4 py-2.5">Tiempo total</th>' +
+                        '<th class="px-4 py-2.5">Racha</th>' +
+                        '<th class="px-4 py-2.5">Pomodoros</th>' +
+                        '<th class="px-4 py-2.5">Logros</th>' +
+                        '<th class="px-4 py-2.5"></th>' +
+                        '</tr>' +
+                        '</thead>' +
+                        '<tbody class="divide-y divide-slate-800/60 bg-slate-900/30">' +
+                        rows +
+                        '</tbody>' +
+                        '</table>' +
+                        '</div>';
+                } else {
+                    tableHtml =
+                        '<div class="border border-dashed border-slate-600/60 rounded-lg p-5 text-center space-y-2">' +
+                        '<p class="text-slate-300 text-sm font-medium">¿Por dónde empezar?</p>' +
+                        '<div class="text-slate-400 text-xs space-y-1 max-w-sm mx-auto">' +
+                        '<p>1. Pulsa <strong class="text-emerald-400">Compartir perfil</strong> para crear tu perfil público.</p>' +
+                        '<p>2. Pide a un amigo que haga lo mismo con Focus Pulse.</p>' +
+                        '<p>3. Añádelo aquí con su nombre de usuario de GitHub.</p>' +
+                        '</div>' +
+                        '</div>';
+                }
+
+                container.innerHTML = toastHtml + headerHtml + tableHtml;
+
+                // Auto-dismiss share success toast
+                if (data && data.shareComplete) {
+                    setTimeout(function() {
+                        var el = document.getElementById('friends-share-toast');
+                        if (el) {
+                            el.style.transition = 'opacity 0.3s';
+                            el.style.opacity = '0';
+                            setTimeout(function() { if (el && el.parentNode) el.remove(); }, 300);
+                        }
+                    }, 4000);
+                }
+
+                // Wire up Share Profile button (with loading state)
+                var shareBtn = container.querySelector('#friends-share-btn');
+                if (shareBtn) {
+                    shareBtn.addEventListener('click', function() {
+                        shareBtn.textContent = 'Compartiendo...';
+                        shareBtn.disabled = true;
+                        shareBtn.classList.add('opacity-60');
+                        vscode.postMessage({ type: 'friends:shareProfile' });
+                    });
+                }
+
+                // Wire up Add Friend button (with loading state)
+                var addInput = container.querySelector('#friends-add-input');
+                var addBtn = container.querySelector('#friends-add-btn');
+                if (addBtn && addInput) {
+                    var doAdd = function() {
+                        var value = addInput.value.trim();
+                        if (!value) return;
+                        addBtn.textContent = '...';
+                        addBtn.disabled = true;
+                        vscode.postMessage({ type: 'friends:addFriend', payload: { mode: 'username', value: value } });
+                        addInput.value = '';
+                    };
+                    addBtn.addEventListener('click', doAdd);
+                    addInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') doAdd();
+                    });
+                }
+
+                // Wire up Remove buttons
+                var removeBtns = container.querySelectorAll('.friends-remove-btn');
+                removeBtns.forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var username = btn.getAttribute('data-username');
+                        if (username) {
+                            vscode.postMessage({ type: 'friends:removeFriend', payload: { username: username } });
+                        }
+                    });
+                });
+            }
+
+            formatFocusTime(ms) {
+                if (!ms) return '0h 0m';
+                var totalMinutes = Math.floor(ms / 60000);
+                var h = Math.floor(totalMinutes / 60);
+                var m = totalMinutes % 60;
+                return h + 'h ' + m + 'm';
+            }
+
             updateInsights(data) {
                 const insightsEl = document.getElementById('insights');
                 if (!insightsEl || !data.historyAll || data.historyAll.length < 2) {
@@ -1317,12 +1561,18 @@ setupEventListeners() {
         // Listen for data updates
         window.addEventListener('message', function(event) {
             const msg = event.data;
-            console.log('Mensaje recibido en dashboard:', msg);
-            if (!msg || msg.type !== 'stats:update') return;
-            
-            if (dashboardRenderer) {
-                console.log('Actualizando dashboard con datos:', msg.payload);
+            if (!msg) return;
+            if (msg.type === 'stats:update' && dashboardRenderer) {
                 dashboardRenderer.updateData(msg.payload || {});
+            }
+            if (msg.type === 'friends:update' && dashboardRenderer) {
+                dashboardRenderer.updateFriendsTab(msg.payload || {});
+            }
+            if (msg.type === 'sync-info-update' && dashboardRenderer) {
+                dashboardRenderer.syncInfo = msg.payload || {};
+            }
+            if (msg.type === 'friends:error' && dashboardRenderer) {
+                dashboardRenderer.updateFriendsTab({ _error: msg.payload?.message || 'Error desconocido' });
             }
         });
     </script>
@@ -1420,6 +1670,24 @@ currentPanel.webview.onDidReceiveMessage(
           autoSyncEnabled: syncManager.isAutoSyncEnabled(),
         };
 
+        // Build friends data for initial load
+        let friendsTabData: any = undefined;
+        try {
+          const { FriendService: FSInit } = require("./friends/FriendService");
+          const friendSvcInit = FSInit.getInstance();
+          friendSvcInit.setContext(context);
+          const friendsList = friendSvcInit.loadFriends();
+          const loginInit = await friendSvcInit.getAuthenticatedLogin();
+          friendsTabData = {
+            friends: friendsList,
+            ownProfile: null,
+            isAuthenticated: !!syncManager.getCurrentUser(),
+            ownUsername: loginInit,
+          };
+        } catch {
+          // friends feature not available — omit gracefully
+        }
+
         const dashboardData: DashboardData = {
           stats: statsArray,
           history7,
@@ -1433,6 +1701,7 @@ currentPanel.webview.onDidReceiveMessage(
           weeklySummary: [], // TODO: Implement weekly summary
           goals: undefined, // TODO: Implement goals
           sync: syncInfo,
+          friends: friendsTabData,
         };
 
         console.log(
@@ -1493,6 +1762,24 @@ currentPanel.webview.onDidReceiveMessage(
         }
         case "authenticate": {
           await vscode.commands.executeCommand("focusPulse.authenticate");
+          // After auth, refresh friends tab + sync info en la webview
+          try {
+            const { FriendService: FSAuth } = require("./friends/FriendService");
+            const fsSvcAuth = FSAuth.getInstance();
+            fsSvcAuth.setContext(context);
+            const fListAuth = fsSvcAuth.loadFriends();
+            const fLoginAuth = await fsSvcAuth.getAuthenticatedLogin();
+            const sMgrAuth = UserSyncManager.getInstance();
+            const curUserAuth = sMgrAuth.getCurrentUser();
+            currentPanel?.webview.postMessage({
+              type: "friends:update",
+              payload: { friends: fListAuth, ownProfile: null, isAuthenticated: !!curUserAuth, ownUsername: fLoginAuth },
+            });
+            currentPanel?.webview.postMessage({
+              type: "sync-info-update",
+              payload: { isAuthenticated: !!curUserAuth, userEmail: curUserAuth?.email, lastSync: sMgrAuth.getLastSyncTime(), autoSyncEnabled: sMgrAuth.isAutoSyncEnabled() },
+            });
+          } catch { /* ignore */ }
           break;
         }
         case "create-github-token": {
@@ -1508,6 +1795,111 @@ currentPanel.webview.onDidReceiveMessage(
         }
         case "assistant:click": {
           console.log("Assistant clicked");
+          break;
+        }
+        case "friends:refreshFriends": {
+          const { FriendService } = require("./friends/FriendService");
+          const friendService = FriendService.getInstance();
+          friendService.setContext(context);
+          try {
+            const friends = await friendService.refreshFriends();
+            const login = await friendService.getAuthenticatedLogin();
+            const syncMgr = UserSyncManager.getInstance();
+            const isAuth = !!syncMgr.getCurrentUser();
+
+            // Build ownProfile from current data
+            let ownProfile = null;
+            if (isAuth && login) {
+              const hist = getHistory();
+              const pomStats = getPomodoroStats();
+              const streakD = getStreakDays(hist);
+              const streakN = Array.isArray(streakD) ? streakD.length : streakD;
+              const xpData = computeXpState(hist, pomStats, undefined);
+              const statsArr = getStatsArray();
+              const dwState = getDeepWorkState(context);
+              const unl = computeAchievements(streakN, hist, statsArr, xpData, pomStats, undefined, dwState, context);
+              const last7 = hist.slice().sort((a: any, b: any) => a.date.localeCompare(b.date)).slice(-7);
+              const avgSc = last7.length > 0
+                ? last7.reduce((s: number, d: any) => s + d.avgScore, 0) / last7.length
+                : 0;
+              const totalMs = hist.reduce((s: number, d: any) => s + (d.totalTimeMs || 0), 0);
+              ownProfile = friendService.buildOwnProfile({
+                githubLogin: login,
+                level: xpData.level,
+                totalXp: xpData.totalXp,
+                totalFocusTimeMs: totalMs,
+                currentStreak: streakN,
+                totalPomodoros: pomStats?.total || 0,
+                totalAchievements: unl.length,
+                avgScoreLast7Days: Math.round(avgSc * 10) / 10,
+              });
+            }
+
+            currentPanel?.webview.postMessage({
+              type: "friends:update",
+              payload: { friends, ownProfile, isAuthenticated: isAuth, ownUsername: login },
+            });
+          } catch (err) {
+            currentPanel?.webview.postMessage({
+              type: "friends:error",
+              payload: { message: String(err) },
+            });
+          }
+          break;
+        }
+        case "friends:shareProfile": {
+          await vscode.commands.executeCommand("focusPulse.shareProfile");
+          try {
+            const { FriendService: FS4 } = require("./friends/FriendService");
+            const fsSvc4 = FS4.getInstance();
+            fsSvc4.setContext(context);
+            const fList4 = fsSvc4.loadFriends();
+            const fLogin4 = await fsSvc4.getAuthenticatedLogin();
+            const sMgr4 = UserSyncManager.getInstance();
+            currentPanel?.webview.postMessage({
+              type: "friends:update",
+              payload: { friends: fList4, ownProfile: null, isAuthenticated: !!sMgr4.getCurrentUser(), ownUsername: fLogin4, shareComplete: true },
+            });
+          } catch { /* ignore */ }
+          break;
+        }
+        case "friends:addFriend": {
+          const { FriendService: FS2 } = require("./friends/FriendService");
+          const friendSvc = FS2.getInstance();
+          friendSvc.setContext(context);
+          try {
+            if (msg.payload?.mode === "username") {
+              await friendSvc.addFriendByUsername(msg.payload.value);
+            } else {
+              await friendSvc.addFriendByGistId(msg.payload.value);
+            }
+            const updatedFriends = friendSvc.loadFriends();
+            const syncMgr2 = UserSyncManager.getInstance();
+            const login2 = await friendSvc.getAuthenticatedLogin();
+            currentPanel?.webview.postMessage({
+              type: "friends:update",
+              payload: { friends: updatedFriends, ownProfile: null, isAuthenticated: !!syncMgr2.getCurrentUser(), ownUsername: login2 },
+            });
+          } catch (err) {
+            currentPanel?.webview.postMessage({
+              type: "friends:error",
+              payload: { message: String(err) },
+            });
+          }
+          break;
+        }
+        case "friends:removeFriend": {
+          const { FriendService: FS3 } = require("./friends/FriendService");
+          const friendSvc2 = FS3.getInstance();
+          friendSvc2.setContext(context);
+          await friendSvc2.removeFriend(msg.payload?.username || "");
+          const updatedFriends2 = friendSvc2.loadFriends();
+          const syncMgr3 = UserSyncManager.getInstance();
+          const login3 = await friendSvc2.getAuthenticatedLogin();
+          currentPanel?.webview.postMessage({
+            type: "friends:update",
+            payload: { friends: updatedFriends2, ownProfile: null, isAuthenticated: !!syncMgr3.getCurrentUser(), ownUsername: login3 },
+          });
           break;
         }
         default: {

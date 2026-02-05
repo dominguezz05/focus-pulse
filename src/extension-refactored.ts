@@ -46,6 +46,7 @@ import { getStateManager, type AppState } from "./state/StateManager";
 import { CustomAchievementManager } from "./webview/CustomAchievementManager";
 import { registerExportCommands } from "./export/exportCommands";
 import { registerSyncCommands } from "./export/syncCommands";
+import { registerFriendCommands } from "./friends/friendCommands";
 import { AssistantService } from "./services/AssistantService";
 import { NotificationService } from "./notifications/NotificationService";
 import { getEventBus } from "./events";
@@ -366,9 +367,30 @@ export function activate(context: vscode.ExtensionContext) {
   // Register sync commands
   registerSyncCommands(context);
 
+  // Register friend commands
+  registerFriendCommands(context);
+
   // Register notification commands (reusa la instancia ya creada)
   const { registerNotificationCommands } = require('./notifications/NotificationCommands');
   registerNotificationCommands(context, notificationService);
+
+  // Auto-authenticate with stored token (persists across window reloads)
+  (async () => {
+    try {
+      const { GitHubSyncProvider, UserSyncManager } = require('./export/UserSyncManager');
+      const provider = new GitHubSyncProvider();
+      provider.setContext(context);
+      const storedUser = await provider.authenticateWithStoredToken();
+      if (storedUser) {
+        const syncMgr = UserSyncManager.getInstance();
+        await syncMgr.setProvider(provider);
+        await syncMgr.setCurrentUser(storedUser);
+        console.log('Focus Pulse: auto-authenticated as', storedUser.email);
+      }
+    } catch (e) {
+      console.log('Focus Pulse: auto-auth skipped:', e);
+    }
+  })();
 
   const handlers = [
     vscode.commands.registerCommand("focusPulse.openDashboard", () => {
