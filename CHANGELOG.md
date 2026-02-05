@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.6.1](https://github.com/dominguezz05/focus-pulse/compare/v2.5.0...v2.6.1) (2026-02-05)
+
+
+###  Chores
+
+* logic friends version 2.6 ([2ba6982](https://github.com/dominguezz05/focus-pulse/commit/2ba6982e9615b874337d0af5b7dd1e1852c2179a))
+
+
+###  Bug Fixes
+
+* bug logros en amigos ([6c75a69](https://github.com/dominguezz05/focus-pulse/commit/6c75a69d2b49f2c76e6debe270cfed3475c62eeb))
+* funtionalities of notifications ([dc2ffd0](https://github.com/dominguezz05/focus-pulse/commit/dc2ffd056366f1ba900d9dfcff564a4fa18d44b3))
+* notification assistant ([14b8bed](https://github.com/dominguezz05/focus-pulse/commit/14b8bed15db4068c4f4e7b19b5f26294bb12cd8a))
+* problems ([f21690b](https://github.com/dominguezz05/focus-pulse/commit/f21690b35de6d2540a8b6cbd3b38b44fd4902647))
+* readme ([0a84982](https://github.com/dominguezz05/focus-pulse/commit/0a8498264a5e4bc310aa0bd3ffa9c525c7daced6))
+
 ## [2.6.0] - 2026-02-05
 
 ### Features
