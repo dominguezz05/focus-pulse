@@ -26,10 +26,17 @@ export interface CustomAchievement extends Achievement {
 }
 
 export interface AchievementCondition {
-  type: 'focus_time' | 'streak' | 'files_worked' | 'pomodoros' | 'xp_level' | 'score_avg' | 'edits_count';
-  operator: 'gte' | 'lte' | 'eq' | 'gt' | 'lt';
+  type:
+    | "focus_time"
+    | "streak"
+    | "files_worked"
+    | "pomodoros"
+    | "xp_level"
+    | "score_avg"
+    | "edits_count";
+  operator: "gte" | "lte" | "eq" | "gt" | "lt";
   value: number;
-  timeframe?: 'today' | 'week' | 'month' | 'total';
+  timeframe?: "today" | "week" | "month" | "total";
 }
 
 export function computeAchievements(
@@ -257,7 +264,7 @@ export function computeAchievements(
       history,
       streakDays,
       xp,
-      pomodoroStats
+      pomodoroStats,
     );
     list.push(...customUnlocked);
   }
@@ -275,22 +282,35 @@ function parseTimeToMs(text: string): number {
 
 // --- Gestión de logros personalizados ---
 
-const CUSTOM_ACHIEVEMENTS_KEY = 'focusPulse.customAchievements';
+const CUSTOM_ACHIEVEMENTS_KEY = "focusPulse.customAchievements";
 
-export function saveCustomAchievement(achievement: CustomAchievement, context: vscode.ExtensionContext): void {
+export async function saveCustomAchievement(
+  achievement: CustomAchievement,
+  context: vscode.ExtensionContext,
+): Promise<CustomAchievement[]> {
   const existing = getCustomAchievements(context);
   existing.push(achievement);
-  context.globalState.update(CUSTOM_ACHIEVEMENTS_KEY, existing);
+  await context.globalState.update(CUSTOM_ACHIEVEMENTS_KEY, existing);
+  return existing;
 }
 
-export function getCustomAchievements(context: vscode.ExtensionContext): CustomAchievement[] {
-  return context.globalState.get<CustomAchievement[]>(CUSTOM_ACHIEVEMENTS_KEY, []);
+export function getCustomAchievements(
+  context: vscode.ExtensionContext,
+): CustomAchievement[] {
+  return context.globalState.get<CustomAchievement[]>(
+    CUSTOM_ACHIEVEMENTS_KEY,
+    [],
+  );
 }
 
-export function deleteCustomAchievement(id: string, context: vscode.ExtensionContext): void {
+export async function deleteCustomAchievement(
+  id: string,
+  context: vscode.ExtensionContext,
+): Promise<CustomAchievement[]> {
   const existing = getCustomAchievements(context);
-  const filtered = existing.filter(a => a.id !== id);
-  context.globalState.update(CUSTOM_ACHIEVEMENTS_KEY, filtered);
+  const filtered = existing.filter((a) => a.id !== id);
+  await context.globalState.update(CUSTOM_ACHIEVEMENTS_KEY, filtered);
+  return filtered;
 }
 
 export function evaluateCustomAchievements(
@@ -299,19 +319,28 @@ export function evaluateCustomAchievements(
   history: HistoryDay[],
   streakDays: number,
   xp: XpState | undefined,
-  pomodoroStats: PomodoroStats | undefined
+  pomodoroStats: PomodoroStats | undefined,
 ): Achievement[] {
   const unlocked: Achievement[] = [];
 
   for (const custom of customAchievements) {
-    if (evaluateCondition(custom.condition, stats, history, streakDays, xp, pomodoroStats)) {
+    if (
+      evaluateCondition(
+        custom.condition,
+        stats,
+        history,
+        streakDays,
+        xp,
+        pomodoroStats,
+      )
+    ) {
       unlocked.push({
         id: custom.id,
         title: custom.title,
         description: custom.description,
         icon: custom.icon,
         color: custom.color,
-        custom: true
+        custom: true,
       });
     }
   }
@@ -325,30 +354,30 @@ function evaluateCondition(
   history: HistoryDay[],
   streakDays: number,
   xp: XpState | undefined,
-  pomodoroStats: PomodoroStats | undefined
+  pomodoroStats: PomodoroStats | undefined,
 ): boolean {
   let value: number = 0;
 
   switch (condition.type) {
-    case 'focus_time':
+    case "focus_time":
       value = getFocusTime(stats, history, condition.timeframe);
       break;
-    case 'streak':
+    case "streak":
       value = streakDays;
       break;
-    case 'files_worked':
+    case "files_worked":
       value = getFilesWorked(stats, condition.timeframe);
       break;
-    case 'pomodoros':
+    case "pomodoros":
       value = getPomodorosCount(pomodoroStats, condition.timeframe);
       break;
-    case 'xp_level':
+    case "xp_level":
       value = xp?.level || 0;
       break;
-    case 'score_avg':
+    case "score_avg":
       value = getAverageScore(stats, history, condition.timeframe);
       break;
-    case 'edits_count':
+    case "edits_count":
       value = getEditsCount(stats, condition.timeframe);
       break;
     default:
@@ -356,30 +385,53 @@ function evaluateCondition(
   }
 
   switch (condition.operator) {
-    case 'gte': return value >= condition.value;
-    case 'lte': return value <= condition.value;
-    case 'eq': return value === condition.value;
-    case 'gt': return value > condition.value;
-    case 'lt': return value < condition.value;
-    default: return false;
+    case "gte":
+      return value >= condition.value;
+    case "lte":
+      return value <= condition.value;
+    case "eq":
+      return value === condition.value;
+    case "gt":
+      return value > condition.value;
+    case "lt":
+      return value < condition.value;
+    default:
+      return false;
   }
 }
 
-function getFocusTime(stats: FocusSummary[], history: HistoryDay[], timeframe?: string): number {
+function getFocusTime(
+  stats: FocusSummary[],
+  history: HistoryDay[],
+  timeframe?: string,
+): number {
   const toMinutes = (ms: number) => Math.floor(ms / (60 * 1000));
 
   switch (timeframe) {
-    case 'today':
-      return stats.reduce((total, s) => total + toMinutes(parseTimeToMs(s.timeText)), 0);
-    case 'week':
-      const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-      const weekHistory = history.filter(h => new Date(h.date).getTime() >= weekAgo);
-      return weekHistory.reduce((total, h) => total + toMinutes(h.totalTimeMs), 0);
-    case 'month':
-      const monthAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-      const monthHistory = history.filter(h => new Date(h.date).getTime() >= monthAgo);
-      return monthHistory.reduce((total, h) => total + toMinutes(h.totalTimeMs), 0);
-    case 'total':
+    case "today":
+      return stats.reduce(
+        (total, s) => total + toMinutes(parseTimeToMs(s.timeText)),
+        0,
+      );
+    case "week":
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const weekHistory = history.filter(
+        (h) => new Date(h.date).getTime() >= weekAgo,
+      );
+      return weekHistory.reduce(
+        (total, h) => total + toMinutes(h.totalTimeMs),
+        0,
+      );
+    case "month":
+      const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const monthHistory = history.filter(
+        (h) => new Date(h.date).getTime() >= monthAgo,
+      );
+      return monthHistory.reduce(
+        (total, h) => total + toMinutes(h.totalTimeMs),
+        0,
+      );
+    case "total":
     default:
       return history.reduce((total, h) => total + toMinutes(h.totalTimeMs), 0);
   }
@@ -387,55 +439,70 @@ function getFocusTime(stats: FocusSummary[], history: HistoryDay[], timeframe?: 
 
 function getFilesWorked(stats: FocusSummary[], timeframe?: string): number {
   switch (timeframe) {
-    case 'today':
+    case "today":
       return stats.length;
-    case 'week':
-    case 'month':
-    case 'total':
+    case "week":
+    case "month":
+    case "total":
     default:
       return stats.length; // Simplificado - para timeframe extendido necesitaríamos histórico
   }
 }
 
-function getPomodorosCount(pomodoroStats: PomodoroStats | undefined, timeframe?: string): number {
+function getPomodorosCount(
+  pomodoroStats: PomodoroStats | undefined,
+  timeframe?: string,
+): number {
   if (!pomodoroStats) return 0;
-  
+
   switch (timeframe) {
-    case 'today':
+    case "today":
       return pomodoroStats.today || 0;
-    case 'total':
+    case "total":
     default:
       return pomodoroStats.total || 0;
   }
 }
 
-function getAverageScore(stats: FocusSummary[], history: HistoryDay[], timeframe?: string): number {
+function getAverageScore(
+  stats: FocusSummary[],
+  history: HistoryDay[],
+  timeframe?: string,
+): number {
   switch (timeframe) {
-    case 'today':
+    case "today":
       if (stats.length === 0) return 0;
       return stats.reduce((total, s) => total + s.score, 0) / stats.length;
-    case 'week':
+    case "week":
       const weekHistory = history.slice(-7);
       if (weekHistory.length === 0) return 0;
-      return weekHistory.reduce((total, h) => total + h.avgScore, 0) / weekHistory.length;
-    case 'month':
+      return (
+        weekHistory.reduce((total, h) => total + h.avgScore, 0) /
+        weekHistory.length
+      );
+    case "month":
       const monthHistory = history.slice(-30);
       if (monthHistory.length === 0) return 0;
-      return monthHistory.reduce((total, h) => total + h.avgScore, 0) / monthHistory.length;
-    case 'total':
+      return (
+        monthHistory.reduce((total, h) => total + h.avgScore, 0) /
+        monthHistory.length
+      );
+    case "total":
     default:
       if (history.length === 0) return 0;
-      return history.reduce((total, h) => total + h.avgScore, 0) / history.length;
+      return (
+        history.reduce((total, h) => total + h.avgScore, 0) / history.length
+      );
   }
 }
 
 function getEditsCount(stats: FocusSummary[], timeframe?: string): number {
   switch (timeframe) {
-    case 'today':
+    case "today":
       return stats.reduce((total, s) => total + s.edits, 0);
-    case 'week':
-    case 'month':
-    case 'total':
+    case "week":
+    case "month":
+    case "total":
     default:
       return stats.reduce((total, s) => total + s.edits, 0); // Simplificado
   }
@@ -443,36 +510,41 @@ function getEditsCount(stats: FocusSummary[], timeframe?: string): number {
 
 // --- Validación de logros personalizados ---
 
-export function validateCustomAchievement(achievement: CustomAchievement): { valid: boolean; errors: string[] } {
+export function validateCustomAchievement(achievement: CustomAchievement): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   // Validar título
   if (!achievement.title || achievement.title.trim().length === 0) {
-    errors.push('El título es obligatorio');
+    errors.push("El título es obligatorio");
   }
   if (achievement.title && achievement.title.length > 50) {
-    errors.push('El título no puede exceder 50 caracteres');
+    errors.push("El título no puede exceder 50 caracteres");
   }
 
   // Validar descripción
   if (!achievement.description || achievement.description.trim().length === 0) {
-    errors.push('La descripción es obligatoria');
+    errors.push("La descripción es obligatoria");
   }
   if (achievement.description && achievement.description.length > 150) {
-    errors.push('La descripción no puede exceder 150 caracteres');
+    errors.push("La descripción no puede exceder 150 caracteres");
   }
 
   // Validar ID único
   if (!achievement.id || achievement.id.trim().length === 0) {
-    errors.push('El ID es obligatorio');
+    errors.push("El ID es obligatorio");
   }
   if (achievement.id && !/^[a-zA-Z0-9_-]+$/.test(achievement.id)) {
-    errors.push('El ID solo puede contener letras, números, guiones y guiones bajos');
+    errors.push(
+      "El ID solo puede contener letras, números, guiones y guiones bajos",
+    );
   }
 
   // Validar condición
   if (!achievement.condition) {
-    errors.push('La condición es obligatoria');
+    errors.push("La condición es obligatoria");
   } else {
     const conditionErrors = validateCondition(achievement.condition);
     errors.push(...conditionErrors);
@@ -480,12 +552,12 @@ export function validateCustomAchievement(achievement: CustomAchievement): { val
 
   // Validar icon (opcional)
   if (achievement.icon && achievement.icon.length > 2) {
-    errors.push('El icono no puede exceder 2 caracteres');
+    errors.push("El icono no puede exceder 2 caracteres");
   }
 
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -493,27 +565,45 @@ function validateCondition(condition: AchievementCondition): string[] {
   const errors: string[] = [];
 
   // Validar tipo
-  const validTypes = ['focus_time', 'streak', 'files_worked', 'pomodoros', 'xp_level', 'score_avg', 'edits_count'];
+  const validTypes = [
+    "focus_time",
+    "streak",
+    "files_worked",
+    "pomodoros",
+    "xp_level",
+    "score_avg",
+    "edits_count",
+  ];
   if (!validTypes.includes(condition.type)) {
-    errors.push(`Tipo de condición inválido. Valores válidos: ${validTypes.join(', ')}`);
+    errors.push(
+      `Tipo de condición inválido. Valores válidos: ${validTypes.join(", ")}`,
+    );
   }
 
   // Validar operador
-  const validOperators = ['gte', 'lte', 'eq', 'gt', 'lt'];
+  const validOperators = ["gte", "lte", "eq", "gt", "lt"];
   if (!validOperators.includes(condition.operator)) {
-    errors.push(`Operador inválido. Valores válidos: ${validOperators.join(', ')}`);
+    errors.push(
+      `Operador inválido. Valores válidos: ${validOperators.join(", ")}`,
+    );
   }
 
   // Validar valor
-  if (typeof condition.value !== 'number' || condition.value < 0) {
-    errors.push('El valor debe ser un número positivo');
+  if (typeof condition.value !== "number" || condition.value < 0) {
+    errors.push("El valor debe ser un número positivo");
   }
 
   // Validar timeframe para tipos que lo requieren
-  if (condition.type === 'focus_time' || condition.type === 'files_worked' || condition.type === 'score_avg') {
-    const validTimeframes = ['today', 'week', 'month', 'total'];
+  if (
+    condition.type === "focus_time" ||
+    condition.type === "files_worked" ||
+    condition.type === "score_avg"
+  ) {
+    const validTimeframes = ["today", "week", "month", "total"];
     if (condition.timeframe && !validTimeframes.includes(condition.timeframe)) {
-      errors.push(`Timeframe inválido. Valores válidos: ${validTimeframes.join(', ')}`);
+      errors.push(
+        `Timeframe inválido. Valores válidos: ${validTimeframes.join(", ")}`,
+      );
     }
   }
 
@@ -521,14 +611,21 @@ function validateCondition(condition: AchievementCondition): string[] {
 }
 
 export function generateAchievementId(title: string): string {
-  return 'custom-' + title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .substring(0, 20) + '-' + Date.now().toString(36);
+  return (
+    "custom-" +
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .substring(0, 20) +
+    "-" +
+    Date.now().toString(36)
+  );
 }
 // Catálogo completo de logros conocidos por Focus Pulse
-export function getAllAchievementsDefinitions(unlockedAchievements: Achievement[] = []): Achievement[] {
+export function getAllAchievementsDefinitions(
+  unlockedAchievements: Achievement[] = [],
+): Achievement[] {
   return [
     {
       id: "first-focus",
