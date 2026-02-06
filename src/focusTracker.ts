@@ -52,7 +52,7 @@ export function computeFocusScore(s: FocusStats): number {
   }
 
   const editsPerMin = s.edits / minutes;
-  const switchesPerMin = s.switches / Math.max(minutes, 0.1);
+  const switchesPerMin = s.switches / Math.max(minutes, 1);
 
   const weights = getScoreWeights();
 
@@ -64,7 +64,7 @@ export function computeFocusScore(s: FocusStats): number {
 
   if (score < 0) score = 0;
   if (score > 100) score = 100;
-  return Math.round(score);
+  return Math.round(score * 100) / 100;
 }
 
 export function formatMinutes(ms: number): string {
