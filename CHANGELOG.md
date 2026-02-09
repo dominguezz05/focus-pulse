@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.6.2] (2026-02-09)
+
+### 🎯 New Features
+
+#### 💬 Feedback System with GitHub Integration
+
+**User-Friendly Feedback Collection**
+
+- **Floating button** — Always-visible feedback button in dashboard (bottom-left corner)
+- **Premium modal design** — Glassmorphism UI with smooth animations
+- **Multiple feedback types** — Ideas 💡, Bugs 🐛, UX Improvements ✨
+- **Smart auto-popup** — Automatically appears when user reaches:
+  - Level 5+
+  - 7+ achievements unlocked
+  - 5+ day streak
+  - Only shows once every 30 days (non-intrusive)
+
+**Dual Submission System**
+
+- **Email via FormSubmit.co** — Direct email notifications (zero config needed after initial setup)
+- **GitHub Issues** — Auto-creates issues in repository with proper labels
+  - `enhancement` + `user-feedback` for suggestions
+  - `bug` + `user-reported` for bug reports
+  - `ux` + `user-feedback` for UX improvements
+- **User context included** — Level, XP, and version auto-attached to feedback
+
+**Privacy & UX**
+
+- Optional email field (for follow-up responses)
+- No sensitive data collected (no file names or code)
+- Honeypot spam prevention
+- One-click "View Issue" after submission
+- Captcha-free experience
+
+---
+
 ### [2.6.1] (2026-02-09)
 
 ### ✨ Friends System 2.0 - Major Improvements
