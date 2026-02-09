@@ -528,13 +528,13 @@ setupEventListeners() {
 if (target === 'friends') {
                             // Check if friends data is stale before refreshing
                             const now = Date.now();
-                            const lastFriendsUpdate = (window as any).lastFriendsUpdate || 0;
+                            const lastFriendsUpdate = window.lastFriendsUpdate || 0;
                             const FRIENDS_STALE_THRESHOLD = 30000; // 30 seconds
-                            
+
                             if (now - lastFriendsUpdate > FRIENDS_STALE_THRESHOLD) {
                                 document.getElementById('friends-container').innerHTML = '<div class="flex justify-center py-8"><div class="text-slate-400 text-sm animate-pulse">Actualizando...</div></div>';
                                 vscode.postMessage({ type: 'friends:refreshFriends' });
-                                (window as any).lastFriendsUpdate = now;
+                                window.lastFriendsUpdate = now;
                             } else {
                                 // Use cached data if still fresh
                                 console.log('Friends data still fresh, using cache');
@@ -711,7 +711,7 @@ if (target === 'friends') {
 if (data.friends) {
                     this.updateFriendsTab(data.friends);
                     // Update timestamp when friends data is received
-                    (window as any).lastFriendsUpdate = Date.now();
+                    window.lastFriendsUpdate = Date.now();
                 }
             }
             
@@ -773,6 +773,7 @@ if (data.friends) {
                         '</tr>';
                 }
 
+                var self = this;
                 friends.forEach(function(f) {
                     var p = f.cachedProfile;
                     if (p) {
@@ -781,7 +782,7 @@ if (data.friends) {
                             '<td class="px-4 py-2.5 text-slate-200">' + f.username + '</td>' +
                             '<td class="px-4 py-2.5 text-blue-300">' + p.level + '</td>' +
                             '<td class="px-4 py-2.5 text-purple-300">' + p.totalXp + '</td>' +
-                            '<td class="px-4 py-2.5 text-slate-200">' + this.formatFocusTime(p.totalFocusTimeMs) + '</td>' +
+                            '<td class="px-4 py-2.5 text-slate-200">' + self.formatFocusTime(p.totalFocusTimeMs) + '</td>' +
                             '<td class="px-4 py-2.5 text-emerald-300">' + p.currentStreak + '</td>' +
                             '<td class="px-4 py-2.5 text-slate-200">' + p.totalPomodoros + '</td>' +
                             '<td class="px-4 py-2.5 text-slate-200">' + p.totalAchievements + '</td>' +
