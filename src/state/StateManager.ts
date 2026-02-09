@@ -6,6 +6,13 @@ import { debounceStorageWrite } from '../utils/Debouncer';
 
 const STORAGE_KEY = 'focusPulseAppState';
 
+// Global context reference for state manager
+let globalContext: vscode.ExtensionContext | null = null;
+
+export function setGlobalContext(context: vscode.ExtensionContext): void {
+  globalContext = context;
+}
+
 export class FocusStateManager implements StateManager {
   private state: AppState;
   private subscribers: Set<StateSubscriber<AppState>> = new Set();
@@ -148,8 +155,13 @@ export class FocusStateManager implements StateManager {
     getEventBus().emit(FOCUS_EVENTS.DATA_RESET, { timestamp: Date.now() });
   }
 
-  async persist(): Promise<void> {
+async persist(): Promise<void> {
     try {
+      if (!globalContext) {
+        console.warn('Global context not set, skipping state persistence');
+        return;
+      }
+      
       const stateToPersist = {
         ...this.state,
         session: {
@@ -158,16 +170,21 @@ export class FocusStateManager implements StateManager {
         },
       };
       
-      await vscode.workspace.getConfiguration('focusPulse').update(STORAGE_KEY, stateToPersist);
+      await globalContext.globalState.update(STORAGE_KEY, stateToPersist);
       getEventBus().emit(FOCUS_EVENTS.DATA_SAVED, { timestamp: Date.now() });
     } catch (error) {
       console.error('Failed to persist state:', error);
     }
   }
 
-  async load(): Promise<void> {
+async load(): Promise<void> {
     try {
-      const persistedState = vscode.workspace.getConfiguration('focusPulse').get<any>(STORAGE_KEY);
+      if (!globalContext) {
+        console.warn('Global context not set, skipping state loading');
+        return;
+      }
+      
+      const persistedState = globalContext.globalState.get<any>(STORAGE_KEY);
       
       if (persistedState) {
         this.state = {

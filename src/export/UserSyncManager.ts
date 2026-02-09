@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
-import { DataExportManager, ExportData } from './DataExportManager';
+import * as vscode from "vscode";
+import { DataExportManager, ExportData } from "./DataExportManager";
 
 export interface UserAccount {
   id: string;
@@ -21,7 +21,9 @@ export interface CloudSyncProvider {
   authenticate(): Promise<UserAccount>;
   upload(data: ExportData): Promise<string>;
   download(syncId: string): Promise<ExportData>;
-  listSyncs(): Promise<Array<{ id: string; timestamp: string; version: string }>>;
+  listSyncs(): Promise<
+    Array<{ id: string; timestamp: string; version: string }>
+  >;
   delete(syncId: string): Promise<void>;
 }
 
@@ -48,11 +50,11 @@ export class UserSyncManager {
       this.syncProvider = provider;
       this.currentUser = await provider.authenticate();
       await this.storeUser(this.currentUser);
-      
+
       vscode.window.showInformationMessage(
-        `Successfully authenticated as ${this.currentUser.email}`
+        `Successfully authenticated as ${this.currentUser.email}`,
       );
-      
+
       return this.currentUser;
     } catch (error) {
       vscode.window.showErrorMessage(`Authentication failed: ${error}`);
@@ -62,7 +64,7 @@ export class UserSyncManager {
 
   async enableAutoSync(options: SyncOptions = {}): Promise<void> {
     if (!this.currentUser || !this.syncProvider) {
-      throw new Error('User not authenticated. Please authenticate first.');
+      throw new Error("User not authenticated. Please authenticate first.");
     }
 
     // Clear existing timer
@@ -76,12 +78,12 @@ export class UserSyncManager {
       try {
         await this.performSync(options);
       } catch (error) {
-        console.error('Auto-sync failed:', error);
+        console.error("Auto-sync failed:", error);
       }
     }, interval);
 
     vscode.window.showInformationMessage(
-      `Auto-sync enabled (every ${options.syncInterval || 30} minutes)`
+      `Auto-sync enabled (every ${options.syncInterval || 30} minutes)`,
     );
   }
 
@@ -91,58 +93,77 @@ export class UserSyncManager {
       this.syncTimer = null;
     }
 
-    vscode.window.showInformationMessage('Auto-sync disabled');
+    vscode.window.showInformationMessage("Auto-sync disabled");
   }
 
   async performSync(options: SyncOptions = {}): Promise<string> {
     if (!this.currentUser || !this.syncProvider) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
       const exportManager = DataExportManager.getInstance();
-      
+
       // Export data based on options
-      const fullData = JSON.parse(await exportManager.exportData('json'));
-      
+      const fullData = JSON.parse(await exportManager.exportData("json"));
+
       // Prepare data for sync
       const data: ExportData = {
-        version: '2.2.0',
+        version: "2.2.0",
         exportDate: new Date().toISOString(),
         userAccount: {
           id: this.currentUser.id,
           email: this.currentUser.email,
         },
-        configuration: options.includeConfiguration !== false ? fullData.configuration : {
-          enableStatusBar: false,
-          minMinutesForScore: 1,
-          scoreWeights: { timeWeight: 0, editsWeight: 0, switchPenalty: 0 },
-          pomodoro: { enabled: false, workMinutes: 25, breakMinutes: 5 },
-          goals: { enabled: false, targetMinutes: 60, targetPomodoros: 3 },
-          deepWork: { enabled: false, durationMinutes: 60, switchPenalty: 40, xpBonus: 150 },
-        },
-        state: options.includeState !== false ? fullData.state : {
-          focus: null,
-          pomodoro: null,
-          achievements: null,
-          xp: null,
-          deepWork: null,
-          goals: null,
-          session: null,
-        },
+        configuration:
+          options.includeConfiguration !== false
+            ? fullData.configuration
+            : {
+                enableStatusBar: false,
+                minMinutesForScore: 1,
+                scoreWeights: {
+                  timeWeight: 0,
+                  editsWeight: 0,
+                  switchPenalty: 0,
+                },
+                pomodoro: { enabled: false, workMinutes: 25, breakMinutes: 5 },
+                goals: {
+                  enabled: false,
+                  targetMinutes: 60,
+                  targetPomodoros: 3,
+                },
+                deepWork: {
+                  enabled: false,
+                  durationMinutes: 60,
+                  switchPenalty: 40,
+                  xpBonus: 150,
+                },
+              },
+        state:
+          options.includeState !== false
+            ? fullData.state
+            : {
+                focus: null,
+                pomodoro: null,
+                achievements: null,
+                xp: null,
+                deepWork: null,
+                goals: null,
+                session: null,
+              },
         history: options.includeHistory !== false ? fullData.history : [],
       };
 
       // Upload to cloud
       const syncId = await this.syncProvider.upload(data);
-      
+
       // Update last sync time
       this.lastSyncTime = Date.now();
       this.currentUser.lastSyncAt = new Date().toISOString();
       await this.storeUser(this.currentUser);
 
       vscode.window.showInformationMessage(
-        `Data synced successfully (Sync ID: ${syncId})`
+        `Data synced successfully (Sync ID: ${syncId})`,
       );
 
       return syncId;
@@ -154,7 +175,7 @@ export class UserSyncManager {
 
   async downloadSync(syncId: string, options: SyncOptions = {}): Promise<void> {
     if (!this.syncProvider) {
-      throw new Error('No sync provider available');
+      throw new Error("No sync provider available");
     }
 
     try {
@@ -162,18 +183,14 @@ export class UserSyncManager {
       const exportManager = DataExportManager.getInstance();
 
       // Import data with merge options
-      await exportManager.importData(
-        JSON.stringify(data),
-        'json',
-        {
-          mergeConfiguration: options.includeConfiguration !== false,
-          mergeState: options.includeState !== false,
-          mergeHistory: options.includeHistory !== false,
-        }
-      );
+      await exportManager.importData(JSON.stringify(data), "json", {
+        mergeConfiguration: options.includeConfiguration !== false,
+        mergeState: options.includeState !== false,
+        mergeHistory: options.includeHistory !== false,
+      });
 
       vscode.window.showInformationMessage(
-        `Data imported from sync (Sync ID: ${syncId})`
+        `Data imported from sync (Sync ID: ${syncId})`,
       );
     } catch (error) {
       vscode.window.showErrorMessage(`Download sync failed: ${error}`);
@@ -181,9 +198,11 @@ export class UserSyncManager {
     }
   }
 
-  async listAvailableSyncs(): Promise<Array<{ id: string; timestamp: string; version: string }>> {
+  async listAvailableSyncs(): Promise<
+    Array<{ id: string; timestamp: string; version: string }>
+  > {
     if (!this.syncProvider) {
-      throw new Error('No sync provider available');
+      throw new Error("No sync provider available");
     }
 
     return await this.syncProvider.listSyncs();
@@ -191,7 +210,7 @@ export class UserSyncManager {
 
   async deleteSync(syncId: string): Promise<void> {
     if (!this.syncProvider) {
-      throw new Error('No sync provider available');
+      throw new Error("No sync provider available");
     }
 
     try {
@@ -227,14 +246,14 @@ export class UserSyncManager {
   async signOut(): Promise<void> {
     this.currentUser = null;
     this.syncProvider = null;
-    
+
     if (this.syncTimer) {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
     }
 
     await this.clearStoredUser();
-    vscode.window.showInformationMessage('Signed out successfully');
+    vscode.window.showInformationMessage("Signed out successfully");
   }
 
   private context: vscode.ExtensionContext | null = null;
@@ -245,13 +264,15 @@ export class UserSyncManager {
 
   private async storeUser(user: UserAccount): Promise<void> {
     if (this.context) {
-      await this.context.globalState.update('focusPulse.userAccount', user);
+      await this.context.globalState.update("focusPulse.userAccount", user);
     }
   }
 
   private async loadStoredUser(): Promise<void> {
     if (this.context) {
-      const stored = this.context.globalState.get<UserAccount>('focusPulse.userAccount');
+      const stored = this.context.globalState.get<UserAccount>(
+        "focusPulse.userAccount",
+      );
       if (stored) {
         this.currentUser = stored;
       }
@@ -260,7 +281,10 @@ export class UserSyncManager {
 
   private async clearStoredUser(): Promise<void> {
     if (this.context) {
-      await this.context.globalState.update('focusPulse.userAccount', undefined);
+      await this.context.globalState.update(
+        "focusPulse.userAccount",
+        undefined,
+      );
     }
   }
 }
@@ -273,9 +297,9 @@ export class MockCloudSyncProvider implements CloudSyncProvider {
   async authenticate(): Promise<UserAccount> {
     // Mock authentication - using specific real data
     const mockUser: UserAccount = {
-      id: 'iker-dominguez-focus-pulse-user',
-      email: 'iker.dominguez@example.com',
-      name: 'Iker Domínguez',
+      id: "iker-dominguez-focus-pulse-user",
+      email: "iker.dominguez@example.com",
+      name: "Iker Domínguez",
       createdAt: new Date().toISOString(),
     };
 
@@ -284,7 +308,7 @@ export class MockCloudSyncProvider implements CloudSyncProvider {
   }
 
   async upload(data: ExportData): Promise<string> {
-    const syncId = 'sync-' + Math.random().toString(36).substr(2, 9);
+    const syncId = "sync-" + Math.random().toString(36).substr(2, 9);
     this.syncs.set(syncId, data);
     return syncId;
   }
@@ -297,7 +321,9 @@ export class MockCloudSyncProvider implements CloudSyncProvider {
     return data;
   }
 
-  async listSyncs(): Promise<Array<{ id: string; timestamp: string; version: string }>> {
+  async listSyncs(): Promise<
+    Array<{ id: string; timestamp: string; version: string }>
+  > {
     return Array.from(this.syncs.entries()).map(([id, data]) => ({
       id,
       timestamp: data.exportDate,
@@ -320,50 +346,52 @@ export class GitHubSyncProvider implements CloudSyncProvider {
     try {
       // Show step-by-step guide before asking for the token
       const proceed = await vscode.window.showInformationMessage(
-        'Crear token de GitHub',
+        "Crear token de GitHub",
         {
           modal: true,
           detail:
-            '1. Ve a github.com/settings/tokens\n' +
-            '2. Crea un nuevo token (classic)\n' +
-            '3. Da permiso de "gist" (lectura y escritura)\n' +
-            '4. Cópialo y pégalo cuando te lo pida abajo',
+            "1. Ve a github.com/settings/tokens\n" +
+            "2. Crea un nuevo token (classic)\n" +
+            '3. Da permiso de "gist" (lectura y escritura) y de "repo"\n' +
+            "4. Cópialo y pégalo cuando te lo pida abajo",
         },
-        'Entendido',
+        "Entendido",
       );
-      if (proceed !== 'Entendido') {
-        throw new Error('Authentication cancelled');
+      if (proceed !== "Entendido") {
+        throw new Error("Authentication cancelled");
       }
 
       // Request GitHub token from user
       const token = await vscode.window.showInputBox({
-        prompt: 'Pega aquí tu Personal Access Token de GitHub',
+        prompt: "Pega aquí tu Personal Access Token de GitHub",
         password: true,
-        placeHolder: 'ghp_xxxxxxxxxxxx...',
+        placeHolder: "ghp_xxxxxxxxxxxx...",
         validateInput: (value) => {
           if (!value || value.length < 10) {
-            return 'Please enter a valid GitHub Personal Access Token';
+            return "Please enter a valid GitHub Personal Access Token";
           }
           return undefined;
-        }
+        },
       });
 
       if (!token) {
-        throw new Error('Authentication cancelled');
+        throw new Error("Authentication cancelled");
       }
 
       this.token = token;
 
       // Initialize Octokit with token
-      const { Octokit } = await import('@octokit/rest');
+      const { Octokit } = await import("@octokit/rest");
       this.octokit = new Octokit({ auth: token });
 
       // Get authenticated user info from GitHub
-      const { data: githubUser } = await this.octokit.rest.users.getAuthenticated();
+      const { data: githubUser } =
+        await this.octokit.rest.users.getAuthenticated();
 
       this.user = {
         id: githubUser.id.toString(),
-        email: githubUser.email || `${githubUser.login}@users.noreply.github.com`,
+        email:
+          githubUser.email || `${githubUser.login}@users.noreply.github.com`,
         name: githubUser.name || githubUser.login,
         createdAt: githubUser.created_at,
       };
@@ -379,7 +407,7 @@ export class GitHubSyncProvider implements CloudSyncProvider {
 
   async upload(data: ExportData): Promise<string> {
     if (!this.octokit || !this.user) {
-      throw new Error('Not authenticated with GitHub');
+      throw new Error("Not authenticated with GitHub");
     }
 
     try {
@@ -391,9 +419,9 @@ export class GitHubSyncProvider implements CloudSyncProvider {
         public: false,
         files: {
           [filename]: {
-            content: JSON.stringify(data, null, 2)
-          }
-        }
+            content: JSON.stringify(data, null, 2),
+          },
+        },
       });
 
       return gist.id;
@@ -404,22 +432,22 @@ export class GitHubSyncProvider implements CloudSyncProvider {
 
   async download(syncId: string): Promise<ExportData> {
     if (!this.octokit) {
-      throw new Error('Not authenticated with GitHub');
+      throw new Error("Not authenticated with GitHub");
     }
 
     try {
       const { data: gist } = await this.octokit.rest.gists.get({
-        gist_id: syncId
+        gist_id: syncId,
       });
 
       const files = Object.values(gist.files);
       if (files.length === 0) {
-        throw new Error('No files found in gist');
+        throw new Error("No files found in gist");
       }
 
       const file = files[0] as any;
       if (!file.content) {
-        throw new Error('Gist file has no content');
+        throw new Error("Gist file has no content");
       }
 
       return JSON.parse(file.content);
@@ -428,28 +456,30 @@ export class GitHubSyncProvider implements CloudSyncProvider {
     }
   }
 
-  async listSyncs(): Promise<Array<{ id: string; timestamp: string; version: string }>> {
+  async listSyncs(): Promise<
+    Array<{ id: string; timestamp: string; version: string }>
+  > {
     if (!this.octokit) {
-      throw new Error('Not authenticated with GitHub');
+      throw new Error("Not authenticated with GitHub");
     }
 
     try {
       const { data: gists } = await this.octokit.rest.gists.list({
-        per_page: 100
+        per_page: 100,
       });
 
       return gists
-        .filter((gist: any) => gist.description?.includes('Focus Pulse Sync'))
+        .filter((gist: any) => gist.description?.includes("Focus Pulse Sync"))
         .map((gist: any) => {
           const files = Object.values(gist.files);
-          const filename = files.length > 0 ? Object.keys(gist.files)[0] : '';
+          const filename = files.length > 0 ? Object.keys(gist.files)[0] : "";
           const versionMatch = filename.match(/focus-pulse-data-(.+)\.json/);
-          const version = versionMatch ? versionMatch[1] : 'unknown';
+          const version = versionMatch ? versionMatch[1] : "unknown";
 
           return {
             id: gist.id,
             timestamp: gist.created_at,
-            version
+            version,
           };
         });
     } catch (error) {
@@ -459,12 +489,12 @@ export class GitHubSyncProvider implements CloudSyncProvider {
 
   async delete(syncId: string): Promise<void> {
     if (!this.octokit) {
-      throw new Error('Not authenticated with GitHub');
+      throw new Error("Not authenticated with GitHub");
     }
 
     try {
       await this.octokit.rest.gists.delete({
-        gist_id: syncId
+        gist_id: syncId,
       });
     } catch (error) {
       throw new Error(`Failed to delete GitHub Gist: ${error}`);
@@ -472,20 +502,20 @@ export class GitHubSyncProvider implements CloudSyncProvider {
   }
 
   public context: vscode.ExtensionContext | null = null;
-  
+
   setContext(context: vscode.ExtensionContext): void {
     this.context = context;
   }
 
   public async storeToken(token: string): Promise<void> {
     if (this.context?.secrets) {
-      await this.context.secrets.store('focusPulse.githubToken', token);
+      await this.context.secrets.store("focusPulse.githubToken", token);
     }
   }
 
   public async loadStoredToken(): Promise<string | null> {
     if (this.context?.secrets) {
-      const token = await this.context.secrets.get('focusPulse.githubToken');
+      const token = await this.context.secrets.get("focusPulse.githubToken");
       return token || null;
     }
     return null;
@@ -499,14 +529,16 @@ export class GitHubSyncProvider implements CloudSyncProvider {
 
     try {
       this.token = storedToken;
-      const { Octokit } = await import('@octokit/rest');
+      const { Octokit } = await import("@octokit/rest");
       this.octokit = new Octokit({ auth: storedToken });
 
-      const { data: githubUser } = await this.octokit.rest.users.getAuthenticated();
+      const { data: githubUser } =
+        await this.octokit.rest.users.getAuthenticated();
 
       this.user = {
         id: githubUser.id.toString(),
-        email: githubUser.email || `${githubUser.login}@users.noreply.github.com`,
+        email:
+          githubUser.email || `${githubUser.login}@users.noreply.github.com`,
         name: githubUser.name || githubUser.login,
         createdAt: githubUser.created_at,
       };
@@ -521,7 +553,7 @@ export class GitHubSyncProvider implements CloudSyncProvider {
 
   public async clearStoredToken(): Promise<void> {
     if (this.context?.secrets) {
-      await this.context.secrets.delete('focusPulse.githubToken');
+      await this.context.secrets.delete("focusPulse.githubToken");
     }
   }
 }
