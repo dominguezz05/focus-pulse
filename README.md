@@ -5,7 +5,7 @@
 ### _Your AI-Powered Coding Companion for Deep Work_
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.6.1-informational)
+![Version](https://img.shields.io/badge/version-2.6.2-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
@@ -159,7 +159,7 @@ Your intelligent coding companion that learns your patterns and guides your focu
 
 ---
 
-## 🆕 What's New in 2.6.1
+## 🆕 What's New in 2.6.2
 
 ### 🚀 Friends System 2.0 - Major Improvements
 
@@ -202,6 +202,25 @@ Input automatically detects:
 - Automatic retry with 2-second delay
 - Debounced refresh (prevents spam)
 - Better error messages with solutions
+
+### 💬 Feedback System with GitHub Integration
+
+**Share your ideas directly from the dashboard!**
+
+| What                | How                                                   | Result                        |
+| ------------------- | ----------------------------------------------------- | ----------------------------- |
+| **Floating Button** | Click 💬 in bottom-left corner                        | Opens premium feedback modal  |
+| **Send Feedback**   | Fill form (idea/bug/UX improvement)                   | Email + GitHub Issue created  |
+| **Auto-Popup**      | Appears after level 5 / 7 achievements / 5 day streak | Non-intrusive, once per month |
+| **Track Progress**  | Click "View Issue" after submit                       | See your suggestion on GitHub |
+
+**Features:**
+
+- 📧 Dual submission (Email + GitHub Issue)
+- 🏷️ Auto-labeled issues (enhancement/bug/ux)
+- 🔒 Privacy-first (optional email, no code shared)
+- 🎨 Beautiful glassmorphism design
+- 🤖 Auto-includes user context (level, XP, version)
 
 > 📋 **See full changelog:** [CHANGELOG.md](CHANGELOG.md)
 
@@ -976,6 +995,7 @@ Common fixes:
 - [x] **v2.5.1** — Critical fixes (PeakPerformanceAnalyzer crash, event emissions)
 - [x] **v2.6.0** — Friends system (gist-based profiles, comparison table, offline cache)
 - [x] **v2.6.1** — Friends System 2.0 (auto-copy links, direct gist URLs, improved UX)
+- [x] **v2.6.2** — Feedback System with GitHub Issues integration
 
 ### 🚧 In Progress (v2.7.0)
 

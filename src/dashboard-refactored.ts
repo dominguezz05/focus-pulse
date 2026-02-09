@@ -42,6 +42,8 @@ import {
   DeepWorkState,
 } from "./deepWork";
 import type { DeepWorkState as StateTypesDeepWorkState } from "./state/StateTypes";
+import { FeedbackModal } from "./webview/components/FeedbackModal";
+import { GitHubIssueCreator } from "./feedback/GitHubIssueCreator";
 
 let currentPanel: vscode.WebviewPanel | undefined;
 let assistantService: AssistantService | undefined;
@@ -1597,6 +1599,30 @@ if (data.friends) {
             }
         });
     </script>
+
+    ${FeedbackModal.render()}
+
+    <script>
+        ${FeedbackModal.getScript()}
+
+        // Initialize feedback with user data when dashboard updates
+        window.addEventListener('message', function(event) {
+            const msg = event.data;
+            if (msg.type === 'stats:update' && msg.payload) {
+                const data = msg.payload;
+                if (data.xp && window.fillFeedbackUserInfo) {
+                    window.fillFeedbackUserInfo(data.xp.level, data.xp.totalXp);
+                }
+                if (window.checkAutoShowFeedback) {
+                    window.checkAutoShowFeedback({
+                        xp: data.xp,
+                        achievements: data.achievements,
+                        streak: data.streak
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 </html>`;
 }
@@ -1816,6 +1842,33 @@ currentPanel.webview.onDidReceiveMessage(
         }
         case "assistant:click": {
           console.log("Assistant clicked");
+          break;
+        }
+        case "feedback:sent": {
+          // Track feedback sent
+          console.log("Feedback sent at:", msg.payload?.timestamp);
+
+          // Create GitHub issue if authenticated
+          if (msg.payload?.feedbackData) {
+            const issueUrl = await GitHubIssueCreator.createIssueFromFeedback(
+              msg.payload.feedbackData,
+              context
+            );
+
+            if (issueUrl) {
+              const action = await vscode.window.showInformationMessage(
+                "✅ ¡Gracias por tu feedback! Se ha creado un issue en GitHub.",
+                "Ver Issue"
+              );
+              if (action === "Ver Issue") {
+                vscode.env.openExternal(vscode.Uri.parse(issueUrl));
+              }
+            } else {
+              vscode.window.showInformationMessage(
+                "¡Gracias por tu feedback! 🎉 Tu opinión nos ayuda a mejorar Focus Pulse."
+              );
+            }
+          }
           break;
         }
 case "friends:refreshFriends": {
