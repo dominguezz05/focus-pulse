@@ -24,6 +24,7 @@ export class FriendService {
   private static instance: FriendService;
   private context: vscode.ExtensionContext | null = null;
   private cachedLogin: string | null = null;
+  private static isRefreshing = false;
 
   private constructor() {}
 
@@ -149,23 +150,64 @@ export class FriendService {
   async addFriendByUsername(username: string): Promise<FriendEntry> {
     const octokit = await this.getOctokit();
 
-    // Search through user's public gists
-    const { data: gists } = await octokit.rest.gists.listForUser({
-      username,
-      per_page: 100,
-    });
-
+    // Try with retry logic (GitHub API may need time to index new gists)
     let profileGist: any = null;
-    for (const g of gists as any[]) {
-      if (g.description === PROFILE_GIST_DESCRIPTION) {
-        profileGist = g;
-        break;
+    const maxRetries = 2;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      // Add delay on retries to give GitHub time to index
+      if (attempt > 0) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+        console.log(`Retry attempt ${attempt} for user ${username}`);
+      }
+
+      // Search through user's public gists (check multiple pages if needed)
+      let allGists: any[] = [];
+      let page = 1;
+      const maxPages = 3; // Check up to 300 gists (100 per page)
+
+      try {
+        while (page <= maxPages) {
+          const { data: gists } = await octokit.rest.gists.listForUser({
+            username,
+            per_page: 100,
+            page,
+          });
+
+          if (gists.length === 0) break;
+          allGists = allGists.concat(gists);
+
+          // Stop early if we find the profile gist
+          const found = (gists as any[]).find(g => g.description === PROFILE_GIST_DESCRIPTION);
+          if (found) {
+            profileGist = found;
+            break;
+          }
+
+          page++;
+        }
+
+        if (!profileGist) {
+          // Check all collected gists one more time
+          profileGist = allGists.find(g => g.description === PROFILE_GIST_DESCRIPTION);
+        }
+
+        // If found, break out of retry loop
+        if (profileGist) break;
+      } catch (err) {
+        if (attempt === maxRetries) throw err;
+        console.warn(`Error fetching gists for ${username}, will retry:`, err);
       }
     }
 
     if (!profileGist) {
       throw new Error(
-        `No se encontró perfil de Focus Pulse para el usuario "${username}". ¿Ha compartido su perfil?`,
+        `No se encontró perfil de Focus Pulse para el usuario "${username}". ` +
+        `Asegúrate de que:\n` +
+        `1. El usuario ha ejecutado "Focus Pulse: Compartir perfil"\n` +
+        `2. El gist es público\n` +
+        `3. El nombre de usuario es correcto (sensible a mayúsculas)\n` +
+        `4. Si acaba de compartir su perfil, espera unos segundos y reintenta`
       );
     }
 
@@ -197,8 +239,18 @@ export class FriendService {
 
   // ─── Add friend by Gist ID ───────────────────────────────────────────────
 
-  async addFriendByGistId(gistId: string): Promise<FriendEntry> {
+  async addFriendByGistId(gistIdOrUrl: string): Promise<FriendEntry> {
     const octokit = await this.getOctokit();
+
+    // Extract gist ID from URL if a full URL was provided
+    // Supports: https://gist.github.com/username/gistId
+    let gistId = gistIdOrUrl.trim();
+    const gistUrlPattern = /gist\.github\.com\/[\w-]+\/([a-f0-9]+)/i;
+    const match = gistId.match(gistUrlPattern);
+    if (match) {
+      gistId = match[1];
+      console.log(`Extracted gist ID from URL: ${gistId}`);
+    }
 
     const { data: gist } = await octokit.rest.gists.get({ gist_id: gistId });
 
@@ -240,13 +292,23 @@ export class FriendService {
 
   // ─── Refresh all friends (respects cache TTL) ────────────────────────────
 
-  async refreshFriends(force = false): Promise<FriendEntry[]> {
+async refreshFriends(force = false): Promise<FriendEntry[]> {
+  // Prevent concurrent refresh calls
+  if (FriendService.isRefreshing && !force) {
+    return this.loadFriends(); // Return cached data
+  }
+
+  FriendService.isRefreshing = true;
+  
+  try {
     const friends = this.loadFriends();
     const now = Date.now();
     let octokit: any = null;
 
     for (const friend of friends) {
-      if (!force && friend.lastFetched && now - friend.lastFetched < CACHE_TTL_MS) {
+      // Fix cache TTL logic - properly handle null timestamps
+      const ageMs = friend.lastFetched ? now - friend.lastFetched : Infinity;
+      if (!force && ageMs < CACHE_TTL_MS) {
         continue; // still fresh
       }
 
@@ -263,8 +325,9 @@ export class FriendService {
           friend.cachedProfile = JSON.parse(fileContent);
           friend.lastFetched = now;
         }
-      } catch (err) {
-        // Network error — keep stale cache, don't crash
+} catch (err) {
+        // Improve error recovery - update timestamp even on errors to prevent infinite retries
+        friend.lastFetched = now;
         console.warn(
           `FriendService: no se pudo actualizar el perfil de ${friend.username}:`,
           err,
@@ -272,9 +335,12 @@ export class FriendService {
       }
     }
 
-    this.saveFriends(friends);
+this.saveFriends(friends);
     return friends;
+  } finally {
+    FriendService.isRefreshing = false;
   }
+}
 
   // ─── Persistence ─────────────────────────────────────────────────────────
 

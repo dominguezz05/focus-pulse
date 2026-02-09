@@ -33,10 +33,10 @@ export class CustomAchievementManager {
             this.loadAchievements(panel.webview, context);
             break;
           case "createAchievement":
-            this.createAchievement(panel.webview, context, msg.data);
+            await this.createAchievement(panel.webview, context, msg.data);
             break;
           case "deleteAchievement":
-            this.deleteAchievement(panel.webview, context, msg.id);
+            await this.deleteAchievement(panel.webview, context, msg.id);
             break;
           case "validateAchievement":
             this.validateAchievement(panel.webview, msg.data);
@@ -197,7 +197,8 @@ export class CustomAchievementManager {
             <!-- Vista previa y lista -->
             <section>
                 <!-- Vista previa -->
-                <div id="preview-section" class="hidden bg-slate-800 rounded-xl p-6 mb-6 achievement-preview">
+                <div id="preview-section" class="hidden bg-slate-800 rounded-xl p-6 mb-6 achievement-preview relative">
+                    <button id="close-preview" aria-label="Cerrar vista previa" title="Cerrar" class="absolute right-3 top-3 text-slate-400 hover:text-white bg-slate-700/40 hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center">✖</button>
                     <h3 class="text-lg font-semibold mb-4">Vista Previa</h3>
                     <div id="achievement-preview" class="inline-flex flex-col gap-2 rounded-lg border px-3 py-2"></div>
                 </div>
@@ -279,6 +280,28 @@ export class CustomAchievementManager {
             previewSection.classList.remove('hidden');
         }
 
+        // Close preview handlers
+        try {
+            const closeBtn = document.getElementById('close-preview');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    const previewSection = document.getElementById('preview-section');
+                    if (previewSection) previewSection.classList.add('hidden');
+                });
+            }
+        } catch (e) {
+            // ignore
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const previewSection = document.getElementById('preview-section');
+                if (previewSection && !previewSection.classList.contains('hidden')) {
+                    previewSection.classList.add('hidden');
+                }
+            }
+        });
+
         function validateForm() {
             const achievement = {
                 title: document.getElementById('title').value.trim(),
@@ -330,10 +353,7 @@ export class CustomAchievementManager {
                             </div>
                         </div>
                     </div>
-                    <button onclick="deleteAchievement('\${achievement.id}')" 
-                            class="text-red-400 hover:text-red-300 transition-colors">
-                        🗑️
-                    </button>
+                   
                 </div>
             \`).join('');
         }
@@ -371,13 +391,16 @@ export class CustomAchievementManager {
             return text;
         }
 
-        function deleteAchievement(id) {
-            if (confirm('¿Estás seguro de que quieres eliminar este logro?')) {
-                vscode.postMessage({
-                    type: 'deleteAchievement',
-                    id: id
-                });
-            }
+        function handleDeleteClick(e) {
+            const btn = e.currentTarget;
+            const id = btn.getAttribute('data-id');
+            if (!id) return;
+            if (!confirm('¿Estás seguro de que quieres eliminar este logro?')) return;
+            try {
+                btn.setAttribute('disabled', 'true');
+                btn.textContent = 'Eliminando...';
+            } catch (err) {}
+            vscode.postMessage({ type: 'deleteAchievement', id: id });
         }
 
         function showValidationErrors(errors) {
@@ -408,7 +431,13 @@ export class CustomAchievementManager {
                     showValidationErrors([]);
                     break;
                 case 'achievementDeleted':
-                    vscode.postMessage({ type: 'loadAchievements' });
+                    // prefer optimistic removal if id provided
+                    if (msg.id) {
+                        currentAchievements = currentAchievements.filter(a => a.id !== msg.id);
+                        renderAchievements(currentAchievements);
+                    } else {
+                        vscode.postMessage({ type: 'loadAchievements' });
+                    }
                     break;
             }
         });
@@ -429,11 +458,11 @@ export class CustomAchievementManager {
     });
   }
 
-  private static createAchievement(
+  private static async createAchievement(
     webview: vscode.Webview,
     context: vscode.ExtensionContext,
     data: any,
-  ): void {
+  ): Promise<void> {
     const {
       validateCustomAchievement,
       generateAchievementId,
@@ -457,18 +486,34 @@ export class CustomAchievementManager {
       return;
     }
 
-    saveCustomAchievement(achievement, context);
-    webview.postMessage({ type: "achievementCreated" });
+    try {
+      await saveCustomAchievement(achievement, context);
+      webview.postMessage({ type: "achievementCreated" });
+    } catch (err) {
+      console.error("Failed to save custom achievement", err);
+      webview.postMessage({
+        type: "validationResult",
+        data: { errors: ["No se pudo guardar el logro. Intenta de nuevo."] },
+      });
+    }
   }
 
-  private static deleteAchievement(
+  private static async deleteAchievement(
     webview: vscode.Webview,
     context: vscode.ExtensionContext,
     id: string,
-  ): void {
+  ): Promise<void> {
     const { deleteCustomAchievement } = require("../achievements");
-    deleteCustomAchievement(id, context);
-    webview.postMessage({ type: "achievementDeleted" });
+    try {
+      await deleteCustomAchievement(id, context);
+      webview.postMessage({ type: "achievementDeleted", id });
+    } catch (err) {
+      console.error("Failed to delete custom achievement", err);
+      webview.postMessage({
+        type: "validationResult",
+        data: { errors: ["No se pudo eliminar el logro. Intenta de nuevo."] },
+      });
+    }
   }
 
   private static validateAchievement(webview: vscode.Webview, data: any): void {

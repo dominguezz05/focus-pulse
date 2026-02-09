@@ -42,7 +42,7 @@ import {
   updateRefactoredDashboard,
   setupDashboardEventListeners,
 } from "./dashboard-refactored";
-import { getStateManager, type AppState } from "./state/StateManager";
+import { getStateManager, type AppState, setGlobalContext } from "./state/StateManager";
 import { CustomAchievementManager } from "./webview/CustomAchievementManager";
 import { registerExportCommands } from "./export/exportCommands";
 import { registerSyncCommands } from "./export/syncCommands";
@@ -320,6 +320,9 @@ function getWeekNumber(date: Date): number {
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Focus Pulse v2.1 activado con refactor de componentes");
+
+  // Set global context for state manager
+  setGlobalContext(context);
 
   // Initialize state and events
   const stateManager = getStateManager();

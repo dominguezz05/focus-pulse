@@ -2,6 +2,64 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.6.1] (2026-02-09)
+
+### ✨ Friends System 2.0 - Major Improvements
+
+#### 🚀 Share Profile Enhancements
+
+- **Auto-copy gist link** — Gist URL automatically copied to clipboard when sharing profile
+- **Multiple share options** — After sharing, choose to:
+  - 📋 View full instructions (link + username)
+  - 👤 Copy username only
+  - 🌐 Open gist in browser
+- **Better UX** — Clear instructions on what to share with friends
+
+#### ⚡ Add Friend by Link (Recommended)
+
+- **Direct gist link support** — Paste full gist URL instead of searching by username
+- **Instant addition** — No waiting for GitHub API indexing
+- **Auto-detection** — Automatically detects if input is:
+  - Full gist URL (`https://gist.github.com/user/abc123...`)
+  - Gist ID (`abc123def456...`)
+  - GitHub username (fallback to search)
+- **100% reliable** — Works even seconds after friend shared their profile
+
+#### 🛠️ Search Improvements
+
+- **Multi-page search** — Searches up to 300 gists (3 pages) instead of just 100
+- **Retry with delay** — Automatically retries failed searches with 2-second delay
+- **Better error messages** — Clear, actionable error messages with troubleshooting steps
+- **Handles edge cases** — Graceful handling of network errors and API rate limits
+
+### 🐛 Bug Fixes
+
+#### State Management
+
+- **Fixed persistent state error** — Resolved `"focusPulse.focusPulseAppState is not a registered configuration"` error by correctly using `globalState.update()` instead of `workspace.getConfiguration().update()`
+
+#### Friends Tab UI
+
+- **Fixed "Actualizando..." stuck state** — Now sends cached data when debounced or on error
+- **Fixed buttons not resetting** — Add/Share buttons now properly reset after success or error
+- **Fixed concurrent refresh blocking** — Improved `isRefreshing` flag handling with proper cleanup
+- **Fixed missing error feedback** — All errors now update UI with current friends list + error message
+
+#### Search Reliability
+
+- **Fixed timing issues** — Retry mechanism handles newly created gists that aren't indexed yet
+- **Fixed single-page limitation** — Now searches multiple pages of gists
+- **Fixed network error crashes** — Proper error recovery and timestamp updates
+
+### 🔧 Technical Improvements
+
+- Added debouncing for friend refresh (5-second cooldown)
+- Improved cache TTL handling (30-minute default)
+- Better separation of concerns (link detection, error handling)
+- Enhanced logging for debugging search issues
+
+---
+
 ## [2.6.0] - 2026-02-05
 
 ### Features

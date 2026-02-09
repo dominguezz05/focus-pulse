@@ -82,11 +82,31 @@ export function registerFriendCommands(
           avgScoreLast7Days: Math.round(avgScore * 10) / 10,
         });
 
-        await fs.shareProfile(profile);
+        const gistId = await fs.shareProfile(profile);
 
-        vscode.window.showInformationMessage(
-          `Focus Pulse: ¡Perfil compartido! Comparte tu nombre de usuario de GitHub (${login}) con tus amigos para que te añadan.`,
+        // Crear URLs para compartir
+        const gistUrl = `https://gist.github.com/${login}/${gistId}`;
+        const shortInstruction = `Comparte esto con tus amigos:\n\n🔗 Link directo: ${gistUrl}\n👤 Username: ${login}`;
+
+        // Copiar el link al portapapeles
+        await vscode.env.clipboard.writeText(gistUrl);
+
+        // Mostrar opciones de compartir
+        const action = await vscode.window.showInformationMessage(
+          `✅ ¡Perfil compartido!\n\n📋 Link copiado al portapapeles\n🔗 ${gistUrl}`,
+          "Ver instrucciones completas",
+          "Copiar username",
+          "Abrir gist"
         );
+
+        if (action === "Ver instrucciones completas") {
+          vscode.window.showInformationMessage(shortInstruction, { modal: true });
+        } else if (action === "Copiar username") {
+          await vscode.env.clipboard.writeText(login);
+          vscode.window.showInformationMessage(`Username copiado: ${login}`);
+        } else if (action === "Abrir gist") {
+          vscode.env.openExternal(vscode.Uri.parse(gistUrl));
+        }
 
         // Trigger dashboard refresh so friends tab can update
         const eventBus = getEventBus();
@@ -107,8 +127,8 @@ export function registerFriendCommands(
       try {
         const mode = await vscode.window.showQuickPick(
           [
-            { label: "Por nombre de usuario de GitHub", value: "username" },
-            { label: "Por ID de gist", value: "gistId" },
+            { label: "🔗 Por link del gist (recomendado)", value: "gistId", description: "Pega el link que te compartió tu amigo" },
+            { label: "👤 Por nombre de usuario de GitHub", value: "username", description: "Buscará en todos sus gists públicos" },
           ],
           { placeHolder: "¿Cómo deseas añadir al amigo?" },
         );
@@ -116,11 +136,16 @@ export function registerFriendCommands(
 
         const placeholder =
           mode.value === "username"
+            ? "Ejemplo: octocat"
+            : "Pega el link del gist o solo el ID";
+
+        const prompt =
+          mode.value === "username"
             ? "Nombre de usuario de GitHub"
-            : "ID del gist (ej: aa7a08...1b2c3d)";
+            : "Link o ID del gist de Focus Pulse";
 
         const value = await vscode.window.showInputBox({
-          prompt: placeholder,
+          prompt,
           placeHolder: placeholder,
           validateInput: (v) =>
             v && v.trim().length > 0 ? undefined : "Campo obligatorio",

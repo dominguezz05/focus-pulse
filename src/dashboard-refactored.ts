@@ -525,9 +525,20 @@ setupEventListeners() {
                             b.classList.toggle('border-b-0', active);
                             b.classList.toggle('text-slate-400', !active);
                         });
-                        if (target === 'friends') {
-                            document.getElementById('friends-container').innerHTML = '<div class="flex justify-center py-8"><div class="text-slate-400 text-sm animate-pulse">Actualizando...</div></div>';
-                            vscode.postMessage({ type: 'friends:refreshFriends' });
+if (target === 'friends') {
+                            // Check if friends data is stale before refreshing
+                            const now = Date.now();
+                            const lastFriendsUpdate = window.lastFriendsUpdate || 0;
+                            const FRIENDS_STALE_THRESHOLD = 30000; // 30 seconds
+
+                            if (now - lastFriendsUpdate > FRIENDS_STALE_THRESHOLD) {
+                                document.getElementById('friends-container').innerHTML = '<div class="flex justify-center py-8"><div class="text-slate-400 text-sm animate-pulse">Actualizando...</div></div>';
+                                vscode.postMessage({ type: 'friends:refreshFriends' });
+                                window.lastFriendsUpdate = now;
+                            } else {
+                                // Use cached data if still fresh
+                                console.log('Friends data still fresh, using cache');
+                            }
                         }
                     });
                 });
@@ -697,8 +708,10 @@ setupEventListeners() {
                     this.syncInfo = data.sync;
                 }
 
-                if (data.friends) {
+if (data.friends) {
                     this.updateFriendsTab(data.friends);
+                    // Update timestamp when friends data is received
+                    window.lastFriendsUpdate = Date.now();
                 }
             }
             
@@ -737,10 +750,10 @@ setupEventListeners() {
                 // Header: Share Profile + Add Friend (username only)
                 var headerHtml =
                     '<div class="flex flex-col sm:flex-row gap-3 mb-4">' +
-                    '<button class="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 text-emerald-300 hover:from-emerald-500/30 hover:to-blue-500/30 rounded-lg border border-emerald-500/30 text-sm font-medium transition-all" id="friends-share-btn">Compartir perfil</button>' +
+                    '<button class="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 text-emerald-300 hover:from-emerald-500/30 hover:to-blue-500/30 rounded-lg border border-emerald-500/30 text-sm font-medium transition-all" id="friends-share-btn">📤 Compartir perfil</button>' +
                     '<div class="flex flex-1 gap-2">' +
-                    '<input type="text" id="friends-add-input" placeholder="Nombre de usuario de GitHub" class="flex-1 bg-slate-700/40 border border-slate-600/60 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500/60">' +
-                    '<button class="px-3 py-1.5 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg border border-blue-500/30 text-sm font-medium transition-all" id="friends-add-btn">Añadir</button>' +
+                    '<input type="text" id="friends-add-input" placeholder="Link del gist o username de GitHub" class="flex-1 bg-slate-700/40 border border-slate-600/60 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500/60" title="Puedes pegar el link completo del gist o solo el username">' +
+                    '<button class="px-3 py-1.5 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg border border-blue-500/30 text-sm font-medium transition-all" id="friends-add-btn">➕ Añadir</button>' +
                     '</div>' +
                     '</div>';
 
@@ -760,6 +773,7 @@ setupEventListeners() {
                         '</tr>';
                 }
 
+                var self = this;
                 friends.forEach(function(f) {
                     var p = f.cachedProfile;
                     if (p) {
@@ -768,7 +782,7 @@ setupEventListeners() {
                             '<td class="px-4 py-2.5 text-slate-200">' + f.username + '</td>' +
                             '<td class="px-4 py-2.5 text-blue-300">' + p.level + '</td>' +
                             '<td class="px-4 py-2.5 text-purple-300">' + p.totalXp + '</td>' +
-                            '<td class="px-4 py-2.5 text-slate-200">' + this.formatFocusTime(p.totalFocusTimeMs) + '</td>' +
+                            '<td class="px-4 py-2.5 text-slate-200">' + self.formatFocusTime(p.totalFocusTimeMs) + '</td>' +
                             '<td class="px-4 py-2.5 text-emerald-300">' + p.currentStreak + '</td>' +
                             '<td class="px-4 py-2.5 text-slate-200">' + p.totalPomodoros + '</td>' +
                             '<td class="px-4 py-2.5 text-slate-200">' + p.totalAchievements + '</td>' +
@@ -850,9 +864,16 @@ setupEventListeners() {
                     var doAdd = function() {
                         var value = addInput.value.trim();
                         if (!value) return;
-                        addBtn.textContent = '...';
+
+                        // Auto-detect if it's a gist URL or username
+                        var mode = 'username';
+                        if (value.includes('gist.github.com') || /^[a-f0-9]{32}$/i.test(value)) {
+                            mode = 'gistId';
+                        }
+
+                        addBtn.textContent = mode === 'gistId' ? '🔍 Buscando...' : '🔍 Buscando...';
                         addBtn.disabled = true;
-                        vscode.postMessage({ type: 'friends:addFriend', payload: { mode: 'username', value: value } });
+                        vscode.postMessage({ type: 'friends:addFriend', payload: { mode: mode, value: value } });
                         addInput.value = '';
                     };
                     addBtn.addEventListener('click', doAdd);
@@ -1797,7 +1818,34 @@ currentPanel.webview.onDidReceiveMessage(
           console.log("Assistant clicked");
           break;
         }
-        case "friends:refreshFriends": {
+case "friends:refreshFriends": {
+          // Add debouncing for friend refresh calls
+          const now = Date.now();
+          const lastFriendsRefresh = (globalThis as any).lastFriendsRefresh || 0;
+          const FRIENDS_REFRESH_DEBOUNCE = 5000; // 5 seconds
+
+          if (now - lastFriendsRefresh < FRIENDS_REFRESH_DEBOUNCE) {
+            console.log("Friends refresh debounced, skipping");
+            // Still send cached data to prevent "Actualizando..." getting stuck
+            const { FriendService: FSDebounce } = require("./friends/FriendService");
+            const friendServiceDebounce = FSDebounce.getInstance();
+            friendServiceDebounce.setContext(context);
+            const cachedFriends = friendServiceDebounce.loadFriends();
+            const cachedLogin = await friendServiceDebounce.getAuthenticatedLogin();
+            const syncMgrDebounce = UserSyncManager.getInstance();
+            currentPanel?.webview.postMessage({
+              type: "friends:update",
+              payload: {
+                friends: cachedFriends,
+                ownProfile: null,
+                isAuthenticated: !!syncMgrDebounce.getCurrentUser(),
+                ownUsername: cachedLogin
+              },
+            });
+            return;
+          }
+          (globalThis as any).lastFriendsRefresh = now;
+
           const { FriendService } = require("./friends/FriendService");
           const friendService = FriendService.getInstance();
           friendService.setContext(context);
@@ -1840,16 +1888,26 @@ currentPanel.webview.onDidReceiveMessage(
               payload: { friends, ownProfile, isAuthenticated: isAuth, ownUsername: login },
             });
           } catch (err) {
+            // On error, still send current friends list to prevent UI getting stuck
+            const friendsOnError = friendService.loadFriends();
+            const loginOnError = await friendService.getAuthenticatedLogin();
+            const syncMgrOnError = UserSyncManager.getInstance();
             currentPanel?.webview.postMessage({
-              type: "friends:error",
-              payload: { message: String(err) },
+              type: "friends:update",
+              payload: {
+                friends: friendsOnError,
+                ownProfile: null,
+                isAuthenticated: !!syncMgrOnError.getCurrentUser(),
+                ownUsername: loginOnError,
+                _error: `Error al actualizar amigos: ${String(err)}`
+              },
             });
           }
           break;
         }
         case "friends:shareProfile": {
-          await vscode.commands.executeCommand("focusPulse.shareProfile");
           try {
+            await vscode.commands.executeCommand("focusPulse.shareProfile");
             const { FriendService: FS4 } = require("./friends/FriendService");
             const fsSvc4 = FS4.getInstance();
             fsSvc4.setContext(context);
@@ -1858,9 +1916,33 @@ currentPanel.webview.onDidReceiveMessage(
             const sMgr4 = UserSyncManager.getInstance();
             currentPanel?.webview.postMessage({
               type: "friends:update",
-              payload: { friends: fList4, ownProfile: null, isAuthenticated: !!sMgr4.getCurrentUser(), ownUsername: fLogin4, shareComplete: true },
+              payload: {
+                friends: fList4,
+                ownProfile: null,
+                isAuthenticated: !!sMgr4.getCurrentUser(),
+                ownUsername: fLogin4,
+                shareComplete: true
+              },
             });
-          } catch { /* ignore */ }
+          } catch (err) {
+            // On error, still send update to reset button state
+            const { FriendService: FS4Err } = require("./friends/FriendService");
+            const fsSvc4Err = FS4Err.getInstance();
+            fsSvc4Err.setContext(context);
+            const fList4Err = fsSvc4Err.loadFriends();
+            const fLogin4Err = await fsSvc4Err.getAuthenticatedLogin();
+            const sMgr4Err = UserSyncManager.getInstance();
+            currentPanel?.webview.postMessage({
+              type: "friends:update",
+              payload: {
+                friends: fList4Err,
+                ownProfile: null,
+                isAuthenticated: !!sMgr4Err.getCurrentUser(),
+                ownUsername: fLogin4Err,
+                _error: `Error al compartir perfil: ${String(err)}`
+              },
+            });
+          }
           break;
         }
         case "friends:addFriend": {
@@ -1878,12 +1960,27 @@ currentPanel.webview.onDidReceiveMessage(
             const login2 = await friendSvc.getAuthenticatedLogin();
             currentPanel?.webview.postMessage({
               type: "friends:update",
-              payload: { friends: updatedFriends, ownProfile: null, isAuthenticated: !!syncMgr2.getCurrentUser(), ownUsername: login2 },
+              payload: {
+                friends: updatedFriends,
+                ownProfile: null,
+                isAuthenticated: !!syncMgr2.getCurrentUser(),
+                ownUsername: login2
+              },
             });
           } catch (err) {
+            // Send current friends list with error to reset UI state
+            const currentFriends = friendSvc.loadFriends();
+            const login2 = await friendSvc.getAuthenticatedLogin();
+            const syncMgr2 = UserSyncManager.getInstance();
             currentPanel?.webview.postMessage({
-              type: "friends:error",
-              payload: { message: String(err) },
+              type: "friends:update",
+              payload: {
+                friends: currentFriends,
+                ownProfile: null,
+                isAuthenticated: !!syncMgr2.getCurrentUser(),
+                ownUsername: login2,
+                _error: String(err)
+              },
             });
           }
           break;

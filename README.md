@@ -5,7 +5,7 @@
 ### _Your AI-Powered Coding Companion for Deep Work_
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.6.0-informational)
+![Version](https://img.shields.io/badge/version-2.6.1-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
@@ -159,18 +159,49 @@ Your intelligent coding companion that learns your patterns and guides your focu
 
 ---
 
-## 🆕 What's New in 2.6.0
+## 🆕 What's New in 2.6.1
 
-### 👥 Friends System
+### 🚀 Friends System 2.0 - Major Improvements
 
-Compare your Focus Pulse stats with friends directly inside the dashboard. No backend — profiles live as public GitHub Gists.
+**Share profiles faster than ever** — Now with auto-copy, direct links, and instant friend additions!
 
-| Action             | How                                                                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Share your profile | Run **Focus Pulse: Compartir perfil** — creates/updates one public gist with sanitized stats (no file names) |
-| Add a friend       | Click **Añadir** in the Amigos tab → enter their GitHub username or paste a gist ID                          |
-| Compare            | Scroll the comparison table: own row (highlighted green) + all friends, refreshed on tab switch              |
-| Offline            | Cached profiles (30-min TTL) keep working without a connection                                               |
+#### ⚡ Quick Start (New Workflow)
+
+1. **Share:** Click "📤 Compartir perfil" → Link auto-copied to clipboard ✅
+2. **Send:** Paste the link to your friend (Discord, WhatsApp, etc.)
+3. **Add:** Friend pastes your link → Instant addition (no search needed!)
+
+#### 🎯 New Features
+
+| Feature           | Before                        | After                                        |
+| ----------------- | ----------------------------- | -------------------------------------------- |
+| **Share Profile** | Shows username only           | 📋 Auto-copies gist link + menu with options |
+| **Add Friend**    | Search by username (slow)     | 🔗 Paste link directly (instant!)            |
+| **Reliability**   | Can fail if gist just created | ✅ 100% reliable with retry logic            |
+| **UX**            | Manual copy/paste             | 🤖 Auto-detection (link vs username)         |
+
+#### 📋 Share Options Menu
+
+After sharing, choose:
+
+- **View full instructions** — Shows both link and username
+- **Copy username** — For manual sharing
+- **Open gist** — View your public profile
+
+#### 🔍 Smart Friend Search
+
+Input automatically detects:
+
+- ✅ Full gist URL → Direct addition (recommended)
+- ✅ Gist ID (32 chars) → Direct addition
+- ✅ GitHub username → Multi-page search with retry
+
+#### 🛠️ Under the Hood
+
+- Multi-page gist search (up to 300 gists)
+- Automatic retry with 2-second delay
+- Debounced refresh (prevents spam)
+- Better error messages with solutions
 
 > 📋 **See full changelog:** [CHANGELOG.md](CHANGELOG.md)
 
@@ -944,6 +975,7 @@ Common fixes:
 - [x] **v2.5.0** — Notification system + event architecture
 - [x] **v2.5.1** — Critical fixes (PeakPerformanceAnalyzer crash, event emissions)
 - [x] **v2.6.0** — Friends system (gist-based profiles, comparison table, offline cache)
+- [x] **v2.6.1** — Friends System 2.0 (auto-copy links, direct gist URLs, improved UX)
 
 ### 🚧 In Progress (v2.7.0)
 
