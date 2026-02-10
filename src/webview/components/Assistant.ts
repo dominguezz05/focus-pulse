@@ -25,12 +25,12 @@ export class AssistantComponent implements DashboardComponent {
   private stateTransitionTimeout: any = null;
   private lastStateChange = 0;
   private isInTransition = false;
-  
+
   private readonly animationMap = {
     IDLE: ["normal/normal1.png", "normal/normal2.png"],
     FOCUSED: [
       "thinking/pensar1.png",
-      "thinking/pensar2.png", 
+      "thinking/pensar2.png",
       "thinking/pensar3.png",
       "thinking/pensar4.png",
     ],
@@ -50,20 +50,19 @@ export class AssistantComponent implements DashboardComponent {
 
   private readonly stateDurations = {
     IDLE: 300000, // 5 minutos
-    FOCUSED: 60000, // 1 minuto 
+    FOCUSED: 60000, // 1 minuto
     WARNING: 45000, // 45 segundos
     SUCCESS: 8000, // 8 segundos
   };
 
   private productivityFacts = [
-    "¿Sabías que tardas 23 minutos en recuperar el foco tras una interrupción?",
-    "El cerebro humano mantiene el foco máximo por ~45 minutos seguidos",
-    "Trabajar en bloques de 90min + 15min de descanso es óptimo para productividad",
-    "Hacer pausas cada 25 minutos aumenta un 13% tu productividad diaria",
-    "La música sin letra puede mejorar tu concentración hasta en un 15%",
-    "El multitasking reduce tu productividad en un 40% comparado con el trabajo enfocado",
+    "Did you know it takes 23 minutes to regain focus after an interruption?",
+    "The human brain maintains peak focus for ~45 minutes at a time",
+    "Working in 90min blocks + 15min breaks is optimal for productivity",
+    "Taking breaks every 25 minutes increases your daily productivity by 13%",
+    "Music without lyrics can improve your concentration by up to 15%",
+    "Multitasking reduces your productivity by 40% compared to focused work",
   ];
-
   constructor() {
     this.setupGlobalStyles();
   }
@@ -106,11 +105,7 @@ export class AssistantComponent implements DashboardComponent {
 
     // Welcome message con animación especial
     setTimeout(() => {
-      this.showMessage(
-        "¡Hola! Soy Deepy, tu compañero de Deep Work",
-        "IDLE",
-        4000,
-      );
+      this.showMessage("Hi! I'm Deepy, your Deep Work companion", "IDLE", 4000);
       this.animateCharacter("bounce");
     }, 500);
   }
@@ -122,7 +117,7 @@ export class AssistantComponent implements DashboardComponent {
     // Animación principal frame-by-frame optimizada
     this.animationInterval = setInterval(() => {
       if (this.isInTransition) return;
-      
+
       const frames = this.animationMap[this.currentState];
       this.frameIndex = (this.frameIndex + 1) % frames.length;
 
@@ -145,18 +140,19 @@ export class AssistantComponent implements DashboardComponent {
 
   private triggerMicroAnimation(): void {
     if (!this.character) return;
-    
+
     const microAnimations = [
       "animate-bounce",
-      "animate-pulse", 
+      "animate-pulse",
       "scale-110",
       "rotate-3",
-      "rotate--3"
+      "rotate--3",
     ];
-    
-    const randomAnimation = microAnimations[Math.floor(Math.random() * microAnimations.length)];
+
+    const randomAnimation =
+      microAnimations[Math.floor(Math.random() * microAnimations.length)];
     this.character.classList.add(randomAnimation);
-    
+
     setTimeout(() => {
       this.character?.classList.remove(randomAnimation);
     }, 800);
@@ -200,30 +196,39 @@ export class AssistantComponent implements DashboardComponent {
         this.showProductivityFact();
         break;
       case "FOCUSED":
-        this.showMessage("¡Continúa así! Tu enfoque es impresionante", "FOCUSED", 3000);
+        this.showMessage(
+          "Keep it up! Your focus is impressive",
+          "FOCUSED",
+          3000,
+        );
         this.animateCharacter("pulse");
         break;
       case "WARNING":
-        this.showMessage("¿Necesitas ayuda? Aquí estoy para ti", "IDLE", 4000);
+        this.showMessage("Do you need help? I'm here for you", "IDLE", 4000);
         this.setState("IDLE");
         break;
       case "SUCCESS":
         this.createParticleEffect();
-        this.showMessage("¡Logro desbloqueado! Sigue así", "SUCCESS", 3000);
+        this.showMessage("Achievement unlocked! Keep going", "SUCCESS", 3000);
         break;
     }
   }
 
   private handleDoubleClick(): void {
     // Doble click - celebración especial
-    this.showMessage("¡Eres increíble! ¡Sigue conquistando tus metas!", "SUCCESS", 5000);
+    this.showMessage(
+      "You're amazing! Keep crushing your goals!",
+      "SUCCESS",
+      5000,
+    );
     this.createParticleEffect();
     this.animateCharacter("celebrate");
-    
+
     // Efecto rainbow temporal
     const aura = document.getElementById("deepy-aura");
     if (aura) {
-      aura.style.background = "linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #fd79a8)";
+      aura.style.background =
+        "linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #fd79a8)";
       aura.style.animation = "celebration-burst 2s ease-out";
       setTimeout(() => {
         this.updateCharacterVisual();
@@ -236,7 +241,7 @@ export class AssistantComponent implements DashboardComponent {
     const states: AssistantState[] = ["IDLE", "FOCUSED", "WARNING", "SUCCESS"];
     const currentIndex = states.indexOf(this.currentState);
     const nextState = states[(currentIndex + 1) % states.length];
-    
+
     this.setState(nextState);
     this.showMessage(`Estado manual: ${nextState}`, nextState, 2000);
   }
@@ -247,10 +252,10 @@ export class AssistantComponent implements DashboardComponent {
         this.factsClickCount % this.productivityFacts.length
       ];
     this.factsClickCount++;
-    
+
     // Reacción diferente según el estado actual
     let reactionType: "bounce" | "wiggle" | "pulse" | "celebrate" = "bounce";
-    
+
     switch (this.currentState) {
       case "IDLE":
         reactionType = "bounce";
@@ -265,7 +270,7 @@ export class AssistantComponent implements DashboardComponent {
         reactionType = "celebrate";
         break;
     }
-    
+
     this.showMessage(fact, this.currentState, 5000);
     this.animateCharacter(reactionType);
   }
@@ -285,7 +290,16 @@ export class AssistantComponent implements DashboardComponent {
     }
   }
 
-  private animateCharacter(animation: "bounce" | "wiggle" | "pulse" | "celebrate" | "shake" | "glow" | "sparkle"): void {
+  private animateCharacter(
+    animation:
+      | "bounce"
+      | "wiggle"
+      | "pulse"
+      | "celebrate"
+      | "shake"
+      | "glow"
+      | "sparkle",
+  ): void {
     if (!this.character) return;
     const el = this.character;
 
@@ -294,15 +308,15 @@ export class AssistantComponent implements DashboardComponent {
         ? "animate-bounce"
         : animation === "wiggle"
           ? "pixel-wiggle"
-        : animation === "celebrate"
-          ? "celebration-pulse"
-        : animation === "shake"
-          ? "warning-shake"
-        : animation === "glow"
-          ? "focus-glow"
-        : animation === "sparkle"
-          ? "success-sparkle"
-          : "animate-pulse";
+          : animation === "celebrate"
+            ? "celebration-pulse"
+            : animation === "shake"
+              ? "warning-shake"
+              : animation === "glow"
+                ? "focus-glow"
+                : animation === "sparkle"
+                  ? "success-sparkle"
+                  : "animate-pulse";
 
     el.classList.add(animClass);
     setTimeout(() => el.classList.remove(animClass), 1200);
@@ -326,7 +340,7 @@ export class AssistantComponent implements DashboardComponent {
     duration: number,
   ): void {
     this.isShowingMessage = true;
-    
+
     // Cambiar estado del personaje según el mensaje
     this.setState(state);
 
@@ -336,17 +350,17 @@ export class AssistantComponent implements DashboardComponent {
     if (speechText) speechText.textContent = text;
 
     // Agregar icono SVG según el tipo de mensaje
-    const iconContainer = this.speechBubble.querySelector('.message-icon');
+    const iconContainer = this.speechBubble.querySelector(".message-icon");
     if (iconContainer) iconContainer.remove();
-    
+
     const iconHtml = this.getMessageIcon(text, state);
     if (iconHtml) {
-      const tempDiv = document.createElement('div');
+      const tempDiv = document.createElement("div");
       tempDiv.innerHTML = iconHtml;
       const icon = tempDiv.firstElementChild;
       if (icon) {
-        icon.className = 'message-icon absolute -left-12 top-2 w-8 h-8';
-        this.speechBubble.querySelector('.relative')?.prepend(icon);
+        icon.className = "message-icon absolute -left-12 top-2 w-8 h-8";
+        this.speechBubble.querySelector(".relative")?.prepend(icon);
       }
     }
 
@@ -394,24 +408,24 @@ export class AssistantComponent implements DashboardComponent {
 
     this.isInTransition = true;
     const previousState = this.currentState;
-    
+
     // Anticipación visual
     this.character?.classList.add("scale-95");
-    
+
     setTimeout(() => {
       // Cambio de estado
       this.currentState = newState;
       this.frameIndex = 0;
       this.lastStateChange = Date.now();
-      
+
       // Actualizar visual
       this.updateCharacterVisual();
-      
+
       // Completar transición
       setTimeout(() => {
         this.character?.classList.remove("scale-95");
         this.isInTransition = false;
-        
+
         // Auto-regreso a IDLE después del tiempo especificado
         if (newState !== "IDLE") {
           this.scheduleReturnToIdle();
@@ -424,9 +438,9 @@ export class AssistantComponent implements DashboardComponent {
     if (this.stateTransitionTimeout) {
       clearTimeout(this.stateTransitionTimeout);
     }
-    
+
     const duration = this.stateDurations[this.currentState] || 60000;
-    
+
     this.stateTransitionTimeout = setTimeout(() => {
       if (this.currentState !== "IDLE" && !this.isShowingMessage) {
         this.setState("IDLE");
@@ -439,7 +453,8 @@ export class AssistantComponent implements DashboardComponent {
     if (!aura) return;
 
     // Limpiar clases previas
-    aura.className = "absolute rounded-full pointer-events-none transition-all duration-500";
+    aura.className =
+      "absolute rounded-full pointer-events-none transition-all duration-500";
 
     // Actualizar aura según el estado con efectos mejorados
     switch (this.currentState) {
@@ -459,7 +474,8 @@ export class AssistantComponent implements DashboardComponent {
         aura.style.animation = "warning-pulse 1.5s ease-in-out infinite";
         break;
       case "SUCCESS":
-        aura.className += " -inset-8 bg-gradient-to-r from-yellow-400/50 via-orange-400/50 to-pink-400/50 blur-2xl";
+        aura.className +=
+          " -inset-8 bg-gradient-to-r from-yellow-400/50 via-orange-400/50 to-pink-400/50 blur-2xl";
         aura.style.opacity = "0.9";
         aura.style.animation = "celebration-burst 1s ease-out";
         setTimeout(() => {
@@ -583,32 +599,44 @@ export class AssistantComponent implements DashboardComponent {
 
   private getMessageIcon(message: string, state: AssistantState): string {
     const lowerMessage = message.toLowerCase();
-    
-    if (state === "SUCCESS" || lowerMessage.includes("logro") || lowerMessage.includes("nivel")) {
+
+    if (
+      state === "SUCCESS" ||
+      lowerMessage.includes("logro") ||
+      lowerMessage.includes("nivel")
+    ) {
       return `<svg class="w-8 h-8 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
         <path d="M12 2L14.09 8.26L21 9.27L16.5 13.14L18.18 20L12 16.27L5.82 20L7.5 13.14L3 9.27L9.91 8.26L12 2Z"/>
       </svg>`;
     }
-    
-    if (state === "WARNING" || lowerMessage.includes("descanso") || lowerMessage.includes("fatiga")) {
+
+    if (
+      state === "WARNING" ||
+      lowerMessage.includes("descanso") ||
+      lowerMessage.includes("fatiga")
+    ) {
       return `<svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
       </svg>`;
     }
-    
-    if (state === "FOCUSED" || lowerMessage.includes("enfoque") || lowerMessage.includes("profundo")) {
+
+    if (
+      state === "FOCUSED" ||
+      lowerMessage.includes("enfoque") ||
+      lowerMessage.includes("profundo")
+    ) {
       return `<svg class="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
       </svg>`;
     }
-    
+
     if (lowerMessage.includes("pomodoro") || lowerMessage.includes("ciclo")) {
       return `<svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
         <path d="M12 6v6l4 2"/>
       </svg>`;
     }
-    
+
     return `<svg class="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
     </svg>`;
@@ -616,17 +644,19 @@ export class AssistantComponent implements DashboardComponent {
 
   private createParticleEffect(): void {
     if (!this.character) return;
-    
+
     for (let i = 0; i < 12; i++) {
       setTimeout(() => {
-        const particle = document.createElement('div');
-        const particles = ['✨', '⭐', '💫', '🌟'];
-        particle.innerHTML = particles[Math.floor(Math.random() * particles.length)];
-        particle.className = 'absolute text-xl particle-float pointer-events-none';
+        const particle = document.createElement("div");
+        const particles = ["✨", "⭐", "💫", "🌟"];
+        particle.innerHTML =
+          particles[Math.floor(Math.random() * particles.length)];
+        particle.className =
+          "absolute text-xl particle-float pointer-events-none";
         particle.style.left = `${Math.random() * 60 - 10}px`;
-        particle.style.top = '20px';
+        particle.style.top = "20px";
         this.character?.appendChild(particle);
-        
+
         setTimeout(() => particle.remove(), 2000);
       }, i * 80);
     }
@@ -658,8 +688,10 @@ export class AssistantComponent implements DashboardComponent {
       this.setState("SUCCESS");
     } else if (data.stats && data.stats.length > 0) {
       // Analizar rendimiento reciente
-      const avgScore = data.stats.reduce((sum, stat) => sum + stat.score, 0) / data.stats.length;
-      
+      const avgScore =
+        data.stats.reduce((sum, stat) => sum + stat.score, 0) /
+        data.stats.length;
+
       if (avgScore < 30) {
         // Bajo rendimiento - mostrar estado WARNING
         this.setState("WARNING");
@@ -668,10 +700,13 @@ export class AssistantComponent implements DashboardComponent {
         this.setState("FOCUSED");
       }
     }
-    
+
     // Análisis de tiempo de sesión
     if (data.stats && data.stats.length > 0) {
-      const totalTime = data.stats.reduce((sum, stat) => sum + this.parseTimeToMinutes(stat.timeText), 0);
+      const totalTime = data.stats.reduce(
+        (sum, stat) => sum + this.parseTimeToMinutes(stat.timeText),
+        0,
+      );
       if (totalTime > 120) {
         // Más de 2 horas - mostrar fatiga
         this.setState("WARNING");

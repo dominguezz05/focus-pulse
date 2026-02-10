@@ -264,12 +264,12 @@ export class FriendService {
       ((gist as any).files as any)[PROFILE_GIST_FILENAME]?.content;
     if (!fileContent) {
       throw new Error(
-        "El gist no contiene el archivo de perfil esperado.",
+        "The gist does not contain the expected profile file.",
       );
     }
 
     const profile: PublicProfile = JSON.parse(fileContent);
-    const username = profile.github_login || (gist as any).owner?.login || "desconocido";
+    const username = profile.github_login || (gist as any).owner?.login || "unknown";
 
     const entry: FriendEntry = {
       username,

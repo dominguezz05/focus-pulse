@@ -71,7 +71,7 @@ export class ToastRenderer {
           <div class="toast-title">${this.escapeHtml(notification.title)}</div>
           <div class="toast-message">${this.escapeHtml(notification.message)}</div>
         </div>
-        <button class="toast-close" aria-label="Cerrar">×</button>
+        <button class="toast-close" aria-label="Close">×</button>
       </div>
       ${actionsHtml ? `<div class="toast-actions">${actionsHtml}</div>` : ''}
     `;
