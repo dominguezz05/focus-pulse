@@ -47,7 +47,7 @@ export class GitAnalysisService {
       // Obtener el último commit
       const { stdout: commitData } = await execAsync(
         'git log -1 --pretty=format:"%H|%s|%an|%at"',
-        { cwd: this.workspaceRoot }
+        { cwd: this.workspaceRoot },
       );
 
       if (!commitData) return null;
@@ -57,7 +57,7 @@ export class GitAnalysisService {
       // Obtener estadísticas del commit
       const { stdout: statsData } = await execAsync(
         `git show ${hash} --stat --pretty="" --no-color`,
-        { cwd: this.workspaceRoot }
+        { cwd: this.workspaceRoot },
       );
 
       // Parsear estadísticas
@@ -120,76 +120,80 @@ export class GitAnalysisService {
     const filesChanged = commit.filesChanged;
     const totalChanges = commit.insertions + commit.deletions;
 
-    // Detectar merge
-    if (message.includes("merge") || message.includes("Merge")) {
+    // Detect merge
+    if (message.includes("merge")) {
       return {
         type: "merge",
-        message: `🎉 ¡MERGE EXITOSO! ${filesChanged} archivos integrados. ¡Gran trabajo en equipo!`,
+        message: `🎉 SUCCESSFUL MERGE! ${filesChanged} files integrated. Great teamwork!`,
         celebrationLevel: "high",
         timestamp: commit.timestamp,
         data: commit,
       };
     }
 
-    // Detectar commits grandes (refactors, features)
+    // Detect large commits (refactors, features)
     if (filesChanged > 10 || totalChanges > 500) {
       return {
         type: "commit",
-        message: `🚀 ¡COMMIT MASIVO! ${filesChanged} archivos, ${totalChanges} cambios. Eres una bestia del código!`,
+        message: `🚀 MASSIVE COMMIT! ${filesChanged} files, ${totalChanges} changes. You're a coding beast!`,
         celebrationLevel: "high",
         timestamp: commit.timestamp,
         data: commit,
       };
     }
 
-    // Detectar fixes
+    // Detect fixes
     if (message.includes("fix") || message.includes("bug")) {
       return {
         type: "commit",
-        message: `🐛 ¡Bug aplastado! Commit: "${commit.message.slice(0, 50)}..." Eres un cazador de bugs`,
+        message: `🐛 Bug squashed! Commit: "${commit.message.slice(0, 50)}..." You're a bug hunter!`,
         celebrationLevel: "medium",
         timestamp: commit.timestamp,
         data: commit,
       };
     }
 
-    // Detectar features
-    if (message.includes("feat") || message.includes("feature") || message.includes("add")) {
+    // Detect features
+    if (
+      message.includes("feat") ||
+      message.includes("feature") ||
+      message.includes("add")
+    ) {
       return {
         type: "commit",
-        message: `✨ ¡Nueva feature! "${commit.message.slice(0, 50)}..." El producto está evolucionando`,
+        message: `✨ New feature! "${commit.message.slice(0, 50)}..." The product is evolving`,
         celebrationLevel: "medium",
         timestamp: commit.timestamp,
         data: commit,
       };
     }
 
-    // Detectar tests
+    // Detect tests
     if (message.includes("test") || message.includes("spec")) {
       return {
         type: "commit",
-        message: `🧪 ¡Tests guardados! "${commit.message.slice(0, 50)}..." La calidad se agradece`,
+        message: `🧪 Tests saved! "${commit.message.slice(0, 50)}..." Quality pays off`,
         celebrationLevel: "medium",
         timestamp: commit.timestamp,
         data: commit,
       };
     }
 
-    // Detectar docs
+    // Detect docs
     if (message.includes("doc") || message.includes("readme")) {
       return {
         type: "commit",
-        message: `📚 ¡Documentación actualizada! El equipo te lo agradecerá`,
+        message: `📚 Documentation updated! Your team will thank you`,
         celebrationLevel: "low",
         timestamp: commit.timestamp,
         data: commit,
       };
     }
 
-    // Commit genérico
+    // Generic commit
     return {
       type: "commit",
-      message: `✅ ¡Commit guardado! ${filesChanged} archivo${filesChanged > 1 ? "s" : ""} en el historial. ¡Sigue así!`,
+      message: `✅ Commit saved! ${filesChanged} file${filesChanged !== 1 ? "s" : ""} added to history. Keep it up!`,
       celebrationLevel: "low",
       timestamp: commit.timestamp,
       data: commit,
@@ -203,10 +207,9 @@ export class GitAnalysisService {
 
     try {
       // Verificar si el último commit es un merge de PR (GitHub/GitLab style)
-      const { stdout } = await execAsync(
-        'git log -1 --pretty=format:"%s"',
-        { cwd: this.workspaceRoot }
-      );
+      const { stdout } = await execAsync('git log -1 --pretty=format:"%s"', {
+        cwd: this.workspaceRoot,
+      });
 
       const message = stdout.toLowerCase();
 
@@ -228,7 +231,7 @@ export class GitAnalysisService {
 
         return {
           type: "merge",
-          message: `🎊 ¡PR MERGEADO! Tu código está en producción. ¡ÉPICO! 🚀`,
+          message: `🎊 PR MERGED! Your code is now in production. EPIC! 🚀`,
           celebrationLevel: "high",
           timestamp: lastCommit.timestamp,
           data: lastCommit,
@@ -265,10 +268,13 @@ export class GitAnalysisService {
       const since = new Date(Date.now() - minutes * 60 * 1000).toISOString();
       const { stdout } = await execAsync(
         `git log --since="${since}" --oneline`,
-        { cwd: this.workspaceRoot }
+        { cwd: this.workspaceRoot },
       );
 
-      return stdout.trim().split("\n").filter((line) => line).length;
+      return stdout
+        .trim()
+        .split("\n")
+        .filter((line) => line).length;
     } catch (error) {
       return 0;
     }
@@ -280,7 +286,7 @@ export class GitAnalysisService {
     if (commitsLastHour >= 5) {
       return {
         type: "commit",
-        message: `🔥 ¡RACHA DE COMMITS! ${commitsLastHour} commits en la última hora. ¡Imparable!`,
+        message: `🔥 Epic! ${commitsLastHour} commits in the last hour. Unstoppable!`,
         celebrationLevel: "high",
         timestamp: Date.now(),
         data: { count: commitsLastHour },
@@ -290,7 +296,7 @@ export class GitAnalysisService {
     if (commitsLastHour >= 3) {
       return {
         type: "commit",
-        message: `💪 ¡Productivo! ${commitsLastHour} commits en la última hora. Mantén el ritmo`,
+        message: `💪 Productive! ${commitsLastHour} commits in the last hour. Keep it up!`,
         celebrationLevel: "medium",
         timestamp: Date.now(),
         data: { count: commitsLastHour },
@@ -316,7 +322,7 @@ export class GitAnalysisService {
 
       const { stdout } = await execAsync(
         `git log --since="${since}" --format="%ai"`,
-        { cwd: this.workspaceRoot }
+        { cwd: this.workspaceRoot },
       );
 
       if (!stdout.trim()) {
@@ -349,7 +355,7 @@ export class GitAnalysisService {
       });
 
       const mostProductiveDay = Object.entries(dayCount).sort(
-        (a, b) => b[1] - a[1]
+        (a, b) => b[1] - a[1],
       )[0][0];
 
       return {

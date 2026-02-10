@@ -69,37 +69,46 @@ function convertToDeepWorkState(state: StateTypesDeepWorkState): DeepWorkState {
   };
 }
 
-function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {
+function getRefactoredHtml(
+  context: vscode.ExtensionContext,
+  webview: vscode.Webview,
+): string {
   // Generate URIs for assistant sprites
   const getAssistantImageUri = (state: string, frame: string) => {
-    const imagePath = vscode.Uri.joinPath(context.extensionUri, 'media', 'assistant', state, frame);
+    const imagePath = vscode.Uri.joinPath(
+      context.extensionUri,
+      "media",
+      "assistant",
+      state,
+      frame,
+    );
     return webview.asWebviewUri(imagePath).toString();
   };
 
   // Create animation map with proper URIs
   const animationMapJson = JSON.stringify({
     IDLE: [
-      getAssistantImageUri('normal', 'normal1.png'),
-      getAssistantImageUri('normal', 'normal2.png')
+      getAssistantImageUri("normal", "normal1.png"),
+      getAssistantImageUri("normal", "normal2.png"),
     ],
     FOCUSED: [
-      getAssistantImageUri('thinking', 'pensar1.png'),
-      getAssistantImageUri('thinking', 'pensar2.png'),
-      getAssistantImageUri('thinking', 'pensar3.png'),
-      getAssistantImageUri('thinking', 'pensar4.png')
+      getAssistantImageUri("thinking", "pensar1.png"),
+      getAssistantImageUri("thinking", "pensar2.png"),
+      getAssistantImageUri("thinking", "pensar3.png"),
+      getAssistantImageUri("thinking", "pensar4.png"),
     ],
     WARNING: [
-      getAssistantImageUri('fatigue', 'Fatiga1.png'),
-      getAssistantImageUri('fatigue', 'fatiga2.png'),
-      getAssistantImageUri('fatigue', 'fatiga3.png'),
-      getAssistantImageUri('fatigue', 'fatiga4.png')
+      getAssistantImageUri("fatigue", "Fatiga1.png"),
+      getAssistantImageUri("fatigue", "fatiga2.png"),
+      getAssistantImageUri("fatigue", "fatiga3.png"),
+      getAssistantImageUri("fatigue", "fatiga4.png"),
     ],
     SUCCESS: [
-      getAssistantImageUri('levelup', 'xp1.png'),
-      getAssistantImageUri('levelup', 'xp2.png'),
-      getAssistantImageUri('levelup', 'xp3.png'),
-      getAssistantImageUri('levelup', 'xp4.png')
-    ]
+      getAssistantImageUri("levelup", "xp1.png"),
+      getAssistantImageUri("levelup", "xp2.png"),
+      getAssistantImageUri("levelup", "xp3.png"),
+      getAssistantImageUri("levelup", "xp4.png"),
+    ],
   });
 
   return `<!DOCTYPE html>
@@ -150,7 +159,7 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
 <!-- Tab bar -->
 <div class="flex gap-1 mb-3 border-b border-slate-700/50 pb-2" id="tab-bar">
   <button class="tab-btn active-tab px-4 py-1.5 text-sm font-medium rounded-t-lg bg-slate-800 text-slate-100 border border-slate-700/60 border-b-0" data-tab="dashboard">Dashboard</button>
-  <button class="tab-btn px-4 py-1.5 text-sm font-medium rounded-t-lg text-slate-400 hover:text-slate-200 transition-colors" data-tab="friends">Amigos</button>
+  <button class="tab-btn px-4 py-1.5 text-sm font-medium rounded-t-lg text-slate-400 hover:text-slate-200 transition-colors" data-tab="friends">Friends</button>
 </div>
 <!-- Dashboard tab content -->
 <div id="tab-content-dashboard" class="space-y-4">
@@ -165,7 +174,7 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                         Focus Pulse Dashboard 
                                     </h1>
                                     <p class="text-slate-400">
-                                        Visualiza tu productividad y progreso directamente en VS Code.
+                                         Visualize your productivity and progress directly in VS Code.
                                     </p>
                                 </div>
                                 <div class="flex gap-2">
@@ -173,14 +182,14 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                         <button 
                                             id="export-menu-btn"
                                             class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-md transition-colors duration-200 flex items-center gap-1.5 border border-slate-600"
-                                            title="Exportar/Importar datos"
+                                             title="Export/Import data"
                                         >
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                                 <polyline points="7,10 12,15 17,10"></polyline>
                                                 <line x1="12" y1="15" x2="12" y2="3"></line>
                                             </svg>
-                                            Datos
+                                             Data
                                         </button>
                                         <div 
                                             id="export-menu" 
@@ -196,7 +205,7 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                                         <polyline points="7,10 12,15 17,10"></polyline>
                                                         <line x1="12" y1="15" x2="12" y2="3"></line>
                                                     </svg>
-                                                    Exportar JSON
+                                                     Export JSON
                                                 </button>
                                                 <button 
                                                     class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
@@ -207,7 +216,7 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                                         <polyline points="7,10 12,15 17,10"></polyline>
                                                         <line x1="12" y1="15" x2="12" y2="3"></line>
                                                     </svg>
-                                                    Exportar XML
+                                                     Export XML
                                                 </button>
                                                 <button 
                                                     class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
@@ -218,7 +227,7 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                                         <polyline points="7,10 12,15 17,10"></polyline>
                                                         <line x1="12" y1="15" x2="12" y2="3"></line>
                                                     </svg>
-                                                    Exportar a archivo
+                                                     Export to file
                                                 </button>
                                                 <button 
                                                     class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
@@ -229,7 +238,7 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                                         <polyline points="17,8 12,3 7,8"></polyline>
                                                         <line x1="12" y1="3" x2="12" y2="15"></line>
                                                     </svg>
-                                                    Importar desde archivo
+                                                     Import from file
                                                 </button>
                                                 <div class="border-t border-slate-700 my-1"></div>
                                                 <button 
@@ -240,7 +249,7 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                                         <polyline points="23,4 23,10 17,10"></polyline>
                                                         <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"></path>
                                                     </svg>
-                                                    Estado de sincronización
+                                                     Sync status
                                                 </button>
                                                 <button
                                                     class="export-menu-item w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"
@@ -252,7 +261,7 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                                                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                                     </svg>
-                                                    Amigos
+                                                     Friends
                                                 </button>
                                             </div>
                                         </div>
@@ -262,13 +271,13 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                             
                             <div class="flex items-center gap-4 text-sm" id="xp-container">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-slate-300 font-medium">Nivel</span>
+                                     <span class="text-slate-300 font-medium">Level</span>
                                     <span id="xp-level" class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">1</span>
                                 </div>
                                 <div class="flex-1 h-3 rounded-full bg-slate-700/50 overflow-hidden backdrop-blur-sm border border-slate-600/50">
                                     <div id="xp-bar-inner" class="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 shadow-lg shadow-blue-500/25" style="width: 0%;"></div>
                                 </div>
-                                <span id="xp-label" class="text-sm text-slate-300 font-medium">0 XP total</span>
+                                <span id="xp-label" class="text-sm text-slate-300 font-medium">0 total XP</span>
                             </div>
                             <div id="deepwork-pill" class="text-[11px] text-slate-500"></div>
                         </header>
@@ -276,31 +285,31 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                         <!-- Metrics Grid -->
                         <section class="grid gap-4 md:grid-cols-4" id="metrics-container">
                             <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
-                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Racha</div>
-                                <div class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400" id="streak-value">0 días</div>
-                                <p class="text-xs text-slate-400 mt-2">Días consecutivos con tiempo de foco registrado.</p>
+                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Streak</div>
+                                <div class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400" id="streak-value">0 days</div>
+                                <p class="text-xs text-slate-400 mt-2">Consecutive days with registered focus time.</p>
                             </div>
                             <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
-                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Últimos 7 días</div>
+                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Last 7 days</div>
                                 <div class="text-lg text-slate-200 mb-1">
-                                    <span id="last7-time" class="font-bold text-blue-300">0s</span> de trabajo
+                                    <span id="last7-time" class="font-bold text-blue-300">0s</span> of work
                                 </div>
                                 <div class="text-lg text-slate-200">
-                                    Media de foco: <span id="last7-score" class="font-bold text-purple-300">-</span>/100
+                                    Focus average: <span id="last7-score" class="font-bold text-purple-300">-</span>/100
                                 </div>
-                                <p class="text-xs text-slate-400 mt-2">Basado en sesiones registradas con Focus Pulse.</p>
+                                <p class="text-xs text-slate-400 mt-2">Based on sessions registered with Focus Pulse.</p>
                             </div>
                             <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
-                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Archivos hoy</div>
+                                <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Files today</div>
                                 <div class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400" id="files-today">0</div>
-                                <p class="text-xs text-slate-400 mt-2">Archivos con foco en esta sesión de VS Code.</p>
+                                <p class="text-xs text-slate-400 mt-2">Files with focus in this VS Code session.</p>
                             </div>
                             <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 flex flex-col gap-3">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Pomodoros</div>
+                                         <div class="text-xs uppercase tracking-wide text-slate-400 mb-2 font-semibold">Pomodoros</div>
                                         <div class="text-lg text-slate-200 mb-1">
-                                            Hoy: <span id="pomodoro-today" class="font-bold text-emerald-300">0</span>
+                                            Today: <span id="pomodoro-today" class="font-bold text-emerald-300">0</span>
                                         </div>
                                         <div class="text-lg text-slate-200">
                                             Total: <span id="pomodoro-total" class="font-bold text-emerald-400">0</span>
@@ -308,14 +317,14 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                                     </div>
                                     <div class="flex flex-col gap-2 items-end">
                                         <button id="export-json-btn" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-[11px] font-medium text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-200 border border-blue-500/30">
-                                            Exportar JSON
+                                             Export JSON
                                         </button>
                                         <button id="export-csv-btn" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500/20 to-blue-500/20 text-[11px] font-medium text-emerald-300 hover:from-emerald-500/30 hover:to-blue-500/30 transition-all duration-200 border border-emerald-500/30">
-                                            Exportar CSV
+                                             Export CSV
                                         </button>
                                     </div>
                                 </div>
-                                <p class="text-[11px] text-slate-500">Exporta tu histórico para analizarlo fuera (Notion, Excel, etc.).</p>
+                                <p class="text-[11px] text-slate-500">Export your history to analyze it externally (Notion, Excel, etc.).</p>
                             </div>
                         </section>
                         
@@ -323,12 +332,12 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                         <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="goals-container">
                             <div class="flex items-center justify-between mb-3">
                                 <h2 class="text-lg font-semibold flex items-center gap-2">
-                                    <span>🎯</span> Objetivo de hoy
+                                     <span>🎯</span> Today\\'s goal
                                 </h2>
-                                <span id="goal-status-label" class="text-sm text-slate-400 font-medium">Sin objetivo configurado</span>
+                                 <span id="goal-status-label" class="text-sm text-slate-400 font-medium">No goal configured</span>
                             </div>
                             <div id="goal-content" class="space-y-3 text-sm text-slate-300">
-                                <p class="text-slate-500 text-sm">Configura los objetivos diarios en las opciones de Focus Pulse.</p>
+                                 <p class="text-slate-500 text-sm">Configure daily goals in Focus Pulse settings.</p>
                             </div>
                         </section>
                         
@@ -336,11 +345,11 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                         <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="insights-container">
                             <div class="flex items-center justify-between mb-3">
                                 <h2 class="text-lg font-semibold flex items-center gap-2">
-                                    <span>📊</span> Insights rápidos
+                                     <span>📊</span> Quick insights
                                 </h2>
                             </div>
                             <div id="insights" class="text-sm text-slate-300 space-y-2">
-                                <p class="text-slate-500 text-sm">Aún no hay suficientes datos para comparar días.</p>
+                                 <p class="text-slate-500 text-sm">Not enough data yet to compare days.</p>
                             </div>
                         </section>
                         
@@ -348,9 +357,9 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                         <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="heatmap-container">
                             <div class="flex items-center justify-between mb-3">
                                 <h2 class="text-lg font-semibold flex items-center gap-2">
-                                    <span>🔥</span> Heatmap de productividad (últimos 30 días)
+                                     <span>🔥</span> Productivity heatmap (last 30 days)
                                 </h2>
-                                <span class="text-sm text-slate-500">Intensidad basada en minutos de foco</span>
+                                 <span class="text-sm text-slate-500">Intensity based on focus minutes</span>
                             </div>
                             <div id="heatmap" class="flex flex-col gap-1 text-[10px] text-slate-400"></div>
                         </section>
@@ -359,12 +368,12 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                         <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="weekly-container">
                             <div class="flex items-center justify-between mb-3">
                                 <h2 class="text-lg font-semibold flex items-center gap-2">
-                                    <span>📈</span> Resumen semanal
+                                     <span>📈</span> Weekly summary
                                 </h2>
-                                <span class="text-sm text-slate-500">Minutos totales por semana</span>
+                                 <span class="text-sm text-slate-500">Total minutes per week</span>
                             </div>
                             <div id="weekly-summary" class="space-y-2 text-sm text-slate-300">
-                                <p class="text-slate-500 text-sm">Todavía no hay datos suficientes.</p>
+                                 <p class="text-slate-500 text-sm">Still not enough data.</p>
                             </div>
                         </section>
                         
@@ -372,20 +381,20 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                         <section class="bg-slate-800 rounded-xl border border-slate-700/60 p-4 backdrop-blur-sm" id="achievements-container">
                             <div class="flex items-center justify-between mb-3">
                                 <h2 class="text-lg font-semibold flex items-center gap-2">
-                                    <span>🏆</span> Logros de hoy
+                                     <span>🏆</span> Today\\'s achievements
                                 </h2>
                                 <div class="flex items-center gap-3">
                                     <button id="custom-achievements-btn" class="text-sm bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 px-3 py-1.5 rounded-lg border border-purple-500/30 font-medium transition-all duration-200 transform hover:scale-105" type="button">
-                                        ⚡ Personalizados
+                                         ⚡ Custom
                                     </button>
-                                    <span class="text-sm text-slate-400 font-medium" id="achievements-count">0 logros</span>
+                                     <span class="text-sm text-slate-400 font-medium" id="achievements-count">0 achievements</span>
                                     <button id="achievements-toggle" class="text-sm text-sky-400 hover:text-sky-300 font-medium underline underline-offset-2 transition-colors" type="button">
-                                        Ver todos
+                                         View all
                                     </button>
                                 </div>
                             </div>
                             <div id="achievements" class="flex flex-wrap gap-2 text-sm">
-                                <span class="text-slate-400 text-sm">Sin datos todavía.</span>
+                                 <span class="text-slate-400 text-sm">No data yet.</span>
                             </div>
                             <div id="all-achievements" class="mt-3 grid gap-2 sm:grid-cols-2 text-sm hidden"></div>
                         </section>
@@ -394,20 +403,20 @@ function getRefactoredHtml(context: vscode.ExtensionContext, webview: vscode.Web
                         <section class="bg-slate-800/60 rounded-xl border border-slate-700/60 overflow-hidden backdrop-blur-sm" id="table-container">
                             <div class="px-6 py-3 border-b border-slate-700/70 bg-slate-800/40 flex items-center justify-between">
                                 <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
-                                    <span>📄</span> Detalle por archivo
+                                     <span>📄</span> File details
                                 </h2>
-                                <span class="text-sm text-slate-400 font-medium" id="summary-label">0 archivos registrados</span>
+                                 <span class="text-sm text-slate-400 font-medium" id="summary-label">0 files registered</span>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full">
                                     <thead class="bg-slate-800/60 border-b border-slate-700/50">
                                         <tr class="text-left text-sm uppercase tracking-wide text-slate-400 font-semibold">
-                                            <th class="px-6 py-3">Archivo</th>
-                                            <th class="px-6 py-3">Puntuación</th>
-                                            <th class="px-6 py-3">Tiempo</th>
-                                            <th class="px-6 py-3">Ediciones</th>
-                                            <th class="px-6 py-3">Δ texto</th>
-                                            <th class="px-6 py-3">Cambios</th>
+                                             <th class="px-6 py-3">File</th>
+                                            <th class="px-6 py-3">Score</th>
+                                            <th class="px-6 py-3">Time</th>
+                                            <th class="px-6 py-3">Edits</th>
+                                            <th class="px-6 py-3">Δ text</th>
+                                            <th class="px-6 py-3">Switches</th>
                                         </tr>
                                     </thead>
                                     <tbody id="table-body" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
@@ -455,14 +464,14 @@ setupEventListeners() {
                             } else if (action === 'sync-status') {
                                 var syncInfo = self.syncInfo || {};
                                 var statusMsg = syncInfo.isAuthenticated
-                                    ? 'Autenticado · Última sync: ' + (syncInfo.lastSync ? new Date(syncInfo.lastSync).toLocaleString() : 'Nunca') + ' · Auto-sync: ' + (syncInfo.autoSyncEnabled ? 'Activado' : 'Desactivado')
-                                    : 'No autenticado. Conecta tu cuenta de GitHub para sincronizar.';
+                                    ? 'Authenticated · Last sync: ' + (syncInfo.lastSync ? new Date(syncInfo.lastSync).toLocaleString() : 'Never') + ' · Auto-sync: ' + (syncInfo.autoSyncEnabled ? 'Enabled' : 'Disabled')
+                                    : 'Not authenticated. Connect your GitHub account to sync.';
                                 var existing = document.getElementById('sync-status-toast');
                                 if (existing) existing.remove();
                                 var toast = document.createElement('div');
                                 toast.id = 'sync-status-toast';
                                 toast.className = 'fixed top-4 right-4 z-50 bg-slate-800 border border-slate-600 rounded-lg shadow-lg p-3 text-sm text-slate-200 max-w-xs';
-                                toast.innerHTML = '<div class="flex justify-between items-start gap-2 mb-1.5"><span class="font-semibold text-slate-100">Sincronización</span><button id="sync-toast-close" class="text-slate-500 hover:text-slate-300 leading-none text-lg">&times;</button></div><p class="text-slate-300">' + statusMsg + '</p>';
+                                toast.innerHTML = '<div class="flex justify-between items-start gap-2 mb-1.5"><span class="font-semibold text-slate-100">Sync</span><button id="sync-toast-close" class="text-slate-500 hover:text-slate-300 leading-none text-lg">&times;</button></div><p class="text-slate-300">' + statusMsg + '</p>';
                                 document.body.appendChild(toast);
                                 toast.querySelector('#sync-toast-close').addEventListener('click', function() { toast.remove(); });
                                 setTimeout(function() { if (toast.parentNode) toast.remove(); }, 5000);
@@ -496,12 +505,12 @@ setupEventListeners() {
                     var allAchievementsEl = document.getElementById('all-achievements');
                     var toggleBtn = document.getElementById('achievements-toggle');
                     
-                    if (showAllAchievements) {
+                     if (showAllAchievements) {
                         allAchievementsEl.classList.remove('hidden');
-                        if (toggleBtn) toggleBtn.textContent = 'Ocultar';
+                        if (toggleBtn) toggleBtn.textContent = 'Hide';
                     } else {
                         allAchievementsEl.classList.add('hidden');
-                        if (toggleBtn) toggleBtn.textContent = 'Ver todos';
+                        if (toggleBtn) toggleBtn.textContent = 'View all';
                     }
                 });
                 
@@ -534,7 +543,7 @@ if (target === 'friends') {
                             const FRIENDS_STALE_THRESHOLD = 30000; // 30 seconds
 
                             if (now - lastFriendsUpdate > FRIENDS_STALE_THRESHOLD) {
-                                document.getElementById('friends-container').innerHTML = '<div class="flex justify-center py-8"><div class="text-slate-400 text-sm animate-pulse">Actualizando...</div></div>';
+                                document.getElementById('friends-container').innerHTML = '<div class="flex justify-center py-8"><div class="text-slate-400 text-sm animate-pulse">Updating...</div></div>';
                                 vscode.postMessage({ type: 'friends:refreshFriends' });
                                 window.lastFriendsUpdate = now;
                             } else {
@@ -564,18 +573,18 @@ if (target === 'friends') {
                             : 0;
                         barEl.style.width = pct.toFixed(1) + '%';
                     }
-                    if (labelEl) labelEl.textContent = Math.round(data.xp.totalXp) + ' XP total';
+                    if (labelEl) labelEl.textContent = Math.round(data.xp.totalXp) + ' total XP';
                 }
                 
                 // Update Deep Work
                 if (data.deepWork) {
                     const deepWorkEl = document.getElementById('deepwork-pill');
                     if (deepWorkEl) {
-                        if (data.deepWork.active) {
-                            deepWorkEl.textContent = '🧠 Deep Work activo';
+                            if (data.deepWork.active) {
+                            deepWorkEl.textContent = '🧠 Deep Work active';
                             deepWorkEl.className = 'text-[11px] text-emerald-300 mt-1';
                         } else {
-                            deepWorkEl.textContent = 'Deep Work inactivo (pulsa en la barra de estado para iniciar)';
+                            deepWorkEl.textContent = 'Deep Work inactive (click on status bar to start)';
                             deepWorkEl.className = 'text-[11px] text-slate-500 mt-1';
                         }
                     }
@@ -585,7 +594,7 @@ if (target === 'friends') {
                 if (data.streak !== undefined) {
                     const streakEl = document.getElementById('streak-value');
                     if (streakEl) {
-                        streakEl.textContent = data.streak + (data.streak === 1 ? ' día' : ' días');
+                        streakEl.textContent = data.streak + (data.streak === 1 ? ' day' : ' days');
                     }
                 }
                 
@@ -608,7 +617,7 @@ if (target === 'friends') {
                     
                     if (filesEl) filesEl.textContent = data.stats.length;
                     if (summaryLabelEl) {
-                        summaryLabelEl.textContent = data.stats.length + (data.stats.length === 1 ? ' archivo' : ' archivos');
+                        summaryLabelEl.textContent = data.stats.length + (data.stats.length === 1 ? ' file' : ' files');
                     }
                     
                     // Update table
@@ -657,8 +666,8 @@ if (target === 'friends') {
                     
                     if (statusEl && contentEl) {
                         if (!goals.enabled) {
-                            statusEl.textContent = 'Objetivos desactivados';
-                            contentEl.innerHTML = '<p class="text-slate-500 text-xs">Activa los objetivos diarios en la configuración de Focus Pulse.</p>';
+                            statusEl.textContent = 'Goals disabled';
+                            contentEl.innerHTML = '<p class="text-slate-500 text-xs">Enable daily goals in Focus Pulse settings.</p>';
                         } else {
                             const min = Math.round(goals.minutesDone);
                             const targetMin = goals.targetMinutes;
@@ -668,11 +677,11 @@ if (target === 'friends') {
                             const pctMin = Math.max(0, Math.min(100, (min / targetMin) * 100));
                             const pctPom = targetPom > 0 ? Math.max(0, Math.min(100, (pom / targetPom) * 100)) : 100;
                             
-                            statusEl.textContent = goals.allDone ? '✅ Objetivo completado' : 'En progreso';
+                            statusEl.textContent = goals.allDone ? '✅ Goal completed' : 'In progress';
                             contentEl.innerHTML = 
                                 '<div class="space-y-1.5">' +
                                     '<div class="flex items-center justify-between">' +
-                                        '<span>Minutos de foco</span>' +
+                                        '<span>Focus minutes</span>' +
                                         '<span class="text-slate-200 font-semibold">' + min + '/' + targetMin + ' min</span>' +
                                     '</div>' +
                                     '<div class="w-full h-2 rounded-full bg-slate-700 overflow-hidden">' +
@@ -689,8 +698,8 @@ if (target === 'friends') {
                                     '</div>' +
                                 '</div>' +
                                 (goals.allDone 
-                                    ? '<p class="text-[11px] text-emerald-300 mt-2">Has cumplido el objetivo de hoy. Buen trabajo 👏</p>'
-                                    : '<p class="text-[11px] text-slate-500 mt-2">Completa ambos objetivos para cerrar el día.</p>'
+                                    ? '<p class="text-[11px] text-emerald-300 mt-2">You have completed today\\'s goal. Good job 👏</p>'
+                                    : '<p class="text-[11px] text-slate-500 mt-2">Complete both goals to close the day.</p>'
                                 );
                         }
                     }
@@ -727,14 +736,14 @@ if (data.friends) {
                     toastHtml = '<div class="bg-rose-900/40 border border-rose-700/60 rounded-lg p-2.5 text-rose-300 text-sm mb-3">' + data._error + '</div>';
                 }
                 if (data && data.shareComplete) {
-                    toastHtml = '<div class="bg-emerald-900/40 border border-emerald-700/60 rounded-lg p-2.5 text-emerald-300 text-sm mb-3" id="friends-share-toast">✓ Perfil compartido. Comparte tu usuario <strong>' + (data.ownUsername || '') + '</strong> con tus amigos.</div>';
+                    toastHtml = '<div class="bg-emerald-900/40 border border-emerald-700/60 rounded-lg p-2.5 text-emerald-300 text-sm mb-3" id="friends-share-toast">✓ Profile shared. Share your username <strong>' + (data.ownUsername || '') + '</strong> with your friends.</div>';
                 }
 
                 if (!data || !data.isAuthenticated) {
                     container.innerHTML =
                         '<div class="text-center py-8">' +
-                        '<p class="text-slate-400 text-sm mb-4">Necesitas autenticarte con GitHub para usar la función de amigos.</p>' +
-                        '<button class="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg border border-blue-500/30 text-sm font-medium transition-all" id="friends-auth-btn">Autenticar cuenta</button>' +
+                        '<p class="text-slate-400 text-sm mb-4">You need to authenticate with GitHub to use the friends feature.</p>' +
+                        '<button class="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg border border-blue-500/30 text-sm font-medium transition-all" id="friends-auth-btn">Authenticate account</button>' +
                         '</div>';
                     var authBtn = container.querySelector('#friends-auth-btn');
                     if (authBtn) {
@@ -747,15 +756,15 @@ if (data.friends) {
 
                 var friends = data.friends || [];
                 var ownProfile = data.ownProfile;
-                var ownUsername = data.ownUsername || 'Tú';
+                var ownUsername = data.ownUsername || 'You';
 
                 // Header: Share Profile + Add Friend (username only)
                 var headerHtml =
                     '<div class="flex flex-col sm:flex-row gap-3 mb-4">' +
-                    '<button class="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 text-emerald-300 hover:from-emerald-500/30 hover:to-blue-500/30 rounded-lg border border-emerald-500/30 text-sm font-medium transition-all" id="friends-share-btn">📤 Compartir perfil</button>' +
+                    '<button class="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 text-emerald-300 hover:from-emerald-500/30 hover:to-blue-500/30 rounded-lg border border-emerald-500/30 text-sm font-medium transition-all" id="friends-share-btn">📤 Share profile</button>' +
                     '<div class="flex flex-1 gap-2">' +
-                    '<input type="text" id="friends-add-input" placeholder="Link del gist o username de GitHub" class="flex-1 bg-slate-700/40 border border-slate-600/60 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500/60" title="Puedes pegar el link completo del gist o solo el username">' +
-                    '<button class="px-3 py-1.5 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg border border-blue-500/30 text-sm font-medium transition-all" id="friends-add-btn">➕ Añadir</button>' +
+                    '<input type="text" id="friends-add-input" placeholder="GitHub username or gist link" class="flex-1 bg-slate-700/40 border border-slate-600/60 rounded-lg px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500/60" title="You can paste the full gist link or just the GitHub username">' +
+                    '<button class="px-3 py-1.5 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg border border-blue-500/30 text-sm font-medium transition-all" id="friends-add-btn">➕ Add</button>' +
                     '</div>' +
                     '</div>';
 
@@ -764,7 +773,7 @@ if (data.friends) {
                 if (ownProfile) {
                     rows +=
                         '<tr class="border-l-4 border-emerald-500" style="background:rgba(15,23,42,0.8);">' +
-                        '<td class="px-4 py-2.5 text-slate-100 font-semibold">' + ownUsername + ' <span class="text-xs text-emerald-400 ml-1">(Tú)</span></td>' +
+                        '<td class="px-4 py-2.5 text-slate-100 font-semibold">' + ownUsername + ' <span class="text-xs text-emerald-400 ml-1">(You)</span></td>' +
                         '<td class="px-4 py-2.5 text-blue-300 font-semibold">' + ownProfile.level + '</td>' +
                         '<td class="px-4 py-2.5 text-purple-300">' + ownProfile.totalXp + '</td>' +
                         '<td class="px-4 py-2.5 text-slate-200">' + this.formatFocusTime(ownProfile.totalFocusTimeMs) + '</td>' +
@@ -794,7 +803,7 @@ if (data.friends) {
                         rows +=
                             '<tr class="hover:bg-slate-800/60 transition-colors">' +
                             '<td class="px-4 py-2.5 text-slate-200">' + f.username + '</td>' +
-                            '<td colspan="6" class="px-4 py-2.5 text-slate-500 text-sm italic">Sin datos disponibles</td>' +
+                            '<td colspan="6" class="px-4 py-2.5 text-slate-500 text-sm italic">Without data available</td>' +
                             '<td class="px-4 py-2.5"><button class="friends-remove-btn text-slate-500 hover:text-rose-400 transition-colors text-lg leading-none" data-username="' + f.username + '">&times;</button></td>' +
                             '</tr>';
                     }
@@ -807,13 +816,13 @@ if (data.friends) {
                         '<table class="min-w-full">' +
                         '<thead class="bg-slate-800/60 border-b border-slate-700/50">' +
                         '<tr class="text-left text-xs uppercase tracking-wide text-slate-400 font-semibold">' +
-                        '<th class="px-4 py-2.5">Usuario</th>' +
-                        '<th class="px-4 py-2.5">Nivel</th>' +
+                        '<th class="px-4 py-2.5">User</th>' +
+                        '<th class="px-4 py-2.5">Level</th>' +
                         '<th class="px-4 py-2.5">XP</th>' +
-                        '<th class="px-4 py-2.5">Tiempo total</th>' +
-                        '<th class="px-4 py-2.5">Racha</th>' +
+                        '<th class="px-4 py-2.5">Total time</th>' +
+                        '<th class="px-4 py-2.5">Streak</th>' +
                         '<th class="px-4 py-2.5">Pomodoros</th>' +
-                        '<th class="px-4 py-2.5">Logros</th>' +
+                        '<th class="px-4 py-2.5">Achievements</th>' +
                         '<th class="px-4 py-2.5"></th>' +
                         '</tr>' +
                         '</thead>' +
@@ -825,11 +834,11 @@ if (data.friends) {
                 } else {
                     tableHtml =
                         '<div class="border border-dashed border-slate-600/60 rounded-lg p-5 text-center space-y-2">' +
-                        '<p class="text-slate-300 text-sm font-medium">¿Por dónde empezar?</p>' +
+                        '<p class="text-slate-300 text-sm font-medium">Where to start?</p>' +
                         '<div class="text-slate-400 text-xs space-y-1 max-w-sm mx-auto">' +
-                        '<p>1. Pulsa <strong class="text-emerald-400">Compartir perfil</strong> para crear tu perfil público.</p>' +
-                        '<p>2. Pide a un amigo que haga lo mismo con Focus Pulse.</p>' +
-                        '<p>3. Añádelo aquí con su nombre de usuario de GitHub.</p>' +
+                        '<p>1. Click <strong class="text-emerald-400">Share profile</strong> to create your public profile.</p>' +
+                        '<p>2. Ask a friend to do the same with Focus Pulse.</p>' +
+                        '<p>3. Add them here with their GitHub username.</p>' +
                         '</div>' +
                         '</div>';
                 }
@@ -852,7 +861,7 @@ if (data.friends) {
                 var shareBtn = container.querySelector('#friends-share-btn');
                 if (shareBtn) {
                     shareBtn.addEventListener('click', function() {
-                        shareBtn.textContent = 'Compartiendo...';
+                        shareBtn.textContent = 'Sharing...';
                         shareBtn.disabled = true;
                         shareBtn.classList.add('opacity-60');
                         vscode.postMessage({ type: 'friends:shareProfile' });
@@ -930,12 +939,12 @@ if (data.friends) {
                 
                 insightsEl.innerHTML = 
                     '<p>' +
-                        'Hoy has trabajado <span class="' + trendClass + '">' + arrow + ' ' + Math.round(Math.abs(diffMin)) + ' min</span> ' +
-                        (diffMin >= 0 ? 'más' : 'menos') + ' que ayer.' +
+                        'Today you have worked <span class="' + trendClass + '">' + arrow + ' ' + Math.round(Math.abs(diffMin)) + ' min</span> ' +
+                        (diffMin >= 0 ? 'more' : 'less') + ' than yesterday.' +
                     '</p>' +
                     '<p>' +
-                        'Tu foco medio ha ' + (scoreDiff > 0 ? 'mejorado' : scoreDiff < 0 ? 'bajado' : 'quedado igual') + ': ' +
-                        '<span class="' + scoreClass + '">' + scoreArrow + ' ' + Math.round(Math.abs(scoreDiff)) + '</span> puntos frente a ayer.' +
+                        'Your focus score has ' + (scoreDiff > 0 ? 'improved' : scoreDiff < 0 ? 'decreased' : 'stayed the same') + ': ' +
+                        '<span class="' + scoreClass + '">' + scoreArrow + ' ' + Math.round(Math.abs(scoreDiff)) + '</span> points vs yesterday.' +
                     '</p>';
             }
             
@@ -1006,8 +1015,8 @@ if (data.friends) {
                 // Update today's achievements
                 if (achievementsEl && achievementsCountEl) {
                     if (!data.achievements || !data.achievements.length) {
-                        achievementsEl.innerHTML = '<span class="text-slate-400 text-xs">Sin logros todavía. Trabaja un poco más y sigue revisando.</span>';
-                        achievementsCountEl.textContent = '0 logros';
+                        achievementsEl.innerHTML = '<span class="text-slate-400 text-xs">No achievements yet. Work a bit more and keep checking.</span>';
+                        achievementsCountEl.textContent = '0 achievements';
                     } else {
                         achievementsEl.innerHTML = '';
                         data.achievements.forEach((a) => {
@@ -1032,7 +1041,7 @@ if (data.friends) {
                             
                             achievementsEl.appendChild(span);
                         });
-                        achievementsCountEl.textContent = data.achievements.length + (data.achievements.length === 1 ? ' logro' : ' logros');
+                        achievementsCountEl.textContent = data.achievements.length + (data.achievements.length === 1 ? ' achievement' : ' achievements');
                     }
                 }
                 
@@ -1168,12 +1177,14 @@ if (data.friends) {
                 this.animationInterval = null;
                 this.frameIndex = 0;
                 this.productivityFacts = [
-                    "¿Sabías que tardas 23 minutos en recuperar el foco tras una interrupción?",
-                    "El cerebro humano mantiene el foco máximo por ~45 minutos seguidos",
-                    "Trabajar en bloques de 90min + 15min de descanso es óptimo para productividad",
-                    "Hacer pausas cada 25 minutos aumenta un 13% tu productividad diaria",
-                    "La música sin letra puede mejorar tu concentración hasta en un 15%",
-                    "El multitasking reduce tu productividad en un 40% comparado con el trabajo enfocto"
+                    "Did you know it takes 23 minutes to regain focus after an interruption?",
+                    "The human brain maintains maximum focus for ~45 consecutive minutes",
+                    "Working in 90min blocks + 15min breaks is optimal for productivity",
+                    "Taking breaks every 25 minutes increases your daily productivity by 13%",
+                    "Music without lyrics can improve your concentration by up to 15%",
+                    "Sitting in a cluttered environment can reduce your ability to focus by 77%",
+                    "The Pomodoro Technique was developed in the late 1980s by Francesco Cirillo",
+                    "Deep work sessions of 2-3 hours can yield the same output as a full day of shallow work"
                 ];
 
                 this.setupGlobalStyles();
@@ -1322,7 +1333,7 @@ if (data.friends) {
 
                 // Show welcome message
                 setTimeout(() => {
-                    this.showMessage("¡Hola! Soy Deepy, tu compañero de Deep Work", 'IDLE', 4000);
+                    this.showMessage("Hi! I'm Deepy, your Deep Work companion", 'IDLE', 4000);
                 }, 500);
             };
 
@@ -1521,13 +1532,13 @@ if (data.friends) {
 
                 switch (type) {
                     case 'achievement':
-                        message = \`¡Logro desbloqueado: \${details?.title || 'Increíble'}!\`;
+                        message = \`Achievement unlocked: \${details?.title || 'Amazing'}!\`;
                         break;
                     case 'level':
-                        message = \`¡Nivel \${details?.level || 'superior'} alcanzado! Sigue así\`;
+                        message = \`Level \${details?.level || 'higher'} reached! Keep it up\`;
                         break;
                     case 'streak':
-                        message = \`¡\${details?.days || 'varios'} días de racha! No pierdas el ritmo\`;
+                        message = \`\${details?.days || 'several'} day streak! Don\'t lose the rhythm\`;
                         break;
                 }
 
@@ -1631,7 +1642,10 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   console.log("openRefactoredDashboard llamado");
   if (currentPanel) {
     console.log("Reutilizando panel existente");
-    currentPanel.webview.html = getRefactoredHtml(context, currentPanel.webview);
+    currentPanel.webview.html = getRefactoredHtml(
+      context,
+      currentPanel.webview,
+    );
     currentPanel.reveal(vscode.ViewColumn.One);
     return;
   }
@@ -1657,109 +1671,111 @@ export function openRefactoredDashboard(context: vscode.ExtensionContext) {
   console.log("Estableciendo HTML del dashboard");
   currentPanel.webview.html = getRefactoredHtml(context, currentPanel.webview);
 
-currentPanel.webview.onDidReceiveMessage(
+  currentPanel.webview.onDidReceiveMessage(
     async (msg) => {
       if (!msg) return;
 
       // Handle different message types
       switch (msg.command || msg.type) {
         case "requestData": {
-        console.log("Dashboard requesting data");
-        // Send initial data when dashboard requests it
-        const statsArray = getStatsArray();
-        const history7 = getLastDays(7);
-        const historyAll = getHistory();
-        const pomodoroStats = getPomodoroStats();
-        const deepWork = getDeepWorkState(context);
-        const streakDays = getStreakDays(historyAll);
-        const achievements = computeAchievements(
-          Array.isArray(streakDays) ? streakDays.length : streakDays,
-          historyAll,
-          statsArray,
-          undefined,
-          pomodoroStats,
-          undefined,
-          deepWork,
-          context,
-        );
-        const allDefs = getAllAchievementsDefinitions();
-        const { getCustomAchievements } = require("./achievements");
-        const customAchievements = getCustomAchievements(context);
+          console.log("Dashboard requesting data");
+          // Send initial data when dashboard requests it
+          const statsArray = getStatsArray();
+          const history7 = getLastDays(7);
+          const historyAll = getHistory();
+          const pomodoroStats = getPomodoroStats();
+          const deepWork = getDeepWorkState(context);
+          const streakDays = getStreakDays(historyAll);
+          const achievements = computeAchievements(
+            Array.isArray(streakDays) ? streakDays.length : streakDays,
+            historyAll,
+            statsArray,
+            undefined,
+            pomodoroStats,
+            undefined,
+            deepWork,
+            context,
+          );
+          const allDefs = getAllAchievementsDefinitions();
+          const { getCustomAchievements } = require("./achievements");
+          const customAchievements = getCustomAchievements(context);
 
-        // Combinar definiciones estáticas con logros personalizados
-        const allAchievements = [
-          ...allDefs.map((a: any) => ({
-            ...a,
-            unlocked: achievements.some((u) => u.id === a.id),
-          })),
-          ...customAchievements.map((a: any) => ({
-            ...a,
-            unlocked: achievements.some((u) => u.id === a.id),
-          })),
-        ];
-        // Check if deepWork is from StateTypes and convert if needed
-        let deepWorkForXp: DeepWorkState | undefined;
-        if (isStateTypesDeepWorkState(deepWork)) {
-          deepWorkForXp = convertToDeepWorkState(deepWork);
-        } else {
-          deepWorkForXp = deepWork;
-        }
+          // Combinar definiciones estáticas con logros personalizados
+          const allAchievements = [
+            ...allDefs.map((a: any) => ({
+              ...a,
+              unlocked: achievements.some((u) => u.id === a.id),
+            })),
+            ...customAchievements.map((a: any) => ({
+              ...a,
+              unlocked: achievements.some((u) => u.id === a.id),
+            })),
+          ];
+          // Check if deepWork is from StateTypes and convert if needed
+          let deepWorkForXp: DeepWorkState | undefined;
+          if (isStateTypesDeepWorkState(deepWork)) {
+            deepWorkForXp = convertToDeepWorkState(deepWork);
+          } else {
+            deepWorkForXp = deepWork;
+          }
 
-        const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
+          const xp = computeXpState(historyAll, pomodoroStats, deepWorkForXp);
 
-        // Get sync information
-        const syncManager = UserSyncManager.getInstance();
-        const currentUser = syncManager.getCurrentUser();
-        const syncInfo = {
-          isAuthenticated: !!currentUser,
-          userEmail: currentUser?.email,
-          lastSync: syncManager.getLastSyncTime(),
-          autoSyncEnabled: syncManager.isAutoSyncEnabled(),
-        };
-
-        // Build friends data for initial load
-        let friendsTabData: any = undefined;
-        try {
-          const { FriendService: FSInit } = require("./friends/FriendService");
-          const friendSvcInit = FSInit.getInstance();
-          friendSvcInit.setContext(context);
-          const friendsList = friendSvcInit.loadFriends();
-          const loginInit = await friendSvcInit.getAuthenticatedLogin();
-          friendsTabData = {
-            friends: friendsList,
-            ownProfile: null,
-            isAuthenticated: !!syncManager.getCurrentUser(),
-            ownUsername: loginInit,
+          // Get sync information
+          const syncManager = UserSyncManager.getInstance();
+          const currentUser = syncManager.getCurrentUser();
+          const syncInfo = {
+            isAuthenticated: !!currentUser,
+            userEmail: currentUser?.email,
+            lastSync: syncManager.getLastSyncTime(),
+            autoSyncEnabled: syncManager.isAutoSyncEnabled(),
           };
-        } catch {
-          // friends feature not available — omit gracefully
-        }
 
-        const dashboardData: DashboardData = {
-          stats: statsArray,
-          history7,
-          streak: Array.isArray(streakDays) ? streakDays.length : streakDays,
-          achievements,
-          xp,
-          pomodoroStats,
-          historyAll,
-          deepWork,
-          allAchievements,
-          weeklySummary: [], // TODO: Implement weekly summary
-          goals: undefined, // TODO: Implement goals
-          sync: syncInfo,
-          friends: friendsTabData,
-        };
+          // Build friends data for initial load
+          let friendsTabData: any = undefined;
+          try {
+            const {
+              FriendService: FSInit,
+            } = require("./friends/FriendService");
+            const friendSvcInit = FSInit.getInstance();
+            friendSvcInit.setContext(context);
+            const friendsList = friendSvcInit.loadFriends();
+            const loginInit = await friendSvcInit.getAuthenticatedLogin();
+            friendsTabData = {
+              friends: friendsList,
+              ownProfile: null,
+              isAuthenticated: !!syncManager.getCurrentUser(),
+              ownUsername: loginInit,
+            };
+          } catch {
+            // friends feature not available — omit gracefully
+          }
 
-        console.log(
-          "Enviando datos al dashboard:",
-          dashboardData.stats?.length || 0,
-          "archivos",
-        );
-        currentPanel?.webview.postMessage({
-          type: "stats:update",
-          payload: dashboardData,
-        });
+          const dashboardData: DashboardData = {
+            stats: statsArray,
+            history7,
+            streak: Array.isArray(streakDays) ? streakDays.length : streakDays,
+            achievements,
+            xp,
+            pomodoroStats,
+            historyAll,
+            deepWork,
+            allAchievements,
+            weeklySummary: [], // TODO: Implement weekly summary
+            goals: undefined, // TODO: Implement goals
+            sync: syncInfo,
+            friends: friendsTabData,
+          };
+
+          console.log(
+            "Enviando datos al dashboard:",
+            dashboardData.stats?.length || 0,
+            "archivos",
+          );
+          currentPanel?.webview.postMessage({
+            type: "stats:update",
+            payload: dashboardData,
+          });
           break;
         }
         case "openCustomAchievements": {
@@ -1811,7 +1827,9 @@ currentPanel.webview.onDidReceiveMessage(
           await vscode.commands.executeCommand("focusPulse.authenticate");
           // After auth, refresh friends tab + sync info en la webview
           try {
-            const { FriendService: FSAuth } = require("./friends/FriendService");
+            const {
+              FriendService: FSAuth,
+            } = require("./friends/FriendService");
             const fsSvcAuth = FSAuth.getInstance();
             fsSvcAuth.setContext(context);
             const fListAuth = fsSvcAuth.loadFriends();
@@ -1820,13 +1838,25 @@ currentPanel.webview.onDidReceiveMessage(
             const curUserAuth = sMgrAuth.getCurrentUser();
             currentPanel?.webview.postMessage({
               type: "friends:update",
-              payload: { friends: fListAuth, ownProfile: null, isAuthenticated: !!curUserAuth, ownUsername: fLoginAuth },
+              payload: {
+                friends: fListAuth,
+                ownProfile: null,
+                isAuthenticated: !!curUserAuth,
+                ownUsername: fLoginAuth,
+              },
             });
             currentPanel?.webview.postMessage({
               type: "sync-info-update",
-              payload: { isAuthenticated: !!curUserAuth, userEmail: curUserAuth?.email, lastSync: sMgrAuth.getLastSyncTime(), autoSyncEnabled: sMgrAuth.isAutoSyncEnabled() },
+              payload: {
+                isAuthenticated: !!curUserAuth,
+                userEmail: curUserAuth?.email,
+                lastSync: sMgrAuth.getLastSyncTime(),
+                autoSyncEnabled: sMgrAuth.isAutoSyncEnabled(),
+              },
             });
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
           break;
         }
         case "create-github-token": {
@@ -1852,39 +1882,43 @@ currentPanel.webview.onDidReceiveMessage(
           if (msg.payload?.feedbackData) {
             const issueUrl = await GitHubIssueCreator.createIssueFromFeedback(
               msg.payload.feedbackData,
-              context
+              context,
             );
 
             if (issueUrl) {
               const action = await vscode.window.showInformationMessage(
-                "✅ ¡Gracias por tu feedback! Se ha creado un issue en GitHub.",
-                "Ver Issue"
+                "✅ Thanks for your feedback! An issue has been created on GitHub.",
+                "Ver Issue",
               );
               if (action === "Ver Issue") {
                 vscode.env.openExternal(vscode.Uri.parse(issueUrl));
               }
             } else {
               vscode.window.showInformationMessage(
-                "¡Gracias por tu feedback! 🎉 Tu opinión nos ayuda a mejorar Focus Pulse."
+                "Thanks for your feedback! 🎉 Your opinion helps us improve Focus Pulse.",
               );
             }
           }
           break;
         }
-case "friends:refreshFriends": {
+        case "friends:refreshFriends": {
           // Add debouncing for friend refresh calls
           const now = Date.now();
-          const lastFriendsRefresh = (globalThis as any).lastFriendsRefresh || 0;
+          const lastFriendsRefresh =
+            (globalThis as any).lastFriendsRefresh || 0;
           const FRIENDS_REFRESH_DEBOUNCE = 5000; // 5 seconds
 
           if (now - lastFriendsRefresh < FRIENDS_REFRESH_DEBOUNCE) {
             console.log("Friends refresh debounced, skipping");
             // Still send cached data to prevent "Actualizando..." getting stuck
-            const { FriendService: FSDebounce } = require("./friends/FriendService");
+            const {
+              FriendService: FSDebounce,
+            } = require("./friends/FriendService");
             const friendServiceDebounce = FSDebounce.getInstance();
             friendServiceDebounce.setContext(context);
             const cachedFriends = friendServiceDebounce.loadFriends();
-            const cachedLogin = await friendServiceDebounce.getAuthenticatedLogin();
+            const cachedLogin =
+              await friendServiceDebounce.getAuthenticatedLogin();
             const syncMgrDebounce = UserSyncManager.getInstance();
             currentPanel?.webview.postMessage({
               type: "friends:update",
@@ -1892,7 +1926,7 @@ case "friends:refreshFriends": {
                 friends: cachedFriends,
                 ownProfile: null,
                 isAuthenticated: !!syncMgrDebounce.getCurrentUser(),
-                ownUsername: cachedLogin
+                ownUsername: cachedLogin,
               },
             });
             return;
@@ -1918,12 +1952,29 @@ case "friends:refreshFriends": {
               const xpData = computeXpState(hist, pomStats, undefined);
               const statsArr = getStatsArray();
               const dwState = getDeepWorkState(context);
-              const unl = computeAchievements(streakN, hist, statsArr, xpData, pomStats, undefined, dwState, context);
-              const last7 = hist.slice().sort((a: any, b: any) => a.date.localeCompare(b.date)).slice(-7);
-              const avgSc = last7.length > 0
-                ? last7.reduce((s: number, d: any) => s + d.avgScore, 0) / last7.length
-                : 0;
-              const totalMs = hist.reduce((s: number, d: any) => s + (d.totalTimeMs || 0), 0);
+              const unl = computeAchievements(
+                streakN,
+                hist,
+                statsArr,
+                xpData,
+                pomStats,
+                undefined,
+                dwState,
+                context,
+              );
+              const last7 = hist
+                .slice()
+                .sort((a: any, b: any) => a.date.localeCompare(b.date))
+                .slice(-7);
+              const avgSc =
+                last7.length > 0
+                  ? last7.reduce((s: number, d: any) => s + d.avgScore, 0) /
+                    last7.length
+                  : 0;
+              const totalMs = hist.reduce(
+                (s: number, d: any) => s + (d.totalTimeMs || 0),
+                0,
+              );
               ownProfile = friendService.buildOwnProfile({
                 githubLogin: login,
                 level: xpData.level,
@@ -1938,7 +1989,12 @@ case "friends:refreshFriends": {
 
             currentPanel?.webview.postMessage({
               type: "friends:update",
-              payload: { friends, ownProfile, isAuthenticated: isAuth, ownUsername: login },
+              payload: {
+                friends,
+                ownProfile,
+                isAuthenticated: isAuth,
+                ownUsername: login,
+              },
             });
           } catch (err) {
             // On error, still send current friends list to prevent UI getting stuck
@@ -1952,7 +2008,7 @@ case "friends:refreshFriends": {
                 ownProfile: null,
                 isAuthenticated: !!syncMgrOnError.getCurrentUser(),
                 ownUsername: loginOnError,
-                _error: `Error al actualizar amigos: ${String(err)}`
+                _error: `Error al actualizar amigos: ${String(err)}`,
               },
             });
           }
@@ -1974,12 +2030,14 @@ case "friends:refreshFriends": {
                 ownProfile: null,
                 isAuthenticated: !!sMgr4.getCurrentUser(),
                 ownUsername: fLogin4,
-                shareComplete: true
+                shareComplete: true,
               },
             });
           } catch (err) {
             // On error, still send update to reset button state
-            const { FriendService: FS4Err } = require("./friends/FriendService");
+            const {
+              FriendService: FS4Err,
+            } = require("./friends/FriendService");
             const fsSvc4Err = FS4Err.getInstance();
             fsSvc4Err.setContext(context);
             const fList4Err = fsSvc4Err.loadFriends();
@@ -1992,7 +2050,7 @@ case "friends:refreshFriends": {
                 ownProfile: null,
                 isAuthenticated: !!sMgr4Err.getCurrentUser(),
                 ownUsername: fLogin4Err,
-                _error: `Error al compartir perfil: ${String(err)}`
+                _error: `Error al compartir perfil: ${String(err)}`,
               },
             });
           }
@@ -2017,7 +2075,7 @@ case "friends:refreshFriends": {
                 friends: updatedFriends,
                 ownProfile: null,
                 isAuthenticated: !!syncMgr2.getCurrentUser(),
-                ownUsername: login2
+                ownUsername: login2,
               },
             });
           } catch (err) {
@@ -2032,7 +2090,7 @@ case "friends:refreshFriends": {
                 ownProfile: null,
                 isAuthenticated: !!syncMgr2.getCurrentUser(),
                 ownUsername: login2,
-                _error: String(err)
+                _error: String(err),
               },
             });
           }
@@ -2048,7 +2106,12 @@ case "friends:refreshFriends": {
           const login3 = await friendSvc2.getAuthenticatedLogin();
           currentPanel?.webview.postMessage({
             type: "friends:update",
-            payload: { friends: updatedFriends2, ownProfile: null, isAuthenticated: !!syncMgr3.getCurrentUser(), ownUsername: login3 },
+            payload: {
+              friends: updatedFriends2,
+              ownProfile: null,
+              isAuthenticated: !!syncMgr3.getCurrentUser(),
+              ownUsername: login3,
+            },
           });
           break;
         }

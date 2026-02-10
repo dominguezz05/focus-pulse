@@ -60,7 +60,7 @@ export class PeakPerformanceAnalyzer {
 
     // Calcular promedios por hora
     const hourlyAverages: [number, number][] = Array.from(
-      hourlyScores.entries()
+      hourlyScores.entries(),
     ).map(([hour, scores]) => {
       const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
       return [hour, avg];
@@ -80,7 +80,7 @@ export class PeakPerformanceAnalyzer {
       ([day, scores]) => ({
         day,
         avg: scores.reduce((a, b) => a + b, 0) / scores.length,
-      })
+      }),
     );
     dayAverages.sort((a, b) => b.avg - a.avg);
     const peakDays = dayAverages.slice(0, 2).map((d) => d.day);
@@ -93,7 +93,7 @@ export class PeakPerformanceAnalyzer {
       bestHour,
       worstHour,
       peakDays,
-      hourlyAverages
+      hourlyAverages,
     );
 
     // Generar insights adicionales
@@ -101,7 +101,7 @@ export class PeakPerformanceAnalyzer {
       hourlyAverages,
       hourlyMinutes,
       hourlySessions,
-      dayAverages
+      dayAverages,
     );
 
     return {
@@ -164,21 +164,20 @@ export class PeakPerformanceAnalyzer {
     bestHour: number,
     worstHour: number,
     peakDays: string[],
-    hourlyAverages: [number, number][]
+    hourlyAverages: [number, number][],
   ): string {
     const bestTime = this.formatHour(bestHour);
     const worstTime = this.formatHour(worstHour);
 
     const scoreDiff =
-      hourlyAverages[0][1] -
-      hourlyAverages[hourlyAverages.length - 1][1];
+      hourlyAverages[0][1] - hourlyAverages[hourlyAverages.length - 1][1];
 
     if (scoreDiff > 20) {
-      return `🎯 Tu hora pico es ${bestTime}. Agenda tareas complejas entonces. Evita ${worstTime} para trabajo crítico.`;
+      return `🎯 Your peak hour is ${bestTime}. Schedule complex tasks then. Avoid ${worstTime} for critical work.`;
     } else if (scoreDiff > 10) {
-      return `💡 Mejor rendimiento en ${bestTime}. Considera programar deep work en ese horario.`;
+      return `💡 Better performance at ${bestTime}. Consider scheduling deep work during that time.`;
     } else {
-      return `✨ Tu rendimiento es consistente durante el día. ¡Buen equilibrio!`;
+      return `✨ Your performance is consistent throughout the day. Great balance!`;
     }
   }
 
@@ -186,7 +185,7 @@ export class PeakPerformanceAnalyzer {
     hourlyAverages: [number, number][],
     hourlyMinutes: Map<number, number>,
     hourlySessions: Map<number, number>,
-    dayAverages: { day: string; avg: number }[]
+    dayAverages: { day: string; avg: number }[],
   ): string[] {
     const insights: string[] = [];
 
@@ -194,7 +193,7 @@ export class PeakPerformanceAnalyzer {
     if (hourlyAverages.length > 0) {
       const [bestHour, bestScore] = hourlyAverages[0];
       insights.push(
-        `⏰ Tu hora más productiva es ${this.formatHour(bestHour)} (score promedio: ${Math.round(bestScore)})`
+        `⏰ Your peak hour is ${this.formatHour(bestHour)} (average score: ${Math.round(bestScore)})`,
       );
     }
 
@@ -221,20 +220,22 @@ export class PeakPerformanceAnalyzer {
 
     const maxAvg = Math.max(morningAvg, afternoonAvg, eveningAvg);
     if (maxAvg === morningAvg && morningAvg > 0) {
-      insights.push("🌅 Eres una persona matutina - aprovecha las mañanas");
+      insights.push(
+        "🌅 You're a morning person - make the most of your mornings",
+      );
     } else if (maxAvg === afternoonAvg && afternoonAvg > 0) {
       insights.push(
-        "☀️ Tu energía pico es por la tarde - planea en consecuencia"
+        "☀️ Your peak energy is in the afternoon - plan accordingly",
       );
     } else if (maxAvg === eveningAvg && eveningAvg > 0) {
-      insights.push("🌙 Eres más productivo en las noches - búho nocturno");
+      insights.push("🌙 You're more productive at night - nocturnal owl");
     }
 
     // Insight 3: Mejores días
     if (dayAverages.length > 0) {
       const bestDay = dayAverages[0];
       insights.push(
-        `📅 ${bestDay.day} es tu día más productivo (score: ${Math.round(bestDay.avg)})`
+        `📅 ${bestDay.day} is your most productive day (score: ${Math.round(bestDay.avg)})`,
       );
     }
 
@@ -242,31 +243,33 @@ export class PeakPerformanceAnalyzer {
     const allScores = hourlyAverages.map(([, score]) => score);
     const variance = this.calculateVariance(allScores);
     if (variance < 100) {
-      insights.push("📊 Tu rendimiento es muy consistente a lo largo del día");
+      insights.push(
+        "📊 Your performance is very consistent throughout the day",
+      );
     } else if (variance > 300) {
       insights.push(
-        "📊 Tu rendimiento varía mucho - optimiza tus horarios de trabajo"
+        "📊 Your performance varies a lot - optimize your work schedule",
       );
     }
 
     // Insight 5: Tiempo trabajado por hora
     const totalMinutes = Array.from(hourlyMinutes.values()).reduce(
       (a, b) => a + b,
-      0
+      0,
     );
     const totalSessions = Array.from(hourlySessions.values()).reduce(
       (a, b) => a + b,
-      0
+      0,
     );
     const avgSessionDuration = totalMinutes / totalSessions;
 
     if (avgSessionDuration < 25) {
       insights.push(
-        "⏱️ Tus sesiones son cortas - considera bloques más largos de foco"
+        "⏱️ Your sessions are short - consider longer focused blocks",
       );
     } else if (avgSessionDuration > 60) {
       insights.push(
-        "⏱️ Tus sesiones son largas - recuerda tomar breaks regulares"
+        "⏱️ Your sessions are long - remember to take regular breaks",
       );
     }
 
@@ -305,8 +308,7 @@ export class PeakPerformanceAnalyzer {
 
     // Es buen momento si el score está por encima del promedio general
     const allScores = Array.from(analysis.averageScoreByHour.values());
-    const overallAvg =
-      allScores.reduce((a, b) => a + b, 0) / allScores.length;
+    const overallAvg = allScores.reduce((a, b) => a + b, 0) / allScores.length;
 
     return avgScore >= overallAvg;
   }

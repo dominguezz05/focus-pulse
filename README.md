@@ -5,7 +5,7 @@
 ### _Your AI-Powered Coding Companion for Deep Work_
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.6.2-informational)
+![Version](https://img.shields.io/badge/version-2.7.0-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
@@ -159,7 +159,7 @@ Your intelligent coding companion that learns your patterns and guides your focu
 
 ---
 
-## 🆕 What's New in 2.6.2
+## 🆕 What's New in 2.7.0
 
 ### 🚀 Friends System 2.0 - Major Improvements
 
@@ -996,10 +996,10 @@ Common fixes:
 - [x] **v2.6.0** — Friends system (gist-based profiles, comparison table, offline cache)
 - [x] **v2.6.1** — Friends System 2.0 (auto-copy links, direct gist URLs, improved UX)
 - [x] **v2.6.2** — Feedback System with GitHub Issues integration
+- [x] **v2.7.0** — Full English translation (i18n complete)
 
-### 🚧 In Progress (v2.7.0)
+### 🚧 In Progress (v2.8.0)
 
-- [ ] **English-language Support** — English languaje
 - [ ] **Leaderboards** — Weekly/monthly rankings (opt-in)
 
 ### 🔮 Future (v3.0+)

@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Track your focus level per file with Pomodoro timers, XP progression, achievements, and a real-time dashboard.",
-  "version": "2.6.2",
+  "version": "2.7.0",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
@@ -62,119 +62,119 @@
     "commands": [
       {
         "command": "focusPulse.showStats",
-        "title": "Focus Pulse: Mostrar estadísticas del archivo actual"
+        "title": "Focus Pulse: Show current file statistics"
       },
       {
         "command": "focusPulse.openDashboard",
-        "title": "Focus Pulse: Abrir dashboard"
+        "title": "Focus Pulse: Open dashboard"
       },
       {
         "command": "focusPulse.pomodoroToggle",
-        "title": "Focus Pulse: Iniciar/Parar Pomodoro"
+        "title": "Focus Pulse: Start/Stop Pomodoro"
       },
       {
         "command": "focusPulse.resetData",
-        "title": "Focus Pulse: Resetear histórico y XP"
+        "title": "Focus Pulse: Reset history and XP"
       },
       {
         "command": "focusPulse.exportData",
-        "title": "Focus Pulse: Exportar histórico (interno)"
+        "title": "Focus Pulse: Export history (internal)"
       },
       {
         "command": "focusPulse.deepWorkToggle",
-        "title": "Focus Pulse: Alternar modo Deep Work"
+        "title": "Focus Pulse: Toggle Deep Work mode"
       },
       {
         "command": "focusPulse.createCustomAchievement",
-        "title": "Focus Pulse: Crear logro personalizado"
+        "title": "Focus Pulse: Create custom achievement"
       },
       {
         "command": "focusPulse.manageCustomAchievements",
-        "title": "Focus Pulse: Gestionar logros personalizados"
+        "title": "Focus Pulse: Manage custom achievements"
       },
       {
         "command": "focusPulse.exportDataToFile",
-        "title": "Focus Pulse: Exportar datos a archivo"
+        "title": "Focus Pulse: Export data to file"
       },
       {
         "command": "focusPulse.importDataFromFile",
-        "title": "Focus Pulse: Importar datos desde archivo"
+        "title": "Focus Pulse: Import data from file"
       },
       {
         "command": "focusPulse.exportAsJSON",
-        "title": "Focus Pulse: Exportar como JSON"
+        "title": "Focus Pulse: Export as JSON"
       },
       {
         "command": "focusPulse.exportAsXML",
-        "title": "Focus Pulse: Exportar como XML"
+        "title": "Focus Pulse: Export as XML"
       },
       {
         "command": "focusPulse.authenticate",
-        "title": "Focus Pulse: Autenticar cuenta"
+        "title": "Focus Pulse: Authenticate account"
       },
       {
         "command": "focusPulse.createGitHubToken",
-        "title": "Focus Pulse: Crear/Gestionar Token de GitHub"
+        "title": "Focus Pulse: Create/Manage GitHub Token"
       },
       {
         "command": "focusPulse.enableAutoSync",
-        "title": "Focus Pulse: Habilitar sincronización automática"
+        "title": "Focus Pulse: Enable automatic sync"
       },
       {
         "command": "focusPulse.disableAutoSync",
-        "title": "Focus Pulse: Deshabilitar sincronización automática"
+        "title": "Focus Pulse: Disable automatic sync"
       },
       {
         "command": "focusPulse.manualSync",
-        "title": "Focus Pulse: Sincronizar ahora"
+        "title": "Focus Pulse: Sync now"
       },
       {
         "command": "focusPulse.downloadSync",
-        "title": "Focus Pulse: Descargar sincronización"
+        "title": "Focus Pulse: Download sync"
       },
       {
         "command": "focusPulse.listSyncs",
-        "title": "Focus Pulse: Listar sincronizaciones"
+        "title": "Focus Pulse: List syncs"
       },
       {
         "command": "focusPulse.deleteSync",
-        "title": "Focus Pulse: Eliminar sincronización"
+        "title": "Focus Pulse: Delete sync"
       },
       {
         "command": "focusPulse.signOut",
-        "title": "Focus Pulse: Cerrar sesión"
+        "title": "Focus Pulse: Sign out"
       },
       {
         "command": "focusPulse.syncStatus",
-        "title": "Focus Pulse: Estado de sincronización"
+        "title": "Focus Pulse: Sync status"
       },
       {
         "command": "focusPulse.showGitStats",
-        "title": "Focus Pulse: Ver estadísticas de Git"
+        "title": "Focus Pulse: View Git statistics"
       },
       {
         "command": "focusPulse.testNotification",
-        "title": "Focus Pulse: Probar notificación"
+        "title": "Focus Pulse: Test notification"
       },
       {
         "command": "focusPulse.toggleNotifications",
-        "title": "Focus Pulse: Activar/Desactivar notificaciones"
+        "title": "Focus Pulse: Enable/Disable notifications"
       },
       {
         "command": "focusPulse.notificationSettings",
-        "title": "Focus Pulse: Configurar notificaciones"
+        "title": "Focus Pulse: Configure notifications"
       },
       {
         "command": "focusPulse.shareProfile",
-        "title": "Focus Pulse: Compartir perfil"
+        "title": "Focus Pulse: Share profile"
       },
       {
         "command": "focusPulse.addFriend",
-        "title": "Focus Pulse: Añadir amigo"
+        "title": "Focus Pulse: Add friend"
       },
       {
         "command": "focusPulse.removeFriend",
-        "title": "Focus Pulse: Eliminar amigo"
+        "title": "Focus Pulse: Remove friend"
       }
     ],
     "configuration": {
@@ -184,119 +184,119 @@
         "focusPulse.enableStatusBar": {
           "type": "boolean",
           "default": true,
-          "description": "Mostrar el indicador de Focus Pulse en la barra de estado."
+          "description": "Show Focus Pulse indicator in status bar."
         },
         "focusPulse.minMinutesForScore": {
           "type": "number",
           "default": 1,
           "minimum": 0.1,
-          "description": "Minutos mínimos de trabajo para que la puntuación de foco sea estable."
+          "description": "Minimum work minutes for focus score to be stable."
         },
         "focusPulse.score.timeWeight": {
           "type": "number",
           "default": 0.3,
           "minimum": 0,
-          "description": "Peso del tiempo (minutos de trabajo) en el cálculo del Focus Score."
+          "description": "Weight of time (work minutes) in Focus Score calculation."
         },
         "focusPulse.score.editsWeight": {
           "type": "number",
           "default": 8,
           "minimum": 0,
-          "description": "Peso de las ediciones por minuto en el cálculo del Focus Score."
+          "description": "Weight of edits per minute in Focus Score calculation."
         },
         "focusPulse.score.switchPenalty": {
           "type": "number",
           "default": 15,
           "minimum": 0,
-          "description": "Penalización por cambios de archivo (switches por minuto)."
+          "description": "Penalty for file changes (switches per minute)."
         },
         "focusPulse.enablePomodoro": {
           "type": "boolean",
           "default": true,
-          "description": "Mostrar el Pomodoro de Focus Pulse en la barra de estado."
+          "description": "Show Focus Pulse Pomodoro in status bar."
         },
         "focusPulse.pomodoro.workMinutes": {
           "type": "number",
           "default": 25,
           "minimum": 1,
-          "description": "Duración del bloque de trabajo (minutos)."
+          "description": "Work block duration (minutes)."
         },
         "focusPulse.pomodoro.breakMinutes": {
           "type": "number",
           "default": 5,
           "minimum": 1,
-          "description": "Duración del descanso (minutos)."
+          "description": "Break duration (minutes)."
         },
         "focusPulse.goals.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Activar objetivos diarios (minutos y pomodoros)."
+          "description": "Enable daily goals (minutes and pomodoros)."
         },
         "focusPulse.goals.minutes": {
           "type": "number",
           "default": 60,
           "minimum": 1,
-          "description": "Minutos de foco objetivo para completar el día."
+          "description": "Target focus minutes to complete the day."
         },
         "focusPulse.goals.pomodoros": {
           "type": "number",
           "default": 3,
           "minimum": 0,
-          "description": "Número de pomodoros objetivo para completar el día."
+          "description": "Target number of pomodoros to complete the day."
         },
         "focusPulse.deepWork.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Permitir el modo Deep Work en Focus Pulse."
+          "description": "Allow Deep Work mode in Focus Pulse."
         },
         "focusPulse.deepWork.durationMinutes": {
           "type": "number",
           "default": 60,
           "minimum": 10,
-          "description": "Duración de una sesión de Deep Work (minutos)."
+          "description": "Duration of a Deep Work session (minutes)."
         },
         "focusPulse.deepWork.switchPenalty": {
           "type": "number",
           "default": 40,
           "minimum": 0,
-          "description": "Penalización extra por cambios de archivo durante Deep Work."
+          "description": "Extra penalty for file changes during Deep Work."
         },
         "focusPulse.deepWork.xpBonus": {
           "type": "number",
           "default": 150,
           "minimum": 0,
-          "description": "XP extra al completar una sesión de Deep Work."
+          "description": "Extra XP upon completing a Deep Work session."
         },
         "focusPulse.githubToken": {
           "type": "string",
           "default": "",
-          "description": "GitHub Personal Access Token para sincronización (se guarda de forma segura)."
+          "description": "GitHub Personal Access Token for sync (stored securely)."
         },
         "focusPulse.assistant.personality": {
           "type": "string",
           "enum": [
-            "motivador",
-            "neutro",
+            "motivational",
+            "neutral",
             "zen",
-            "humorístico"
+            "humorous"
           ],
-          "default": "motivador",
-          "description": "Personalidad del asistente virtual (afecta el tono de los mensajes)."
+          "default": "motivational",
+          "description": "Virtual assistant personality (affects message tone)."
         },
         "focusPulse.assistant.flowProtection": {
           "type": "boolean",
           "default": true,
-          "description": "Proteger el Flow State: evitar interrupciones cuando estás muy concentrado."
+          "description": "Protect Flow State: avoid interruptions when you're highly focused."
         },
         "focusPulse.assistant.contextualMessages": {
           "type": "boolean",
           "default": true,
-          "description": "Mensajes contextuales según el tipo de archivo que estás editando."
+          "description": "Contextual messages based on the file type you're editing."
         },
         "focusPulse.notifications.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Activar el sistema de notificaciones de Focus Pulse."
+          "description": "Enable Focus Pulse notification system."
         },
         "focusPulse.notifications.style": {
           "type": "string",
@@ -306,7 +306,7 @@
             "both"
           ],
           "default": "toast",
-          "description": "Estilo de las notificaciones: nativas de VS Code, toast en dashboard, o ambas."
+          "description": "Notification style: VS Code native, dashboard toast, or both."
         },
         "focusPulse.notifications.position": {
           "type": "string",
@@ -317,44 +317,44 @@
             "bottom-left"
           ],
           "default": "top-right",
-          "description": "Posición de las notificaciones toast en el dashboard."
+          "description": "Position of toast notifications in dashboard."
         },
         "focusPulse.notifications.duration": {
           "type": "number",
           "default": 5000,
           "minimum": 1000,
           "maximum": 30000,
-          "description": "Duración de las notificaciones toast en milisegundos."
+          "description": "Duration of toast notifications in milliseconds."
         },
         "focusPulse.notifications.sound": {
           "type": "boolean",
           "default": false,
-          "description": "Reproducir sonido con las notificaciones (experimental)."
+          "description": "Play sound with notifications (experimental)."
         },
         "focusPulse.notifications.types.achievements": {
           "type": "boolean",
           "default": true,
-          "description": "Mostrar notificaciones cuando se desbloquean logros."
+          "description": "Show notifications when achievements are unlocked."
         },
         "focusPulse.notifications.types.levelUp": {
           "type": "boolean",
           "default": true,
-          "description": "Mostrar notificaciones cuando subes de nivel."
+          "description": "Show notifications when you level up."
         },
         "focusPulse.notifications.types.pomodoro": {
           "type": "boolean",
           "default": true,
-          "description": "Mostrar notificaciones cuando completas pomodoros."
+          "description": "Show notifications when you complete pomodoros."
         },
         "focusPulse.notifications.types.goals": {
           "type": "boolean",
           "default": true,
-          "description": "Mostrar notificaciones cuando completas objetivos diarios."
+          "description": "Show notifications when you complete daily goals."
         },
         "focusPulse.notifications.types.deepWork": {
           "type": "boolean",
           "default": true,
-          "description": "Mostrar notificaciones de sesiones Deep Work."
+          "description": "Show Deep Work session notifications."
         }
       }
     }

@@ -56,8 +56,8 @@ export function computeAchievements(
   if (todayStats.length > 0) {
     list.push({
       id: "first-focus",
-      title: "Primer enfoque",
-      description: "Has trabajado al menos en un archivo hoy.",
+      title: "First focus",
+      description: "You've worked on at least one file today.",
     });
   }
 
@@ -68,8 +68,8 @@ export function computeAchievements(
   if (totalTodayTimeMs >= 20 * 60 * 1000) {
     list.push({
       id: "twenty-mins",
-      title: "20 minutos de foco",
-      description: "Más de 20 minutos de trabajo hoy.",
+      title: "20 minutes of focus",
+      description: "More than 20 minutes of work today.",
     });
   }
 
@@ -77,8 +77,8 @@ export function computeAchievements(
   if (maxEdits >= 100) {
     list.push({
       id: "hundred-edits",
-      title: "Dedos de acero",
-      description: "Has hecho 100+ ediciones en un archivo hoy.",
+      title: "Steel fingers",
+      description: "You've made 100+ edits in a file today.",
     });
   }
 
@@ -87,16 +87,16 @@ export function computeAchievements(
   if (streakDays >= 3) {
     list.push({
       id: "streak-3",
-      title: "Racha x3",
-      description: `Llevas ${streakDays} días seguidos con sesión de foco.`,
+      title: "Streak x3",
+      description: `You have ${streakDays} consecutive days with focus sessions.`,
     });
   }
 
   if (streakDays >= 7) {
     list.push({
       id: "streak-7",
-      title: "Semana épica",
-      description: "7 días seguidos con trabajo registrado.",
+      title: "Epic week",
+      description: "7 consecutive days with recorded work.",
     });
   }
 
@@ -109,8 +109,8 @@ export function computeAchievements(
   if (last7.length >= 3 && avgScore7 >= 60) {
     list.push({
       id: "consistent",
-      title: "Constante",
-      description: "Media de foco ≥ 60/100 en los últimos días.",
+      title: "Consistent",
+      description: "Average focus ≥ 60/100 in recent days.",
     });
   }
   // --- Logros ligados a días / semana (heatmap-ish) ---
@@ -120,8 +120,8 @@ export function computeAchievements(
   if (heavyDay) {
     list.push({
       id: "heavy-day",
-      title: "Día intenso",
-      description: "Has tenido al menos un día con 90+ minutos de foco.",
+      title: "Intense day",
+      description: "You've had at least one day with 90+ minutes of focus.",
     });
   }
 
@@ -134,8 +134,8 @@ export function computeAchievements(
       // 5h en total
       list.push({
         id: "strong-week",
-        title: "Semana sólida",
-        description: "Más de 5 horas de foco acumuladas en los últimos 7 días.",
+        title: "Solid week",
+        description: "More than 5 hours of focus accumulated in the last 7 days.",
       });
     }
   }
@@ -152,8 +152,8 @@ export function computeAchievements(
     ) {
       list.push({
         id: "today-better",
-        title: "Hoy mejor que ayer",
-        description: "Has mejorado tu foco medio respecto al día anterior.",
+        title: "Better today than yesterday",
+        description: "You've improved your average focus compared to yesterday.",
       });
     }
   }
@@ -164,32 +164,32 @@ export function computeAchievements(
     if (xp.totalXp >= 300) {
       list.push({
         id: "xp-300",
-        title: "En marcha",
-        description: "Has acumulado al menos 300 XP de foco.",
+        title: "On your way",
+        description: "You've accumulated at least 300 focus XP.",
       });
     }
 
     if (xp.level >= 3) {
       list.push({
         id: "level-3",
-        title: "Nivel 3 alcanzado",
-        description: "Has subido hasta el nivel 3 de Focus Pulse.",
+        title: "Level 3 reached",
+        description: "You've reached level 3 of Focus Pulse.",
       });
     }
 
     if (xp.level >= 5) {
       list.push({
         id: "level-5",
-        title: "Dev disciplinado",
-        description: "Nivel 5 o superior. Llevas varias sesiones sólidas.",
+        title: "Disciplined dev",
+        description: "Level 5 or higher. You've had several solid sessions.",
       });
     }
 
     if (xp.level >= 10) {
       list.push({
         id: "level-10",
-        title: "Leyenda del foco",
-        description: "Nivel 10 o más. Tu disciplina es seria.",
+        title: "Focus legend",
+        description: "Level 10 or higher. Your discipline is serious.",
       });
     }
   }
@@ -200,33 +200,33 @@ export function computeAchievements(
     if (pomodoroStats.today >= 1) {
       list.push({
         id: "pomo-first",
-        title: "Primer pomodoro",
+        title: "First pomodoro",
         description:
-          "Has completado un bloque de trabajo con el temporizador hoy.",
+          "You've completed a work block with the timer today.",
       });
     }
 
     if (pomodoroStats.today >= 4) {
       list.push({
         id: "pomo-4-today",
-        title: "Cuatro bloques",
-        description: "Has completado 4 pomodoros en un solo día.",
+        title: "Four blocks",
+        description: "You've completed 4 pomodoros in a single day.",
       });
     }
 
     if (pomodoroStats.total >= 20) {
       list.push({
         id: "pomo-20-total",
-        title: "Acumulador de bloques",
-        description: "Has completado 20 pomodoros en total.",
+        title: "Block accumulator",
+        description: "You've completed 20 pomodoros in total.",
       });
     }
 
     if (pomodoroStats.total >= 50) {
       list.push({
         id: "pomo-50-total",
-        title: "Máquina de pomodoros",
-        description: "Has completado 50 pomodoros en total.",
+        title: "Pomodoro machine",
+        description: "You've completed 50 pomodoros in total.",
       });
     }
   }
@@ -235,22 +235,22 @@ export function computeAchievements(
     if (deepWork.completedSessions >= 1) {
       list.push({
         id: "deepwork-1",
-        title: "Primer bloque profundo",
-        description: "Has completado tu primera sesión de Deep Work.",
+        title: "First deep block",
+        description: "You've completed your first Deep Work session.",
       });
     }
     if (deepWork.completedSessions >= 5) {
       list.push({
         id: "deepwork-5",
-        title: "Hábito profundo",
-        description: "Has completado 5 sesiones de Deep Work.",
+        title: "Deep habit",
+        description: "You've completed 5 Deep Work sessions.",
       });
     }
     if (deepWork.completedSessions >= 15) {
       list.push({
         id: "deepwork-15",
-        title: "Modo monje",
-        description: "15 sesiones de Deep Work completadas.",
+        title: "Monk mode",
+        description: "15 Deep Work sessions completed.",
       });
     }
   }
@@ -518,33 +518,33 @@ export function validateCustomAchievement(achievement: CustomAchievement): {
 
   // Validar título
   if (!achievement.title || achievement.title.trim().length === 0) {
-    errors.push("El título es obligatorio");
+    errors.push("Title is required");
   }
   if (achievement.title && achievement.title.length > 50) {
-    errors.push("El título no puede exceder 50 caracteres");
+    errors.push("Title cannot exceed 50 characters");
   }
 
   // Validar descripción
   if (!achievement.description || achievement.description.trim().length === 0) {
-    errors.push("La descripción es obligatoria");
+    errors.push("Description is required");
   }
   if (achievement.description && achievement.description.length > 150) {
-    errors.push("La descripción no puede exceder 150 caracteres");
+    errors.push("Description cannot exceed 150 characters");
   }
 
   // Validar ID único
   if (!achievement.id || achievement.id.trim().length === 0) {
-    errors.push("El ID es obligatorio");
+    errors.push("ID is required");
   }
   if (achievement.id && !/^[a-zA-Z0-9_-]+$/.test(achievement.id)) {
     errors.push(
-      "El ID solo puede contener letras, números, guiones y guiones bajos",
+      "ID can only contain letters, numbers, hyphens and underscores",
     );
   }
 
   // Validar condición
   if (!achievement.condition) {
-    errors.push("La condición es obligatoria");
+    errors.push("Condition is required");
   } else {
     const conditionErrors = validateCondition(achievement.condition);
     errors.push(...conditionErrors);
@@ -552,7 +552,7 @@ export function validateCustomAchievement(achievement: CustomAchievement): {
 
   // Validar icon (opcional)
   if (achievement.icon && achievement.icon.length > 2) {
-    errors.push("El icono no puede exceder 2 caracteres");
+    errors.push("Icon cannot exceed 2 characters");
   }
 
   return {
@@ -576,7 +576,7 @@ function validateCondition(condition: AchievementCondition): string[] {
   ];
   if (!validTypes.includes(condition.type)) {
     errors.push(
-      `Tipo de condición inválido. Valores válidos: ${validTypes.join(", ")}`,
+      `Invalid condition type. Valid values: ${validTypes.join(", ")}`,
     );
   }
 
@@ -584,13 +584,13 @@ function validateCondition(condition: AchievementCondition): string[] {
   const validOperators = ["gte", "lte", "eq", "gt", "lt"];
   if (!validOperators.includes(condition.operator)) {
     errors.push(
-      `Operador inválido. Valores válidos: ${validOperators.join(", ")}`,
+      `Invalid operator. Valid values: ${validOperators.join(", ")}`,
     );
   }
 
   // Validar valor
   if (typeof condition.value !== "number" || condition.value < 0) {
-    errors.push("El valor debe ser un número positivo");
+    errors.push("Value must be a positive number");
   }
 
   // Validar timeframe para tipos que lo requieren
@@ -602,7 +602,7 @@ function validateCondition(condition: AchievementCondition): string[] {
     const validTimeframes = ["today", "week", "month", "total"];
     if (condition.timeframe && !validTimeframes.includes(condition.timeframe)) {
       errors.push(
-        `Timeframe inválido. Valores válidos: ${validTimeframes.join(", ")}`,
+        `Invalid timeframe. Valid values: ${validTimeframes.join(", ")}`,
       );
     }
   }
@@ -629,103 +629,103 @@ export function getAllAchievementsDefinitions(
   return [
     {
       id: "first-focus",
-      title: "Primer enfoque",
-      description: "Has trabajado al menos en un archivo hoy.",
+      title: "First focus",
+      description: "You've worked on at least one file today.",
     },
     {
       id: "twenty-mins",
-      title: "20 minutos de foco",
-      description: "Más de 20 minutos de trabajo hoy.",
+      title: "20 minutes of focus",
+      description: "More than 20 minutes of work today.",
     },
     {
       id: "hundred-edits",
-      title: "Dedos de acero",
-      description: "Has hecho 100+ ediciones en un archivo hoy.",
+      title: "Steel fingers",
+      description: "You've made 100+ edits in a file today.",
     },
     {
       id: "streak-3",
-      title: "Racha x3",
-      description: "Llevas al menos 3 días seguidos con sesión de foco.",
+      title: "Streak x3",
+      description: "You have at least 3 consecutive days with focus sessions.",
     },
     {
       id: "streak-7",
-      title: "Semana épica",
-      description: "7 días seguidos con trabajo registrado.",
+      title: "Epic week",
+      description: "7 consecutive days with recorded work.",
     },
     {
       id: "consistent",
-      title: "Constante",
-      description: "Media de foco ≥ 60/100 en los últimos días.",
+      title: "Consistent",
+      description: "Average focus ≥ 60/100 in recent days.",
     },
     {
       id: "heavy-day",
-      title: "Día intenso",
-      description: "Has tenido al menos un día con 90+ minutos de foco.",
+      title: "Intense day",
+      description: "You've had at least one day with 90+ minutes of focus.",
     },
     {
       id: "strong-week",
-      title: "Semana sólida",
-      description: "Más de 5 horas de foco en los últimos 7 días.",
+      title: "Solid week",
+      description: "More than 5 hours of focus in the last 7 days.",
     },
     {
       id: "today-better",
-      title: "Hoy mejor que ayer",
-      description: "Has mejorado tu foco medio respecto al día anterior.",
+      title: "Better today than yesterday",
+      description: "You've improved your average focus compared to yesterday.",
     },
     {
       id: "xp-300",
-      title: "En marcha",
-      description: "Has acumulado al menos 300 XP de foco.",
+      title: "On your way",
+      description: "You've accumulated at least 300 focus XP.",
     },
     {
       id: "level-3",
-      title: "Nivel 3 alcanzado",
-      description: "Has subido hasta el nivel 3 de Focus Pulse.",
+      title: "Level 3 reached",
+      description: "You've reached level 3 of Focus Pulse.",
     },
     {
       id: "level-5",
-      title: "Dev disciplinado",
-      description: "Nivel 5 o superior. Varias sesiones sólidas.",
+      title: "Disciplined dev",
+      description: "Level 5 or higher. Several solid sessions.",
     },
     {
       id: "level-10",
-      title: "Leyenda del foco",
-      description: "Nivel 10 o más. Tu disciplina es seria.",
+      title: "Focus legend",
+      description: "Level 10 or higher. Your discipline is serious.",
     },
     {
       id: "pomo-first",
-      title: "Primer pomodoro",
-      description: "Has completado un bloque de trabajo con el temporizador.",
+      title: "First pomodoro",
+      description: "You've completed a work block with the timer.",
     },
     {
       id: "pomo-4-today",
-      title: "Cuatro bloques",
-      description: "Has completado 4 pomodoros en un solo día.",
+      title: "Four blocks",
+      description: "You've completed 4 pomodoros in a single day.",
     },
     {
       id: "pomo-20-total",
-      title: "Acumulador de bloques",
-      description: "Has completado 20 pomodoros en total.",
+      title: "Block accumulator",
+      description: "You've completed 20 pomodoros in total.",
     },
     {
       id: "pomo-50-total",
-      title: "Máquina de pomodoros",
-      description: "Has completado 50 pomodoros en total.",
+      title: "Pomodoro machine",
+      description: "You've completed 50 pomodoros in total.",
     },
     {
       id: "deepwork-1",
-      title: "Primer bloque profundo",
-      description: "Has completado tu primera sesión de Deep Work.",
+      title: "First deep block",
+      description: "You've completed your first Deep Work session.",
     },
     {
       id: "deepwork-5",
-      title: "Hábito profundo",
-      description: "Has completado 5 sesiones de Deep Work.",
+      title: "Deep habit",
+      description: "You've completed 5 Deep Work sessions.",
     },
     {
       id: "deepwork-15",
-      title: "Modo monje",
-      description: "15 sesiones de Deep Work completadas.",
+      title: "Monk mode",
+      description: "15 Deep Work sessions completed.",
     },
   ];
 }

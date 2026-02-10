@@ -353,17 +353,17 @@ export class GitHubSyncProvider implements CloudSyncProvider {
             "1. Ve a github.com/settings/tokens\n" +
             "2. Crea un nuevo token (classic)\n" +
             '3. Da permiso de "gist" (lectura y escritura) y de "repo"\n' +
-            "4. Cópialo y pégalo cuando te lo pida abajo",
+            "4. Copy and paste it below when prompted",
         },
-        "Entendido",
+        "Understood",
       );
-      if (proceed !== "Entendido") {
+      if (proceed !== "Understood") {
         throw new Error("Authentication cancelled");
       }
 
       // Request GitHub token from user
       const token = await vscode.window.showInputBox({
-        prompt: "Pega aquí tu Personal Access Token de GitHub",
+        prompt: "Paste your GitHub Personal Access Token here",
         password: true,
         placeHolder: "ghp_xxxxxxxxxxxx...",
         validateInput: (value) => {

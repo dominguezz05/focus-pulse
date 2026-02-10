@@ -16,7 +16,7 @@ export class CustomAchievementManager {
 
     const panel = vscode.window.createWebviewPanel(
       "customAchievements",
-      "Logros Personalizados - Focus Pulse",
+      "Custom Achievements - Focus Pulse",
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -63,11 +63,11 @@ export class CustomAchievementManager {
     context: vscode.ExtensionContext,
   ): string {
     return `<!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logros Personalizados - Focus Pulse</title>
+    <title>Custom Achievements - Focus Pulse</title>
     <script>
         const vscode = acquireVsCodeApi();
     </script>
@@ -98,86 +98,86 @@ export class CustomAchievementManager {
                 </div>
                 <div>
                     <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                        Logros Personalizados
+                        Custom Achievements
                     </h1>
-                    <p class="text-slate-400">Crea tus propios logros y badges para motivarte</p>
+                    <p class="text-slate-400">Create your own achievements and badges to motivate yourself</p>
                 </div>
             </div>
         </header>
 
         <div class="grid lg:grid-cols-2 gap-8">
-            <!-- Formulario de creación -->
+            <!-- Creation form -->
             <section class="bg-slate-800 rounded-xl p-6">
                 <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
-                    <span>✨</span> Crear Nuevo Logro
+                    <span>✨</span> Create New Achievement
                 </h2>
                 
                 <form id="achievement-form" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Título</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Title</label>
                         <input type="text" id="title" maxlength="50" required
                                class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Ej: Maestro del Código">
+                               placeholder="E.g.: Code Master">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Descripción</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Description</label>
                         <textarea id="description" maxlength="150" required rows="3"
                                   class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Ej: Completa 100 minutos de foco en un día"></textarea>
+                                  placeholder="E.g.: Complete 100 minutes of focus in one day"></textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Icono (opcional)</label>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Icon (optional)</label>
                             <input type="text" id="icon" maxlength="2"
                                    class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                    placeholder="🎯">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">Color (opcional)</label>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Color (optional)</label>
                             <select id="color" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="blue">Azul</option>
-                                <option value="green">Verde</option>
-                                <option value="purple">Púrpura</option>
-                                <option value="red">Rojo</option>
-                                <option value="yellow">Amarillo</option>
-                                <option value="pink">Rosa</option>
+                                <option value="blue">Blue</option>
+                                <option value="green">Green</option>
+                                <option value="purple">Purple</option>
+                                <option value="red">Red</option>
+                                <option value="yellow">Yellow</option>
+                                <option value="pink">Pink</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">Condición</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Condition</label>
                         <div class="grid grid-cols-3 gap-3">
                             <select id="condition-type" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="focus_time">Tiempo de foco</option>
-                                <option value="streak">Racha de días</option>
-                                <option value="files_worked">Archivos trabajados</option>
+                                <option value="focus_time">Focus time</option>
+                                <option value="streak">Day streak</option>
+                                <option value="files_worked">Files worked</option>
                                 <option value="pomodoros">Pomodoros</option>
-                                <option value="xp_level">Nivel de XP</option>
-                                <option value="score_avg">Puntuación media</option>
-                                <option value="edits_count">Número de ediciones</option>
+                                <option value="xp_level">XP Level</option>
+                                <option value="score_avg">Average score</option>
+                                <option value="edits_count">Number of edits</option>
                             </select>
                             
                             <select id="condition-operator" class="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="gte">≥ (al menos)</option>
-                                <option value="gt">> (más de)</option>
-                                <option value="eq">= (exactamente)</option>
-                                <option value="lte">≤ (como máximo)</option>
-                                <option value="lt">< (menos de)</option>
+                                <option value="gte">≥ (at least)</option>
+                                <option value="gt">> (more than)</option>
+                                <option value="eq">= (exactly)</option>
+                                <option value="lte">≤ (at most)</option>
+                                <option value="lt">< (less than)</option>
                             </select>
                             
                             <input type="number" id="condition-value" min="1" required
                                    class="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="Valor">
+                                    placeholder="Value">
                         </div>
                         
                         <select id="condition-timeframe" class="mt-3 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">(total)</option>
-                            <option value="today">Hoy</option>
-                            <option value="week">Esta semana</option>
-                            <option value="month">Este mes</option>
+                            <option value="today">Today</option>
+                            <option value="week">This week</option>
+                            <option value="month">This month</option>
                         </select>
                     </div>
 
@@ -185,10 +185,10 @@ export class CustomAchievementManager {
 
                     <div class="flex gap-3 pt-4">
                         <button type="submit" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-2 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105">
-                            🚀 Crear Logro
+                            🚀 Create Achievement
                         </button>
                         <button type="button" id="preview-btn" class="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors">
-                            👁️ Vista Previa
+                            👁️ Preview
                         </button>
                     </div>
                 </form>
@@ -198,18 +198,18 @@ export class CustomAchievementManager {
             <section>
                 <!-- Vista previa -->
                 <div id="preview-section" class="hidden bg-slate-800 rounded-xl p-6 mb-6 achievement-preview relative">
-                    <button id="close-preview" aria-label="Cerrar vista previa" title="Cerrar" class="absolute right-3 top-3 text-slate-400 hover:text-white bg-slate-700/40 hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center">✖</button>
-                    <h3 class="text-lg font-semibold mb-4">Vista Previa</h3>
+                    <button id="close-preview" aria-label="Close preview" title="Close" class="absolute right-3 top-3 text-slate-400 hover:text-white bg-slate-700/40 hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center">✖</button>
+                    <h3 class="text-lg font-semibold mb-4">Preview</h3>
                     <div id="achievement-preview" class="inline-flex flex-col gap-2 rounded-lg border px-3 py-2"></div>
                 </div>
 
-                <!-- Lista de logros existentes -->
+                <!-- List of existing achievements -->
                 <div class="bg-slate-800 rounded-xl p-6">
                     <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <span>📋</span> Logros Personalizados Existentes
+                        <span>📋</span> Existing Custom Achievements
                     </h3>
                     <div id="achievements-list" class="space-y-3">
-                        <p class="text-slate-400 text-sm">Cargando logros...</p>
+                        <p class="text-slate-400 text-sm">Loading achievements...</p>
                     </div>
                 </div>
             </section>
@@ -219,12 +219,12 @@ export class CustomAchievementManager {
     <script>
         let currentAchievements = [];
 
-        // Cargar logros al iniciar
+        // Load achievements on start
         window.addEventListener('load', () => {
             vscode.postMessage({ type: 'loadAchievements' });
         });
 
-        // Formulario
+        // Form
         document.getElementById('achievement-form').addEventListener('submit', (e) => {
             e.preventDefault();
             createAchievement();
@@ -262,8 +262,8 @@ export class CustomAchievementManager {
 
         function showPreview() {
             const achievement = {
-                title: document.getElementById('title').value.trim() || 'Título del logro',
-                description: document.getElementById('description').value.trim() || 'Descripción del logro',
+                title: document.getElementById('title').value.trim() || 'Achievement title',
+                description: document.getElementById('description').value.trim() || 'Achievement description',
                 icon: document.getElementById('icon').value.trim() || '🏆',
                 color: document.getElementById('color').value
             };
@@ -337,7 +337,7 @@ export class CustomAchievementManager {
             const container = document.getElementById('achievements-list');
             
             if (!achievements || achievements.length === 0) {
-                container.innerHTML = '<p class="text-slate-400 text-sm">No hay logros personalizados aún. ¡Crea el primero!</p>';
+                container.innerHTML = '<p class="text-slate-400 text-sm">No custom achievements yet. Create the first one!</p>';
                 return;
             }
 
@@ -349,7 +349,7 @@ export class CustomAchievementManager {
                             <div class="font-medium">\${achievement.title}</div>
                             <div class="text-xs text-slate-400">\${achievement.description}</div>
                             <div class="text-xs text-slate-500 mt-1">
-                                Condición: \${formatCondition(achievement.condition)}
+                                Condition: \${formatCondition(achievement.condition)}
                             </div>
                         </div>
                     </div>
@@ -360,28 +360,28 @@ export class CustomAchievementManager {
 
         function formatCondition(condition) {
             const typeNames = {
-                focus_time: 'Tiempo de foco',
-                streak: 'Racha de días',
-                files_worked: 'Archivos trabajados',
+                focus_time: 'Focus time',
+                streak: 'Day streak',
+                files_worked: 'Files worked',
                 pomodoros: 'Pomodoros',
-                xp_level: 'Nivel de XP',
-                score_avg: 'Puntuación media',
-                edits_count: 'Ediciones'
+                xp_level: 'XP Level',
+                score_avg: 'Average score',
+                edits_count: 'Edits'
             };
 
             const operatorNames = {
-                gte: 'al menos',
-                gt: 'más de',
-                eq: 'exactamente',
-                lte: 'como máximo',
-                lt: 'menos de'
+                gte: 'at least',
+                gt: 'more than',
+                eq: 'exactly',
+                lte: 'at most',
+                lt: 'less than'
             };
 
             const timeframeNames = {
-                today: 'hoy',
-                week: 'esta semana',
-                month: 'este mes',
-                total: 'en total'
+                today: 'today',
+                week: 'this week',
+                month: 'this month',
+                total: 'in total'
             };
 
             let text = \`\${typeNames[condition.type]} \${operatorNames[condition.operator]} \${condition.value}\`;
@@ -395,10 +395,10 @@ export class CustomAchievementManager {
             const btn = e.currentTarget;
             const id = btn.getAttribute('data-id');
             if (!id) return;
-            if (!confirm('¿Estás seguro de que quieres eliminar este logro?')) return;
+            if (!confirm('Are you sure you want to delete this achievement?')) return;
             try {
                 btn.setAttribute('disabled', 'true');
-                btn.textContent = 'Eliminando...';
+                btn.textContent = 'Deleting...';
             } catch (err) {}
             vscode.postMessage({ type: 'deleteAchievement', id: id });
         }
@@ -493,7 +493,7 @@ export class CustomAchievementManager {
       console.error("Failed to save custom achievement", err);
       webview.postMessage({
         type: "validationResult",
-        data: { errors: ["No se pudo guardar el logro. Intenta de nuevo."] },
+        data: { errors: ["Could not save the achievement. Try again."] },
       });
     }
   }
@@ -511,7 +511,7 @@ export class CustomAchievementManager {
       console.error("Failed to delete custom achievement", err);
       webview.postMessage({
         type: "validationResult",
-        data: { errors: ["No se pudo eliminar el logro. Intenta de nuevo."] },
+        data: { errors: ["Could not delete the achievement. Try again."] },
       });
     }
   }

@@ -14,11 +14,11 @@ export class FeedbackModal {
                   💭
                 </div>
                 <div>
-                  <h3 class="text-lg font-bold text-slate-100">Tu opinión importa</h3>
-                  <p class="text-xs text-slate-400">Ayúdanos a mejorar Focus Pulse</p>
+                  <h3 class="text-lg font-bold text-slate-100">Your opinion matters</h3>
+                  <p class="text-xs text-slate-400">Help us improve Focus Pulse</p>
                 </div>
               </div>
-              <button id="feedback-close" class="text-slate-400 hover:text-slate-200 transition-colors text-2xl leading-none" title="Cerrar">
+              <button id="feedback-close" class="text-slate-400 hover:text-slate-200 transition-colors text-2xl leading-none" title="Close">
                 ×
               </button>
             </div>
@@ -27,7 +27,7 @@ export class FeedbackModal {
           <!-- Body -->
           <div class="px-6 py-5">
             <p class="text-slate-300 text-sm mb-4">
-              ¿Qué te gustaría ver en Focus Pulse? ¿Algún bug que reportar? ¡Cuéntanos! 🚀
+              What would you like to see in Focus Pulse? Any bugs to report? Let us know! 🚀
             </p>
 
             <form id="feedback-form" action="https://formsubmit.co/ikerdc2005@gmail.com" method="POST">
@@ -38,36 +38,36 @@ export class FeedbackModal {
               <input type="hidden" name="_captcha" value="false">
 
               <!-- Custom subject -->
-              <input type="hidden" name="_subject" value="🎯 Nuevo Feedback de Focus Pulse!">
+              <input type="hidden" name="_subject" value="🎯 New Feedback from Focus Pulse!">
 
               <!-- Success page -->
               <input type="hidden" name="_next" value="https://github.com/dominguezz05/focus-pulse/issues">
 
               <!-- User Info (auto-filled) -->
-              <input type="hidden" id="feedback-user-level" name="Nivel del Usuario" value="">
-              <input type="hidden" id="feedback-user-xp" name="XP Total" value="">
-              <input type="hidden" id="feedback-version" name="Versión" value="2.6.2">
+              <input type="hidden" id="feedback-user-level" name="User Level" value="">
+              <input type="hidden" id="feedback-user-xp" name="Total XP" value="">
+              <input type="hidden" id="feedback-version" name="Version" value="2.7.0">
 
               <!-- Feedback Type -->
               <div class="mb-4">
                 <label class="block text-slate-300 text-sm font-medium mb-2">
-                  Tipo de feedback
+                  Feedback type
                 </label>
                 <div class="grid grid-cols-3 gap-2">
                   <label class="relative">
-                    <input type="radio" name="Tipo" value="Sugerencia" class="peer sr-only" checked>
+                    <input type="radio" name="Type" value="Suggestion" class="peer sr-only" checked>
                     <div class="px-3 py-2 text-center rounded-lg border border-slate-600 cursor-pointer transition-all peer-checked:border-blue-500 peer-checked:bg-blue-500/20 peer-checked:text-blue-300 text-slate-400 text-xs font-medium hover:border-slate-500">
                       💡 Idea
                     </div>
                   </label>
                   <label class="relative">
-                    <input type="radio" name="Tipo" value="Bug" class="peer sr-only">
+                    <input type="radio" name="Type" value="Bug" class="peer sr-only">
                     <div class="px-3 py-2 text-center rounded-lg border border-slate-600 cursor-pointer transition-all peer-checked:border-red-500 peer-checked:bg-red-500/20 peer-checked:text-red-300 text-slate-400 text-xs font-medium hover:border-slate-500">
                       🐛 Bug
                     </div>
                   </label>
                   <label class="relative">
-                    <input type="radio" name="Tipo" value="Mejora UX" class="peer sr-only">
+                    <input type="radio" name="Type" value="UX Improvement" class="peer sr-only">
                     <div class="px-3 py-2 text-center rounded-lg border border-slate-600 cursor-pointer transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500/20 peer-checked:text-emerald-300 text-slate-400 text-xs font-medium hover:border-slate-500">
                       ✨ UX
                     </div>
@@ -78,13 +78,13 @@ export class FeedbackModal {
               <!-- Email (optional) -->
               <div class="mb-4">
                 <label for="feedback-email" class="block text-slate-300 text-sm font-medium mb-2">
-                  Tu email <span class="text-slate-500 text-xs">(opcional, para respuesta)</span>
+                  Your email <span class="text-slate-500 text-xs">(optional, for reply)</span>
                 </label>
                 <input
                   type="email"
                   id="feedback-email"
                   name="Email"
-                  placeholder="tu@email.com"
+                  placeholder="your@email.com"
                   class="w-full px-3 py-2 bg-slate-700/40 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 >
               </div>
@@ -92,17 +92,17 @@ export class FeedbackModal {
               <!-- Message -->
               <div class="mb-4">
                 <label for="feedback-message" class="block text-slate-300 text-sm font-medium mb-2">
-                  Tu mensaje <span class="text-red-400">*</span>
+                  Your message <span class="text-red-400">*</span>
                 </label>
                 <textarea
                   id="feedback-message"
-                  name="Mensaje"
+                  name="Message"
                   required
                   rows="4"
-                  placeholder="Ejemplo: Me gustaría que añadieran modo oscuro personalizable..."
+                  placeholder="Example: I'd like you to add customizable dark mode..."
                   class="w-full px-3 py-2 bg-slate-700/40 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
                 ></textarea>
-                <p class="text-xs text-slate-500 mt-1">Mínimo 10 caracteres</p>
+                <p class="text-xs text-slate-500 mt-1">Minimum 10 characters</p>
               </div>
 
               <!-- Actions -->
@@ -112,20 +112,20 @@ export class FeedbackModal {
                   id="feedback-cancel"
                   class="flex-1 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-all border border-slate-600"
                 >
-                  Cancelar
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-blue-500/25"
                 >
-                  Enviar Feedback 🚀
+                  Send Feedback 🚀
                 </button>
               </div>
             </form>
 
             <!-- Privacy note -->
             <p class="text-xs text-slate-500 text-center mt-3">
-              🔒 Tu feedback es privado y nos ayuda a mejorar
+              🔒 Your feedback is private and helps us improve
             </p>
           </div>
         </div>
@@ -135,7 +135,7 @@ export class FeedbackModal {
       <button
         id="feedback-button"
         class="fixed bottom-6 left-6 w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-2xl shadow-blue-500/50 flex items-center justify-center text-2xl transition-all transform hover:scale-110 z-40"
-        title="Enviar feedback"
+        title="Send feedback"
       >
         💬
       </button>
@@ -196,13 +196,13 @@ export class FeedbackModal {
 
           const message = document.getElementById('feedback-message').value;
           if (message.length < 10) {
-            alert('Por favor, escribe al menos 10 caracteres en tu mensaje.');
+            alert('Please write at least 10 characters in your message.');
             return;
           }
 
           // Collect feedback data
           const feedbackData = {
-            type: document.querySelector('input[name="Tipo"]:checked').value,
+            type: document.querySelector('input[name="Type"]:checked').value,
             message: message,
             email: document.getElementById('feedback-email').value || undefined,
             userLevel: parseInt(document.getElementById('feedback-user-level').value) || 0,
@@ -214,7 +214,7 @@ export class FeedbackModal {
           const submitBtn = form.querySelector('button[type="submit"]');
           const originalText = submitBtn.textContent;
           submitBtn.disabled = true;
-          submitBtn.textContent = 'Enviando...';
+          submitBtn.textContent = 'Sending...';
 
           // Send to FormSubmit via AJAX (email backup)
           const formData = new FormData(form);

@@ -351,7 +351,7 @@ export function activate(context: vscode.ExtensionContext) {
   const assistantService = AssistantService.getInstance();
   const config = vscode.workspace.getConfiguration("focusPulse");
   assistantService.updateConfig({
-    personality: config.get<"motivador" | "neutro" | "zen" | "humorístico">("assistant.personality", "motivador"),
+          personality: config.get<"motivational" | "neutral" | "zen" | "humorous">("assistant.personality", "motivational"),
     flowProtection: config.get<boolean>("assistant.flowProtection", true),
     contextualMessages: config.get<boolean>("assistant.contextualMessages", true),
     enableFatigueDetection: true,
@@ -397,7 +397,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const handlers = [
     vscode.commands.registerCommand("focusPulse.openDashboard", () => {
-      console.log("Abriendo dashboard refactorizado");
+      console.log("Opening refactored dashboard");
       openRefactoredDashboard(context);
     }),
     vscode.commands.registerCommand("focusPulse.openDashboardLegacy", () => {
@@ -454,11 +454,11 @@ export function activate(context: vscode.ExtensionContext) {
         const assistantService = AssistantService.getInstance();
         const config = vscode.workspace.getConfiguration("focusPulse");
         assistantService.updateConfig({
-          personality: config.get<"motivador" | "neutro" | "zen" | "humorístico">("assistant.personality", "motivador"),
+    personality: config.get<"motivational" | "neutral" | "zen" | "humorous">("assistant.personality", "motivational"),
           flowProtection: config.get<boolean>("assistant.flowProtection", true),
           contextualMessages: config.get<boolean>("assistant.contextualMessages", true),
         });
-        console.log("Configuración del asistente actualizada");
+        console.log("Assistant configuration updated");
       }
     }),
   ];

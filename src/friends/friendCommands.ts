@@ -93,18 +93,18 @@ export function registerFriendCommands(
 
         // Mostrar opciones de compartir
         const action = await vscode.window.showInformationMessage(
-          `✅ ¡Perfil compartido!\n\n📋 Link copiado al portapapeles\n🔗 ${gistUrl}`,
-          "Ver instrucciones completas",
-          "Copiar username",
-          "Abrir gist"
+          `✅ Profile shared!\n\n📋 Link copied to clipboard\n🔗 ${gistUrl}`,
+          "View full instructions",
+          "Copy username",
+          "Open gist"
         );
 
-        if (action === "Ver instrucciones completas") {
+        if (action === "View full instructions") {
           vscode.window.showInformationMessage(shortInstruction, { modal: true });
-        } else if (action === "Copiar username") {
+        } else if (action === "Copy username") {
           await vscode.env.clipboard.writeText(login);
-          vscode.window.showInformationMessage(`Username copiado: ${login}`);
-        } else if (action === "Abrir gist") {
+          vscode.window.showInformationMessage(`Username copied: ${login}`);
+        } else if (action === "Open gist") {
           vscode.env.openExternal(vscode.Uri.parse(gistUrl));
         }
 
@@ -113,7 +113,7 @@ export function registerFriendCommands(
         eventBus.emit(FOCUS_EVENTS.DASHBOARD_REFRESH, { reason: "manual" });
       } catch (err) {
         vscode.window.showErrorMessage(
-          `Focus Pulse: Error al compartir perfil — ${err}`,
+          `Focus Pulse: Error sharing profile — ${err}`,
         );
       }
     },
@@ -127,28 +127,28 @@ export function registerFriendCommands(
       try {
         const mode = await vscode.window.showQuickPick(
           [
-            { label: "🔗 Por link del gist (recomendado)", value: "gistId", description: "Pega el link que te compartió tu amigo" },
-            { label: "👤 Por nombre de usuario de GitHub", value: "username", description: "Buscará en todos sus gists públicos" },
+            { label: "🔗 By gist link (recommended)", value: "gistId", description: "Paste the link your friend shared with you" },
+            { label: "👤 By GitHub username", value: "username", description: "Will search all their public gists" },
           ],
-          { placeHolder: "¿Cómo deseas añadir al amigo?" },
+          { placeHolder: "How would you like to add the friend?" },
         );
         if (!mode) return;
 
         const placeholder =
           mode.value === "username"
-            ? "Ejemplo: octocat"
-            : "Pega el link del gist o solo el ID";
+            ? "Example: octocat"
+            : "Paste gist link or just the ID";
 
         const prompt =
           mode.value === "username"
-            ? "Nombre de usuario de GitHub"
-            : "Link o ID del gist de Focus Pulse";
+            ? "GitHub username"
+            : "Focus Pulse gist link or ID";
 
         const value = await vscode.window.showInputBox({
           prompt,
           placeHolder: placeholder,
           validateInput: (v) =>
-            v && v.trim().length > 0 ? undefined : "Campo obligatorio",
+            v && v.trim().length > 0 ? undefined : "Required field",
         });
         if (!value) return;
 
@@ -157,12 +157,12 @@ export function registerFriendCommands(
         if (mode.value === "username") {
           await fs.addFriendByUsername(trimmed);
           vscode.window.showInformationMessage(
-            `Focus Pulse: ¡${trimmed} añadido como amigo!`,
+            `Focus Pulse: ${trimmed} added as friend!`,
           );
         } else {
           const entry = await fs.addFriendByGistId(trimmed);
           vscode.window.showInformationMessage(
-            `Focus Pulse: ¡${entry.username} añadido como amigo!`,
+            `Focus Pulse: ${entry.username} added as friend!`,
           );
         }
 
@@ -170,7 +170,7 @@ export function registerFriendCommands(
         eventBus.emit(FOCUS_EVENTS.DASHBOARD_REFRESH, { reason: "manual" });
       } catch (err) {
         vscode.window.showErrorMessage(
-          `Focus Pulse: Error al añadir amigo — ${err}`,
+          `Focus Pulse: Error adding friend — ${err}`,
         );
       }
     },
@@ -185,7 +185,7 @@ export function registerFriendCommands(
         const friends = fs.loadFriends();
         if (friends.length === 0) {
           vscode.window.showInformationMessage(
-            "Focus Pulse: No tienes amigos añadidos.",
+            "Focus Pulse: You have no friends added.",
           );
           return;
         }
@@ -194,30 +194,30 @@ export function registerFriendCommands(
           friends.map((f) => ({
             label: f.username,
             description: f.cachedProfile
-              ? `Nivel ${f.cachedProfile.level}`
-              : "Sin datos",
+              ? `Level ${f.cachedProfile.level}`
+              : "No data",
           })),
-          { placeHolder: "Selecciona el amigo a eliminar" },
+          { placeHolder: "Select friend to remove" },
         );
         if (!picked) return;
 
         const confirm = await vscode.window.showInformationMessage(
-          `¿Eliminar a ${picked.label} de tu lista de amigos?`,
-          "Sí",
+          `Remove ${picked.label} from your friends list?`,
+          "Yes",
           "No",
         );
-        if (confirm !== "Sí") return;
+        if (confirm !== "Yes") return;
 
         await fs.removeFriend(picked.label);
         vscode.window.showInformationMessage(
-          `Focus Pulse: ${picked.label} ha sido eliminado.`,
+          `Focus Pulse: ${picked.label} has been removed.`,
         );
 
         const eventBus = getEventBus();
         eventBus.emit(FOCUS_EVENTS.DASHBOARD_REFRESH, { reason: "manual" });
       } catch (err) {
         vscode.window.showErrorMessage(
-          `Focus Pulse: Error al eliminar amigo — ${err}`,
+          `Focus Pulse: Error removing friend — ${err}`,
         );
       }
     },

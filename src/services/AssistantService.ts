@@ -24,7 +24,7 @@ export interface AssistantConfig {
   driftThreshold: number; // switches per minute
   motivationThreshold: number; // focus score
   messageCooldown: number; // minutes between messages
-  personality: "motivador" | "neutro" | "zen" | "humorístico";
+  personality: "motivational" | "neutral" | "zen" | "humorous";
   flowProtection: boolean; // Don't interrupt during flow state
   contextualMessages: boolean; // File-type specific messages
 }
@@ -68,9 +68,15 @@ export class AssistantService {
       driftThreshold: 2, // 2 switches per minute
       motivationThreshold: 80, // 80+ focus score
       messageCooldown: 5, // 5 minutes between messages
-      personality: config.get<"motivador" | "neutro" | "zen" | "humorístico">("assistant.personality", "motivador"),
+      personality: config.get<"motivational" | "neutral" | "zen" | "humorous">(
+        "assistant.personality",
+        "motivational",
+      ),
       flowProtection: config.get<boolean>("assistant.flowProtection", true),
-      contextualMessages: config.get<boolean>("assistant.contextualMessages", true),
+      contextualMessages: config.get<boolean>(
+        "assistant.contextualMessages",
+        true,
+      ),
     };
   }
 
@@ -128,19 +134,19 @@ export class AssistantService {
   ): void {
     const celebrationMessages = {
       achievement: [
-        `¡Increíble! Has desbloqueado: ${details?.title || "nuevo logro"}`,
-        "¡Eres una máquina! Nuevo logro conseguido",
-        "¡Brillante! Tu esfuerzo ha sido recompensado",
+        `Incredible! You've unlocked: ${details?.title || "new achievement"}`,
+        "You're a machine! New achievement earned",
+        "Brilliant! Your effort has been rewarded",
       ],
       level: [
-        `¡Nivel ${details?.level || "superior"} alcanzado! Sigue creciendo`,
-        "¡Subiendo de nivel! Tu progreso es impresionante",
-        "¡Nuevo nivel alcanzado! No te detengas ahora",
+        `Level ${details?.level || "up"} reached! Keep growing`,
+        "Level up! Your progress is impressive",
+        "New level reached! Don't stop now",
       ],
       streak: [
-        `¡Racha de ${details?.days || "varios"} días intacta! Tu constancia es admirable`,
-        "¡Sigue así! Tu racha continúa firme",
-        "¡Imparable! Tu racha sigue creciendo",
+        `Streak of ${details?.days || "several"} days intact! Your consistency is admirable`,
+        "Keep it up! Your streak stays strong",
+        "Unstoppable! Your streak continues to grow",
       ],
     };
 
@@ -158,7 +164,7 @@ export class AssistantService {
   private triggerDeepWorkStart(data: any): void {
     const duration = data.duration || "ilimitado";
     this.sendMessage("show", {
-      message: `¡Modo Deep Work activado! Sesión de ${duration} minutos sin distracciones`,
+      message: `Deep Work mode activated! ${duration}-minute session with zero distractions`,
       state: "FOCUSED",
       duration: 3000,
     });
@@ -169,7 +175,7 @@ export class AssistantService {
     const score = data.score || 0;
 
     this.sendMessage("show", {
-      message: `¡Deep Work completado! ${duration} minutos de concentración pura (Score: ${score})`,
+      message: `Deep Work complete! ${duration} minutes of pure focus (Score: ${score})`,
       state: "SUCCESS",
       duration: 5000,
     });
@@ -178,7 +184,7 @@ export class AssistantService {
   private triggerPomodoroComplete(data: any): void {
     const cycle = data.cycle || 1;
     this.sendMessage("show", {
-      message: `¡Pomodoro número ${cycle} completado! Tiempo de un pequeño descanso`,
+      message: `Pomodoro number ${cycle} complete! Time for a short break`,
       state: "IDLE",
       duration: 4000,
     });
@@ -246,9 +252,9 @@ export class AssistantService {
     this.scoreHistory.push({ timestamp: now, score });
 
     // Mantener solo los últimos 30 minutos de historial
-    const thirtyMinutesAgo = now - (30 * 60 * 1000);
+    const thirtyMinutesAgo = now - 30 * 60 * 1000;
     this.scoreHistory = this.scoreHistory.filter(
-      entry => entry.timestamp > thirtyMinutesAgo
+      (entry) => entry.timestamp > thirtyMinutesAgo,
     );
   }
 
@@ -256,9 +262,9 @@ export class AssistantService {
     if (this.scoreHistory.length < 5) return 0;
 
     // Calcular tendencia de decline usando los últimos 10 minutos
-    const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+    const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
     const recentScores = this.scoreHistory.filter(
-      entry => entry.timestamp > tenMinutesAgo
+      (entry) => entry.timestamp > tenMinutesAgo,
     );
 
     if (recentScores.length < 3) return 0;
@@ -267,7 +273,10 @@ export class AssistantService {
     const n = recentScores.length;
     const sumX = recentScores.reduce((sum, entry, i) => sum + i, 0);
     const sumY = recentScores.reduce((sum, entry) => sum + entry.score, 0);
-    const sumXY = recentScores.reduce((sum, entry, i) => sum + i * entry.score, 0);
+    const sumXY = recentScores.reduce(
+      (sum, entry, i) => sum + i * entry.score,
+      0,
+    );
     const sumX2 = recentScores.reduce((sum, entry, i) => sum + i * i, 0);
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
@@ -300,13 +309,16 @@ export class AssistantService {
       const currentFileContext = this.getCurrentFileContext(state);
       return {
         type: "warning",
-        message: this.getPredictiveMessage(scoreDeclineRate, currentFileContext),
+        message: this.getPredictiveMessage(
+          scoreDeclineRate,
+          currentFileContext,
+        ),
         priority: "medium",
         state: "WARNING",
         data: {
           sessionDuration,
           scoreDeclineRate,
-          timeUntilFatigue: Math.round(timeUntilFatigue)
+          timeUntilFatigue: Math.round(timeUntilFatigue),
         },
       };
     }
@@ -316,7 +328,7 @@ export class AssistantService {
       const currentFileContext = this.getCurrentFileContext(state);
       return {
         type: "warning",
-        message: `⚠️ Tu foco está cayendo rápido. Considera un break de 5 min antes de continuar`,
+        message: `⚠️ Your focus is dropping fast. Consider a 5-min break before continuing`,
         priority: "high",
         state: "WARNING",
         data: { scoreDeclineRate },
@@ -328,17 +340,17 @@ export class AssistantService {
 
   private getPredictiveMessage(declineRate: number, context?: string): string {
     const messages = [
-      "📉 Detecto que tu enfoque está bajando. ¿Un break preventivo en 10 min?",
-      "⏰ Tu score está declinando. Planea un descanso pronto para mantener la calidad",
-      "🔮 Predicción: Fatiga en ~10 min. Considera pausar antes de llegar ahí",
-      "💡 Tu rendimiento está bajando gradualmente. Un break ahora = mejor productividad después"
+      "📉 Detecting a drop in your focus. Consider a preventive break in 10 minutes",
+      "⏰ Your score is declining. Plan a break soon to maintain quality",
+      "🔮 Prediction: Fatigue in ~10 min. Consider pausing before reaching that point",
+      "💡 Your performance is gradually declining. A break now = better productivity later",
     ];
 
     // Mensajes contextuales según el tipo de archivo
     if (context === "test") {
-      return "🧪 Tests requieren precisión. Tu foco está bajando - considera un break antes de continuar";
+      return "🧪 Tests require precision. Your focus is dropping - consider a break before continuing";
     } else if (context === "backend") {
-      return "🏗️ Lógica crítica necesita enfoque total. Tu score está cayendo - break preventivo recomendado";
+      return "🏗️ Critical logic needs full focus. Your score is declining - preventive break recommended";
     }
 
     return messages[Math.floor(Math.random() * messages.length)];
@@ -414,7 +426,7 @@ export class AssistantService {
     if (minutesProgress > 80 && pomodorosProgress > 80 && !goals.allDone) {
       return {
         type: "tip",
-        message: `¡Casi completas los objetivos de hoy! ${Math.round(minutesProgress)}% minutos y ${Math.round(pomodorosProgress)}% pomodoros`,
+        message: `Almost completed today's goals! ${Math.round(minutesProgress)}% minutes and ${Math.round(pomodorosProgress)}% pomodoros`,
         priority: "medium",
         state: "FOCUSED",
         data: { minutesProgress, pomodorosProgress },
@@ -424,7 +436,7 @@ export class AssistantService {
     if (minutesProgress > 40 && minutesProgress < 60 && !goals.doneMinutes) {
       return {
         type: "tip",
-        message: `¡Vas por buen camino! ${Math.round(minutesProgress)}% del tiempo objetivo completado`,
+        message: `You're on a good path! ${Math.round(minutesProgress)}% of target time completed. Keep the momentum going!`,
         priority: "low",
         state: "IDLE",
         data: { minutesProgress },
@@ -471,7 +483,8 @@ export class AssistantService {
     // 2. Recent activity (edits in last 5 min)
     // 3. Low context switching (< 3 switches in last 10 min)
     // 4. Minimum session duration (>= 15 min)
-    const sessionDuration = (Date.now() - (session.startTime || 0)) / (1000 * 60);
+    const sessionDuration =
+      (Date.now() - (session.startTime || 0)) / (1000 * 60);
 
     return (
       focus.averageScore >= 75 &&
@@ -529,27 +542,56 @@ export class AssistantService {
     const lower = fileName.toLowerCase();
 
     // Test files
-    if (lower.includes(".test.") || lower.includes(".spec.") || lower.includes("test/") || lower.includes("__tests__/")) {
+    if (
+      lower.includes(".test.") ||
+      lower.includes(".spec.") ||
+      lower.includes("test/") ||
+      lower.includes("__tests__/")
+    ) {
       return "test";
     }
 
     // Configuration files
-    if (lower.includes("config") || lower.endsWith(".json") || lower.endsWith(".yaml") || lower.endsWith(".yml") || lower.endsWith(".toml")) {
+    if (
+      lower.includes("config") ||
+      lower.endsWith(".json") ||
+      lower.endsWith(".yaml") ||
+      lower.endsWith(".yml") ||
+      lower.endsWith(".toml")
+    ) {
       return "config";
     }
 
     // Documentation
-    if (lower.endsWith(".md") || lower.endsWith(".txt") || lower.includes("readme") || lower.includes("doc")) {
+    if (
+      lower.endsWith(".md") ||
+      lower.endsWith(".txt") ||
+      lower.includes("readme") ||
+      lower.includes("doc")
+    ) {
       return "documentation";
     }
 
     // Frontend files
-    if (lower.endsWith(".tsx") || lower.endsWith(".jsx") || lower.endsWith(".vue") || lower.endsWith(".svelte") || lower.endsWith(".html") || lower.endsWith(".css") || lower.endsWith(".scss")) {
+    if (
+      lower.endsWith(".tsx") ||
+      lower.endsWith(".jsx") ||
+      lower.endsWith(".vue") ||
+      lower.endsWith(".svelte") ||
+      lower.endsWith(".html") ||
+      lower.endsWith(".css") ||
+      lower.endsWith(".scss")
+    ) {
       return "frontend";
     }
 
     // Backend files
-    if (lower.includes("api/") || lower.includes("server/") || lower.includes("backend/") || lower.includes("service")) {
+    if (
+      lower.includes("api/") ||
+      lower.includes("server/") ||
+      lower.includes("backend/") ||
+      lower.includes("service")
+    ) {
       return "backend";
     }
 
@@ -558,7 +600,7 @@ export class AssistantService {
 
   private getPersonalityMessage(
     type: "fatigue" | "drift" | "motivation" | "tip",
-    context?: string
+    context?: string,
   ): string {
     // Si hay contexto específico, usar mensajes contextuales
     if (context && this.config.contextualMessages) {
@@ -567,90 +609,90 @@ export class AssistantService {
     }
 
     const messages = {
-      motivador: {
+      motivational: {
         fatigue: [
-          "¡Campeón! Has trabajado duro. Una pausa corta te hará más productivo 💪",
-          "¡Gran esfuerzo! Tu cerebro necesita recargarse. Un descanso y vuelves con todo 🔋",
-          "¡Excelente sesión! Tómate 5 minutos, te los has ganado 🌟"
+          "Champion! You've worked hard. A short break will make you more productive 💪",
+          "Great effort! Your brain needs to recharge. Rest and come back stronger 🔋",
+          "Excellent session! Take 5 minutes, you've earned them 🌟",
         ],
         drift: [
-          "¡Enfoca esa energía! Vuelve al archivo principal y destroza esa tarea 🎯",
-          "¡Tú puedes! Elige un archivo y dale con todo. Un paso a la vez 🚀",
-          "¡Concentración! Sé que puedes mantener el foco. Vamos 💪"
+          "Focus that energy! Return to the main file and crush that task 🎯",
+          "You can do it! Choose one file and give it your all. One step at a time 🚀",
+          "Concentration! I know you can maintain focus. Let's go 💪",
         ],
         motivation: [
-          "¡INCREÍBLE! Estás arrasando. Sigue así, campeón 🔥",
-          "¡WOW! Tu nivel de concentración es épico. No pares ahora 🚀",
-          "¡BESTIAL! Estás en tu mejor momento. A por más 💪"
+          "INCREDIBLE! You're crushing it. Keep it up, champion 🔥",
+          "WOW! Your concentration level is epic. Don't stop now 🚀",
+          "BEAST MODE! You're at your best. Go for more 💪",
         ],
         tip: [
-          "💡 Pro tip: Los breaks de 5 min cada 25 min potencian tu rendimiento",
-          "🎯 Secreto: Una tarea a la vez. Multitasking = enemigo del foco"
-        ]
+          "💡 Pro tip: 5-min breaks every 25 min boost your performance",
+          "🎯 Secret: One task at a time. Multitasking = focus enemy",
+        ],
       },
       zen: {
         fatigue: [
-          "El descanso es parte del trabajo. Respira hondo, camina 5 minutos 🍃",
-          "Tu mente necesita espacio. Una pausa consciente restaura la claridad 🧘",
-          "Observa el cansancio sin juzgar. Un break te devolverá al presente 🌊"
+          "Rest is part of work. Take a deep breath, walk 5 minutes 🍃",
+          "Your mind needs space. A mindful pause restores clarity 🧘",
+          "Observe fatigue without judgment. A break brings you back to present 🌊",
         ],
         drift: [
-          "La mente divaga. Observa sin juzgar, luego regresa al presente 🧘",
-          "Como agua que fluye, vuelve suavemente al cauce principal 🌊",
-          "Nota la distracción, respira, regresa al foco con compasión 🍃"
+          "Mind wanders. Observe without judgment, then return to present 🧘",
+          "Like flowing water, gently return to the main channel 🌊",
+          "Note the distraction, breathe, return to focus with compassion 🍃",
         ],
         motivation: [
-          "Fluyes con el trabajo. Esta es la esencia del flow 🌊",
-          "Presente y enfocado. El camino se revela paso a paso 🍃",
-          "En equilibrio con la tarea. Continúa con esta presencia 🧘"
+          "You flow with work. This is the essence of flow 🌊",
+          "Present and focused. The path reveals itself step by step 🍃",
+          "In balance with the task. Continue with this presence 🧘",
         ],
         tip: [
-          "🍃 Respiración consciente: 3 respiros profundos antes de cada tarea",
-          "🌊 El foco es un músculo. Se entrena con paciencia y constancia"
-        ]
+          "🍃 Conscious breathing: 3 deep breaths before each task",
+          "🌊 Focus is a muscle. Trained with patience and consistency",
+        ],
       },
-      humorístico: {
+      humorous: {
         fatigue: [
-          "Tu cerebro está pidiendo café a gritos ☕️ (o un power nap)",
-          "Alerta: Niveles de café peligrosamente bajos. ¡Break time! ☕",
-          "¿Cansado? Yo también... y soy una IA. Imagínate tú 😅"
+          "Your brain is screaming for coffee ☕️ (or a power nap)",
+          "Warning: Dangerously low caffeine levels. Break time! ☕",
+          "Tired? Me too... and I'm an AI. Imagine you 😅",
         ],
         drift: [
-          "¿Perdido en tabs? Pareces yo buscando las llaves del coche 🔑",
-          "Tab switching nivel: DJ haciendo scratch 🎵 Vuelve al beat principal",
-          "Houston, tenemos un problema de focus 🚀 ¡A tierra otra vez!"
+          "Lost in tabs? You look like me searching for car keys 🔑",
+          "Tab switching level: DJ scratching 🎵 Return to the main beat",
+          "Houston, we have a focus problem 🚀 Back to Earth!",
         ],
         motivation: [
-          "¡MODO BESTIA ACTIVADO! 🦁 Sigues imparable",
-          "¿Eres humano o máquina? Porque estás ON FIRE 🔥",
-          "Plot twist: Tú eres el protagonista y estás ganando 🎮"
+          "BEAST MODE ACTIVATED! 🦁 You're unstoppable",
+          "Human or machine? Because you're ON FIRE 🔥",
+          "Plot twist: You're the protagonist and you're winning 🎮",
         ],
         tip: [
-          "🍕 Break = recarga de superpoderes. No lo saltes, héroe",
-          "🎮 Productividad es un juego. Tú vs. Distracciones. Estás ganando"
-        ]
+          "🍕 Break = superpower recharge. Don't skip it, hero",
+          "🎮 Productivity is a game. You vs. Distractions. You're winning",
+        ],
       },
-      neutro: {
+      neutral: {
         fatigue: [
-          "Llevas tiempo trabajando. Considera tomar un descanso breve",
-          "Tu sesión ha sido larga. Un break de 5-10 minutos es recomendable",
-          "Tiempo de descanso. Las pausas mejoran el rendimiento general"
+          "You've been working for a while. Consider taking a short break",
+          "Your session has been long. A 5-10 minute break is recommended",
+          "Rest time. Breaks improve overall performance",
         ],
         drift: [
-          "Detectados múltiples cambios de archivo. Concéntrate en uno principal",
-          "Alto nivel de context switching. Reduce cambios para mejor foco",
-          "Considera trabajar en un archivo por vez para mantener concentración"
+          "Multiple file changes detected. Focus on one main file",
+          "High context switching level. Reduce changes for better focus",
+          "Consider working on one file at a time to maintain concentration",
         ],
         motivation: [
-          "Excelente nivel de concentración. Continúa con este ritmo",
-          "Tu score de foco es alto. Buen trabajo",
-          "Rendimiento óptimo detectado. Mantén este enfoque"
+          "Excellent concentration level. Continue at this pace",
+          "Your focus score is high. Good work",
+          "Optimal performance detected. Maintain this focus",
         ],
         tip: [
-          "Técnica Pomodoro: 25 min trabajo + 5 min break = productividad",
-          "Un archivo a la vez reduce carga cognitiva y mejora resultados"
-        ]
-      }
+          "Pomodoro Technique: 25 min work + 5 min break = productivity",
+          "One file at a time reduces cognitive load and improves results",
+        ],
+      },
     };
 
     const personality = this.config.personality;
@@ -660,105 +702,101 @@ export class AssistantService {
 
   private getContextualMessage(
     type: "fatigue" | "drift" | "motivation" | "tip",
-    fileContext: string
+    fileContext: string,
   ): string | null {
     const contextualMessages: Record<string, Record<string, string[]>> = {
       test: {
         motivation: [
-          "¡Tests pasando! Tu código es más sólido ahora 🧪",
-          "¡Testing como un pro! La calidad se agradece 🧪",
-          "¡TDD en acción! Los tests son tu red de seguridad 🎯"
+          "Tests passing! Your code is more solid now 🧪",
+          "Testing like a pro! Quality is always appreciated 🧪",
+          "TDD in action! Tests are your safety net 🎯",
         ],
         tip: [
-          "💡 Recuerda: Un test bien escrito es documentación viva 📚",
-          "🧪 Tip: Tests unitarios rápidos = feedback instantáneo",
-          "✅ Cobertura > 80% = tranquilidad mental"
+          "💡 Remember: A well-written test is living documentation 📚",
+          "🧪 Tip: Fast unit tests = instant feedback",
+          "✅ Coverage > 80% = peace of mind",
         ],
         fatigue: [
-          "Escribir tests requiere concentración. Descansa y vuelve con ideas frescas 🧪",
-          "Los mejores tests se escriben con mente despejada. Break time ☕"
+          "Writing tests requires focus. Rest and come back with a fresh perspective 🧪",
+          "The best tests are written with a clear mind. Break time ☕",
         ],
         drift: [
-          "Focus en los tests actuales. Un caso a la vez 🎯",
-          "Testing requiere concentración. Vuelve al archivo de test principal 🧪"
-        ]
+          "Focus on the current tests. One case at a time 🎯",
+          "Testing requires concentration. Get back to the main test file 🧪",
+        ],
       },
       frontend: {
         motivation: [
-          "¡La UI está tomando forma! 🎨",
-          "¡Frontend impecable! Los usuarios lo van a amar 💅",
-          "¡Componentes que brillan! Tu UI skills están on fire 🔥"
+          "The UI is taking shape! 🎨",
+          "Flawless frontend! Users are going to love it 💅",
+          "Components that shine! Your UI skills are on fire 🔥",
         ],
         tip: [
-          "💡 Considera revisar la accesibilidad (a11y) de este componente ♿",
-          "🎨 Tip: Responsive first = usuarios felices en todos los dispositivos",
-          "⚡ Performance tip: Lazy loading para componentes pesados"
+          "💡 Consider checking the accessibility (a11y) of this component ♿",
+          "🎨 Tip: Responsive first = happy users on all devices",
+          "⚡ Performance tip: Lazy loading for heavy components",
         ],
         fatigue: [
-          "El diseño requiere creatividad fresca. Un break te traerá nuevas ideas 🎨",
-          "Los mejores diseños surgen con mente descansada. Tómate un respiro 💅"
+          "Design requires fresh creativity. A break will bring new ideas 🎨",
+          "The best designs come from a rested mind. Take a breather 💅",
         ],
         drift: [
-          "Focus en el componente actual. La UI se construye pieza por pieza 🎨",
-          "Demasiados componentes abiertos. Enfócate en uno a la vez 💅"
-        ]
+          "Focus on the current component. UI is built piece by piece 🎨",
+          "Too many components open. Focus on one at a time 💅",
+        ],
       },
       backend: {
         motivation: [
-          "¡APIs robustas = usuarios felices! 🚀",
-          "¡Backend sólido! La arquitectura está impecable 🏗️",
-          "¡Lógica de negocio on point! Eres una máquina 💪"
+          "Robust APIs = happy users! 🚀",
+          "Solid backend! The architecture is flawless 🏗️",
+          "Business logic on point! You're a machine 💪",
         ],
         tip: [
-          "💡 ¿Validaste los edge cases en este endpoint? 🔍",
-          "🔒 Security tip: Sanitiza todos los inputs del usuario",
-          "⚡ Performance: Considera índices en las queries frecuentes"
+          "💡 Did you validate the edge cases for this endpoint? 🔍",
+          "🔒 Security tip: Sanitize all user inputs",
+          "⚡ Performance: Consider indexes for frequent queries",
         ],
         fatigue: [
-          "La lógica compleja requiere mente fresca. Break time para evitar bugs 🐛",
-          "Backend crítico necesita concentración total. Descansa y vuelve fuerte 💪"
+          "Complex logic requires a fresh mind. Break time to avoid bugs 🐛",
+          "Critical backend work needs total focus. Rest and come back strong 💪",
         ],
         drift: [
-          "Focus en este endpoint. Una API a la vez 🎯",
-          "Demasiados servicios abiertos. Enfócate en la lógica actual 🏗️"
-        ]
+          "Focus on this endpoint. One API at a time 🎯",
+          "Too many services open. Focus on the current logic 🏗️",
+        ],
       },
       documentation: {
         motivation: [
-          "¡Documentando! Futuro tú te lo agradecerá 📝",
-          "¡Docs de calidad! El equipo te lo va a agradecer 📚",
-          "¡Clarity in writing! Las mejores docs del proyecto 🌟"
+          "Documenting! Future you will thank you 📝",
+          "Quality docs! The team is going to appreciate this 📚",
+          "Clarity in writing! The best docs in the project 🌟",
         ],
         tip: [
-          "💡 Buena docs = menos preguntas en Slack 💬",
-          "📚 Tip: Ejemplos de código > mil palabras",
-          "✨ Docs actualizadas = equipo productivo"
+          "💡 Good docs = fewer questions on Slack 💬",
+          "📚 Tip: Code examples > a thousand words",
+          "✨ Updated docs = productive team",
         ],
         fatigue: [
-          "Escribir docs claras requiere mente fresca. Tómate un break 📝",
-          "La claridad viene con descanso. Pausa y vuelve con energía 📚"
+          "Writing clear docs requires a fresh mind. Take a break 📝",
+          "Clarity comes with rest. Pause and come back with energy 📚",
         ],
         drift: [
-          "Focus en esta sección. Docs coherentes se escriben con foco 📝",
-          "Un documento a la vez. La claridad requiere concentración 📚"
-        ]
+          "Focus on this section. Consistent docs are written with focus 📝",
+          "One document at a time. Clarity requires concentration 📚",
+        ],
       },
       config: {
         motivation: [
-          "¡Configuración impecable! El setup es crucial ⚙️",
-          "¡Config on point! Todo va a funcionar smooth 🛠️"
+          "Flawless configuration! The setup is crucial ⚙️",
+          "Config on point! Everything will run smoothly 🛠️",
         ],
         tip: [
-          "💡 Documenta por qué cada config existe. Futuro tú lo agradecerá 📝",
-          "⚙️ Tip: Variables de entorno para configs sensibles"
+          "💡 Document why each config exists. Future you will thank you 📝",
+          "⚙️ Tip: Use environment variables for sensitive configs",
         ],
-        fatigue: [
-          "Configuraciones requieren precisión. Descansa para evitar errores ⚙️"
-        ],
-        drift: [
-          "Focus en este archivo de config. Uno a la vez 🛠️"
-        ]
-      }
+        fatigue: ["Configurations require precision. Rest to avoid errors ⚙️"],
+        drift: ["Focus on this config file. One at a time 🛠️"],
+      },
     };
 
     const contextMessages = contextualMessages[fileContext];
@@ -839,7 +877,7 @@ export class AssistantService {
     if (!this.peakAnalyzer.isGoodTimeToWork(currentHour, history)) {
       setTimeout(() => {
         this.sendMessage("show", {
-          message: `💡 Esta hora (${this.formatHour(currentHour)}) no es tu momento más productivo. Considera tareas más ligeras`,
+          message: `💡 This hour (${this.formatHour(currentHour)}) isn't your peak productivity time. Consider lighter tasks`,
           state: "IDLE",
           duration: 5000,
         });
@@ -858,7 +896,7 @@ export class AssistantService {
     if (!isGoodTime && this.isStartingSession()) {
       return {
         type: "tip",
-        message: `⏰ Según tus datos, ${this.formatHour(analysis.bestHour)} es tu mejor hora. Considera tareas ligeras ahora`,
+        message: `⏰ According to your data, ${this.formatHour(analysis.bestHour)} is your peak window. Consider lighter tasks for now`,
         priority: "low",
         state: "IDLE",
         data: { currentHour, bestHour: analysis.bestHour },
@@ -869,7 +907,7 @@ export class AssistantService {
     if (isGoodTime && Math.random() > 0.7) {
       return {
         type: "motivation",
-        message: `✨ Estás en tu hora pico de productividad. ¡Aprovecha este momentum!`,
+        message: `✨ You're in your peak productivity hour. Make the most of this momentum!`,
         priority: "low",
         state: "FOCUSED",
         data: { currentHour },
@@ -906,7 +944,7 @@ export class AssistantService {
     if (avgScore >= this.config.motivationThreshold) {
       insights.push({
         type: "motivation",
-        message: `¡Excelente enfoque general! Score promedio: ${Math.round(avgScore)}/100`,
+        message: `Excellent focus overall! Average score: ${Math.round(avgScore)}/100`,
         priority: "low",
         state: "FOCUSED",
         data: { avgScore },
@@ -916,7 +954,7 @@ export class AssistantService {
     if (data.streak > 0 && data.streak % 7 === 0) {
       insights.push({
         type: "celebration",
-        message: `¡${data.streak} días seguidos de productividad! Eres constante`,
+        message: `${data.streak} straight days of productivity! You're so consistent`,
         priority: "high",
         state: "SUCCESS",
         data: { streak: data.streak },
@@ -936,13 +974,14 @@ export class AssistantService {
 
   triggerManualInsight(type: string, customMessage?: string): void {
     const insights: Record<string, string> = {
-      fatigue: "Recuerda tomar pausas regulares",
-      drift: "Concéntrate en una tarea a la vez",
-      motivation: "¡Tú puedes! Falta poco",
-      tip: "El trabajo profundo es la clave",
+      fatigue: "Remember to take regular breaks",
+      drift: "Concentrate on one task at a time",
+      motivation: "You've got this! You're almost there",
+      tip: "Deep work is the key to mastering complex tasks. Try to minimize distractions and focus deeply for at least 25 minutes",
     };
 
-    const message = customMessage || insights[type] || "Deepy está aquí para ayudarte";
+    const message =
+      customMessage || insights[type] || "Deepy is here to help you focus!";
     const state = type === "fatigue" || type === "drift" ? "WARNING" : "IDLE";
 
     this.sendMessage("show", {
@@ -1020,14 +1059,15 @@ export class AssistantService {
 
     if (stats.totalCommits === 0) {
       this.sendMessage("show", {
-        message: "📊 No hay commits en los últimos días. ¡Es hora de crear algo!",
+        message:
+          "📊 No commits in the last few days. It's time to create something!",
         state: "IDLE",
         duration: 4000,
       });
       return;
     }
 
-    const message = `📊 Últimos ${days} días: ${stats.totalCommits} commits (${stats.avgCommitsPerDay}/día). Día más productivo: ${stats.mostProductiveDay}`;
+    const message = `📊 Last ${days} days: ${stats.totalCommits} commits (${stats.avgCommitsPerDay}/day). Most productive day: ${stats.mostProductiveDay}`;
 
     this.sendMessage("show", {
       message,

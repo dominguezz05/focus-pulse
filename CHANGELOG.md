@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.7.0] (2026-02-10)
+
+### 🌍 Full English Translation
+
+**Complete i18n - Professional English Throughout**
+
+- All dashboard UI translated to English
+- Friends system: "Share Profile", "Searching...", "User", etc.
+- Feedback modal: All validation messages in English
+- Consistent professional terminology
+- Ready for international users
+
+---
+
 ### [2.6.2] (2026-02-09)
 
 ### 🎯 New Features
