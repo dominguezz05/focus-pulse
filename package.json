@@ -2,7 +2,7 @@
   "name": "focus-pulse",
   "displayName": "Focus Pulse",
   "description": "Track your focus level per file with Pomodoro timers, XP progression, achievements, and a real-time dashboard.",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "publisher": "dominguezz05",
   "license": "MIT",
   "engines": {
