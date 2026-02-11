@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.7.1] - (2026-02-11)
+
+### Added
+
+- **GitHub Action**: Automated Git tagging system triggered on `main` branch merges, synchronized with JSON versioning.
+
+---
+
 ### [2.7.0] (2026-02-10)
 
 ### 🌍 Full English Translation

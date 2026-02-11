@@ -1,0 +1,49 @@
+name: Create Tag from JSON Version
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+jobs:
+  tagging:
+    runs-on: ubuntu-latest
+    # Solo se ejecuta si el PR se aceptó y fusionó
+    if: github.event.pull_request.merged == true
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from JSON
+        id: get_version
+        run: |
+
+          VERSION=$(jq -r '.version' package.json)
+          echo "VERSION=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG_NAME=${{ steps.get_version.outputs.VERSION }}
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Git Tag
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ steps.get_version.outputs.VERSION }}',
+              sha: context.sha
+            })

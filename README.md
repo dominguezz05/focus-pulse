@@ -5,7 +5,7 @@
 ### _Your AI-Powered Coding Companion for Deep Work_
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.7.0-informational)
+![Version](https://img.shields.io/badge/version-2.7.1-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
@@ -338,9 +338,9 @@ The AI assistant will:
 
 ## 🖼️ Dashboard Preview
 
-### Main Dashboard v2.4
+### Main Dashboard v2.7
 
-![Focus Pulse Dashboard v2.4](media/focus-pulse-dashboard-v2.2.png)
+![Focus Pulse Dashboard v2.7](media/focus-pulse-dashboard-v2.2.png)
 
 ---
 
