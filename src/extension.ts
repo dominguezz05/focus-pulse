@@ -51,6 +51,7 @@ import { AssistantService } from "./services/AssistantService";
 import { NotificationService } from "./notifications/NotificationService";
 import { getEventBus } from "./events";
 import { FOCUS_EVENTS } from "./events/EventTypes";
+import { formatDate } from "./utils/formatters";
 
 let previousGoals: DailyGoalProgress | undefined;
 
@@ -76,7 +77,7 @@ function computeDailyGoals(
   const targetPomodoros = config.get<number>("goals.targetPomodoros", 4);
 
   // Calcular minutos y pomodoros de hoy
-  const today = new Date().toISOString().split("T")[0];
+  const today = formatDate(new Date());
   const todayHistory = fullHistory.find((h) => h.date === today);
   let minutesDone = 0;
   let pomodorosDone = 0;

@@ -39,3 +39,13 @@ export function formatTimer(seconds: number): string {
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
+
+/**
+ * Format milliseconds to "Xm Ys" or "Xs" format (used in UI components)
+ */
+export function formatTimeShort(ms: number): string {
+  const m = Math.floor(ms / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  if (m === 0) return `${s}s`;
+  return `${m}m ${s}s`;
+}
