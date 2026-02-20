@@ -74,7 +74,6 @@ function computeXpStateFromTotal(totalXp: number): XpState {
     level,
     xpInLevel: xpRemaining,
     xpToNext,
-    lastXpGain: 0, // Unused field from StateTypes
   };
 }
 
