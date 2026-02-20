@@ -466,10 +466,27 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(...handlers, ...watchers);
 
-  // Loop principal con mejor rendimiento
+  // Event-driven updates: trigger updateAll on significant events for real-time feel
+  const eventBus = getEventBus();
+  let updateQueued = false;
+
+  const queueUpdate = () => {
+    if (!updateQueued) {
+      updateQueued = true;
+      setTimeout(() => {
+        updateAll(context);
+        updateQueued = false;
+      }, 100); // Debounce to 100ms
+    }
+  };
+
+  eventBus.on(FOCUS_EVENTS.FILE_EDIT_OCCURRED, queueUpdate);
+  eventBus.on(FOCUS_EVENTS.FILE_SWITCH_OCCURRED, queueUpdate);
+
+  // Background loop for periodic recalculations (reduced from 2s to 5s)
   setInterval(() => {
     updateAll(context);
-  }, 2000);
+  }, 5000);
 }
 
 export function deactivate() {
