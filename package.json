@@ -57,7 +57,7 @@
     "onCommand:focusPulse.addFriend",
     "onCommand:focusPulse.removeFriend"
   ],
-  "main": "./out/extension-refactored.js",
+  "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
@@ -363,7 +363,7 @@
     "vscode:prepublish": "npm run bundle",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "bundle": "esbuild ./src/extension-refactored.ts --bundle --outfile=out/extension-refactored.js --external:vscode --format=cjs --platform=node",
+    "bundle": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
     "lint": "echo \"No lint configured\"",
     "test": "echo \"No tests\"",
     "package": "vsce package --no-dependencies",

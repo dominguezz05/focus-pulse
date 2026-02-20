@@ -12,12 +12,8 @@ import {
   getStatsArray,
   FocusSummary,
   resetFocusStats,
+  FocusStats,
 } from "./focusTracker";
-import { openRefactoredDashboard, updateRefactoredDashboard, setupDashboardEventListeners } from "./dashboard-refactored";
-import { getStateManager, type AppState } from "./state/StateManager";
-
-// Legacy imports - commented out for clarity
-// import { openDashboard, updateDashboard } from "./dashboard";
 import {
   initStorage,
   updateHistoryFromStats,
@@ -33,16 +29,38 @@ import {
   getAllAchievementsDefinitions,
 } from "./achievements";
 import { computeXpState, PomodoroStats } from "./xp";
-
 import { DailyGoalProgress } from "./goals";
 import {
   initDeepWork,
   toggleDeepWork,
   checkDeepWorkCompletion,
   getDeepWorkState,
+  DeepWorkState,
 } from "./deepWork";
-import type { DeepWorkState } from "./deepWork";
-import { openDashboard, updateDashboard } from "./dashboard";
+import {
+  openRefactoredDashboard,
+  updateRefactoredDashboard,
+  setupDashboardEventListeners,
+} from "./dashboard";
+import { getStateManager, type AppState, setGlobalContext } from "./state/StateManager";
+import { CustomAchievementManager } from "./webview/CustomAchievementManager";
+import { registerExportCommands } from "./export/exportCommands";
+import { registerSyncCommands } from "./export/syncCommands";
+import { registerFriendCommands } from "./friends/friendCommands";
+import { AssistantService } from "./services/AssistantService";
+import { NotificationService } from "./notifications/NotificationService";
+import { getEventBus } from "./events";
+import { FOCUS_EVENTS } from "./events/EventTypes";
+
+let previousGoals: DailyGoalProgress | undefined;
+
+// Module-level tracking for event deduplication.
+// Using plain variables (not StateManager) makes this immune to async races
+// in concurrent updateAll() calls: the write happens synchronously right after
+// the emit, so the next concurrent read always sees the updated value.
+let lastEmittedLevel = 0;
+let lastEmittedXp = 0;
+const emittedAchievementIds = new Set<string>();
 
 // ---------------- Objetivos diarios ----------------
 
@@ -54,21 +72,25 @@ function computeDailyGoals(
   const enabled = config.get<boolean>("goals.enabled", true);
   if (!enabled) return undefined;
 
-  const targetMinutes = config.get<number>("goals.minutes", 60);
-  const targetPomodoros = config.get<number>("goals.pomodoros", 3);
+  const targetMinutes = config.get<number>("goals.targetMinutes", 120);
+  const targetPomodoros = config.get<number>("goals.targetPomodoros", 4);
 
-  const todayDate = new Date();
-  const yyyy = todayDate.getFullYear();
-  const mm = String(todayDate.getMonth() + 1).padStart(2, "0");
-  const dd = String(todayDate.getDate()).padStart(2, "0");
-  const todayKey = `${yyyy}-${mm}-${dd}`;
+  // Calcular minutos y pomodoros de hoy
+  const today = new Date().toISOString().split("T")[0];
+  const todayHistory = fullHistory.find((h) => h.date === today);
+  let minutesDone = 0;
+  let pomodorosDone = 0;
 
-  const todayHistory = fullHistory.find((h) => h.date === todayKey);
-  const minutesDone = todayHistory ? todayHistory.totalTimeMs / 60000 : 0;
-  const pomodorosDone = pomodoroStats?.today ?? 0;
+  if (todayHistory) {
+    minutesDone = todayHistory.totalTimeMs / 60000;
+    if (pomodoroStats) {
+      pomodorosDone = pomodoroStats.today || 0;
+    }
+  }
 
   const doneMinutes = minutesDone >= targetMinutes;
   const donePomodoros = pomodorosDone >= targetPomodoros;
+  const allDone = doneMinutes && donePomodoros;
 
   return {
     enabled,
@@ -78,7 +100,7 @@ function computeDailyGoals(
     pomodorosDone,
     doneMinutes,
     donePomodoros,
-    allDone: doneMinutes && donePomodoros,
+    allDone,
   };
 }
 
@@ -118,6 +140,9 @@ async function exportHistory(format: "json" | "csv", target: vscode.Uri) {
 
 async function updateAll(context: vscode.ExtensionContext) {
   refreshStatusBar();
+  
+  // Initialize eventBus early for notification events
+  const eventBus = getEventBus();
 
   const statsArray = getStatsArray();
   await updateHistoryFromStats(statsArray);
@@ -130,27 +155,120 @@ async function updateAll(context: vscode.ExtensionContext) {
   const pomodoroStats = getPomodoroStats();
   const goals = computeDailyGoals(fullHistory, pomodoroStats);
 
+  const currentState = getStateManager().getState();
+
   const xp = computeXpState(fullHistory, pomodoroStats, deepWorkState);
+
+  // Emit XP earned event if XP increased (guarded by module-level tracker)
+  if (xp.totalXp > lastEmittedXp) {
+    eventBus.emit(FOCUS_EVENTS.XP_EARNED, {
+      amount: xp.totalXp - lastEmittedXp,
+      source: 'session',
+      totalXp: xp.totalXp,
+      timestamp: Date.now()
+    });
+    lastEmittedXp = xp.totalXp;
+  }
+
+  // Emit level up event if level increased (guarded by module-level tracker)
+  if (xp.level > lastEmittedLevel) {
+    eventBus.emit(FOCUS_EVENTS.LEVEL_UP, {
+      newLevel: xp.level,
+      totalXp: xp.totalXp,
+      timestamp: Date.now()
+    });
+    lastEmittedLevel = xp.level;
+  }
+
+  // Persist xp to state for dashboard / other consumers
+  getStateManager().setState({ xp: { ...currentState.xp, ...xp } });
+  
   const weeklySummary = buildWeeklySummaryFromHistory(fullHistory);
   const history7 = getLastDays(7);
-  const streak = getStreakDays(fullHistory);
-
+  const streakDaysArray = getStreakDays(fullHistory);
+  const streakCount = Array.isArray(streakDaysArray)
+    ? streakDaysArray.length
+    : streakDaysArray;
+  
   const unlockedAchievements = computeAchievements(
-    Array.isArray(streak) ? streak.length : streak,
+    streakCount,
     history7,
     statsArray as FocusSummary[],
+    xp,
+    pomodoroStats,
+    goals,
+    deepWorkState,
+    context,
   );
 
-  const allDefs = getAllAchievementsDefinitions(unlockedAchievements);
+  // Emit achievement unlocked events for truly new achievements (module-level tracker)
+  const newUnlocked = unlockedAchievements.filter(a => !emittedAchievementIds.has(a.id));
+
+  newUnlocked.forEach(achievement => {
+    emittedAchievementIds.add(achievement.id);
+    eventBus.emit(FOCUS_EVENTS.ACHIEVEMENT_UNLOCKED, {
+      achievement: {
+        title: achievement.title,
+        description: achievement.description,
+        id: achievement.id
+      },
+      timestamp: Date.now()
+    });
+  });
+
+  // Persist unlocked set to state for dashboard / other consumers
+  if (newUnlocked.length > 0) {
+    getStateManager().setState({
+      achievements: {
+        ...currentState.achievements,
+        unlocked: Array.from(emittedAchievementIds),
+        lastUnlocked: newUnlocked[newUnlocked.length - 1].id,
+        lastCheckTime: Date.now()
+      }
+    });
+  }
+
+  // Emit goal events on state transitions
+  if (goals) {
+    if (previousGoals) {
+      if (goals.doneMinutes && !previousGoals.doneMinutes) {
+        eventBus.emit(FOCUS_EVENTS.GOAL_COMPLETED, {
+          type: 'minutes',
+          current: goals.minutesDone,
+          target: goals.targetMinutes,
+          completed: true,
+          timestamp: Date.now()
+        });
+      }
+      if (goals.donePomodoros && !previousGoals.donePomodoros) {
+        eventBus.emit(FOCUS_EVENTS.GOAL_COMPLETED, {
+          type: 'pomodoros',
+          current: goals.pomodorosDone,
+          target: goals.targetPomodoros,
+          completed: true,
+          timestamp: Date.now()
+        });
+      }
+    }
+    previousGoals = goals;
+  }
+
+  const allDefs = getAllAchievementsDefinitions();
   const mergedAll = allDefs.map((a) => ({
     ...a,
     unlocked: unlockedAchievements.some((u) => u.id === a.id),
   }));
 
-  updateDashboard({
+  // Análisis de picos de rendimiento del asistente (una vez al día)
+  const assistantService = AssistantService.getInstance();
+  if (fullHistory.length >= 5) {
+    assistantService.analyzeAndShowPeakPerformance(fullHistory);
+  }
+
+  updateRefactoredDashboard({
     stats: statsArray,
     history7,
-    streak,
+    streak: streakCount,
     achievements: unlockedAchievements,
     xp,
     pomodoroStats,
@@ -168,47 +286,54 @@ function buildWeeklySummaryFromHistory(history: HistoryDay[]) {
     { totalMinutes: number; totalScore: number; days: number }
   >();
 
-  for (const h of history) {
-    const d = new Date(h.date);
-    const year = d.getFullYear();
-    const week = getWeekNumber(d); // helper abajo
-    const key = `${year}-W${String(week).padStart(2, "0")}`;
-    const entry = byWeek.get(key) ?? {
-      totalMinutes: 0,
-      totalScore: 0,
-      days: 0,
-    };
-    entry.totalMinutes += h.totalTimeMs / 60000;
-    entry.totalScore += h.avgScore;
-    entry.days += 1;
-    byWeek.set(key, entry);
-  }
+  history.forEach((day) => {
+    const date = new Date(day.date);
+    const year = date.getFullYear();
+    const weekNum = getWeekNumber(date);
+    const weekKey = `${year}-W${weekNum.toString().padStart(2, "0")}`;
+
+    if (!byWeek.has(weekKey)) {
+      byWeek.set(weekKey, { totalMinutes: 0, totalScore: 0, days: 0 });
+    }
+
+    const weekData = byWeek.get(weekKey)!;
+    weekData.totalMinutes += day.totalTimeMs / 60000;
+    weekData.totalScore += day.avgScore;
+    weekData.days += 1;
+  });
 
   return Array.from(byWeek.entries())
-    .map(([weekLabel, v]) => ({
+    .map(([weekLabel, data]) => ({
       weekLabel,
-      totalMinutes: v.totalMinutes,
-      avgScore: v.days ? v.totalScore / v.days : 0,
+      totalMinutes: data.totalMinutes,
+      avgScore: data.days > 0 ? data.totalScore / data.days : 0,
     }))
-    .sort((a, b) => (a.weekLabel < b.weekLabel ? -1 : 1));
+    .sort((a, b) => a.weekLabel.localeCompare(b.weekLabel))
+    .slice(-8); // Last 8 weeks
 }
 
-function getWeekNumber(d: Date): number {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil(((+date - +yearStart) / 86400000 + 1) / 7);
+function getWeekNumber(date: Date): number {
+  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+  const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 }
-
-// ---------------- Activación extensión ----------------
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Focus Pulse v2.1 activado con refactor de componentes");
 
+  // Set global context for state manager
+  setGlobalContext(context);
+
   // Initialize state and events
   const stateManager = getStateManager();
-  stateManager.load();
+  stateManager.load(); // get() is sync so state is populated immediately
+
+  // Seed dedup trackers from persisted state so we don't re-emit on restart
+  const persisted = stateManager.getState();
+  lastEmittedLevel = persisted.xp.level;
+  lastEmittedXp = persisted.xp.totalXp;
+  persisted.achievements.unlocked.forEach(id => emittedAchievementIds.add(id));
+
   setupDashboardEventListeners(context);
 
   initStorage(context);
@@ -216,138 +341,139 @@ export function activate(context: vscode.ExtensionContext) {
   initPomodoro(context);
   initDeepWork(context);
 
+  // Initialize Notification Service  
+  const notificationService = new NotificationService(getEventBus());
+  context.subscriptions.push({
+    dispose: () => notificationService.dispose()
+  });
+
+  // Initialize Assistant Service with configuration
+  const assistantService = AssistantService.getInstance();
+  const config = vscode.workspace.getConfiguration("focusPulse");
+  assistantService.updateConfig({
+          personality: config.get<"motivational" | "neutral" | "zen" | "humorous">("assistant.personality", "motivational"),
+    flowProtection: config.get<boolean>("assistant.flowProtection", true),
+    contextualMessages: config.get<boolean>("assistant.contextualMessages", true),
+    enableFatigueDetection: true,
+    enableDriftDetection: true,
+    enableMotivationMessages: true,
+    enableCelebrations: true,
+    sessionTimeThreshold: 90,
+    driftThreshold: 2,
+    motivationThreshold: 80,
+    messageCooldown: 5,
+  });
+
+  // Register export/import commands
+  registerExportCommands(context);
+
+  // Register sync commands
+  registerSyncCommands(context);
+
+  // Register friend commands
+  registerFriendCommands(context);
+
+  // Register notification commands (reusa la instancia ya creada)
+  const { registerNotificationCommands } = require('./notifications/NotificationCommands');
+  registerNotificationCommands(context, notificationService);
+
+  // Auto-authenticate with stored token (persists across window reloads)
+  (async () => {
+    try {
+      const { GitHubSyncProvider, UserSyncManager } = require('./export/UserSyncManager');
+      const provider = new GitHubSyncProvider();
+      provider.setContext(context);
+      const storedUser = await provider.authenticateWithStoredToken();
+      if (storedUser) {
+        const syncMgr = UserSyncManager.getInstance();
+        await syncMgr.setProvider(provider);
+        await syncMgr.setCurrentUser(storedUser);
+        console.log('Focus Pulse: auto-authenticated as', storedUser.email);
+      }
+    } catch (e) {
+      console.log('Focus Pulse: auto-auth skipped:', e);
+    }
+  })();
+
   const handlers = [
-  vscode.commands.registerCommand("focusPulse.openDashboard", () => {
+    vscode.commands.registerCommand("focusPulse.openDashboard", () => {
+      console.log("Opening refactored dashboard");
       openRefactoredDashboard(context);
     }),
     vscode.commands.registerCommand("focusPulse.openDashboardLegacy", () => {
       // Keep original as fallback for testing
-      vscode.window.showInformationMessage("Focus Pulse: Using legacy dashboard for compatibility");
     }),
-    vscode.commands.registerCommand("focusPulse.exportData", async (args: any) => {
-      await exportHistory(args.format, args.target);
-    }),
+    vscode.commands.registerCommand(
+      "focusPulse.exportData",
+      async (args: any) => {
+        await exportHistory(args.format, args.target);
+      },
+    ),
     vscode.commands.registerCommand("focusPulse.resetHistory", async () => {
       resetFocusStats();
       clearHistory();
       await stateManager.reset();
-      vscode.window.showInformationMessage("Focus Pulse: histórico y estado reiniciados.");
+      // Reset dedup trackers so future level-ups / achievements emit correctly
+      lastEmittedLevel = 0;
+      lastEmittedXp = 0;
+      emittedAchievementIds.clear();
+      vscode.window.showInformationMessage(
+        "Focus Pulse: histórico y estado reiniciados.",
+      );
     }),
-    vscode.commands.registerCommand("focusPulse.toggleDeepWork", () => {
+    vscode.commands.registerCommand("focusPulse.deepWorkToggle", () => {
       toggleDeepWork(context);
     }),
-    vscode.commands.registerCommand("focusPulse.togglePomodoro", () => {
+    vscode.commands.registerCommand("focusPulse.pomodoroToggle", () => {
       togglePomodoro(context);
+    }),
+    vscode.commands.registerCommand("focusPulse.createCustomAchievement", () => {
+      CustomAchievementManager.show(context);
+    }),
+    vscode.commands.registerCommand("focusPulse.manageCustomAchievements", () => {
+      CustomAchievementManager.show(context);
+    }),
+    vscode.commands.registerCommand("focusPulse.showGitStats", async () => {
+      const assistantService = AssistantService.getInstance();
+      await assistantService.showGitStats(7);
     }),
   ];
 
-  
+  const watchers = [
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      handleEditorChange(editor);
+      updateAll(context);
+    }),
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      handleTextDocumentChange(event);
+      updateAll(context);
+    }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      // Actualizar configuración del asistente cuando cambie en settings
+      if (event.affectsConfiguration("focusPulse.assistant")) {
+        const assistantService = AssistantService.getInstance();
+        const config = vscode.workspace.getConfiguration("focusPulse");
+        assistantService.updateConfig({
+    personality: config.get<"motivational" | "neutral" | "zen" | "humorous">("assistant.personality", "motivational"),
+          flowProtection: config.get<boolean>("assistant.flowProtection", true),
+          contextualMessages: config.get<boolean>("assistant.contextualMessages", true),
+        });
+        console.log("Assistant configuration updated");
+      }
+    }),
+  ];
+
+  context.subscriptions.push(...handlers, ...watchers);
 
   // Loop principal con mejor rendimiento
   setInterval(() => {
     updateAll(context);
-  },2000);
-
-  const editorChangeDisposable = vscode.window.onDidChangeActiveTextEditor(
-    (editor) => {
-      handleEditorChange(editor);
-      updateAll(context);
-    },
-  );
-  context.subscriptions.push(editorChangeDisposable);
-
-  const editDisposable = vscode.workspace.onDidChangeTextDocument((event) => {
-    handleTextDocumentChange(event);
-    updateAll(context);
-  });
-  context.subscriptions.push(editDisposable);
-
-  const commandExportData = vscode.commands.registerCommand(
-    "focusPulse.exportData",
-    async (args: any) => {
-      if (!args || !args.format || !args.target) return;
-      const format = args.format === "csv" ? "csv" : "json";
-      const uri = args.target as vscode.Uri;
-      await exportHistory(format, uri);
-    },
-  );
-  context.subscriptions.push(commandExportData);
-
-  const commandShowStats = vscode.commands.registerCommand(
-    "focusPulse.showStats",
-    () => {
-      const stats = getCurrentStats();
-      if (!stats) {
-        vscode.window.showInformationMessage(
-          "Focus Pulse: no hay estadísticas para el archivo actual.",
-        );
-        return;
-      }
-
-      const score = computeFocusScore(stats);
-      const message =
-        `Focus Pulse\n\n` +
-        `Archivo: ${stats.fileName}\n` +
-        `Puntuación de foco: ${score}/100\n` +
-        `Tiempo total: ${formatMinutes(stats.timeMs)}\n` +
-        `Ediciones: ${stats.edits}\n` +
-        `Cambios de fichero: ${stats.switches}`;
-
-      vscode.window.showInformationMessage(message, { modal: true });
-    },
-  );
-  context.subscriptions.push(commandShowStats);
-
-  const commandOpenDashboard = vscode.commands.registerCommand(
-    "focusPulse.openDashboard",
-    () => {
-      openDashboard(context);
-      updateAll(context);
-    },
-  );
-  context.subscriptions.push(commandOpenDashboard);
-
-  const commandDeepWorkToggle = vscode.commands.registerCommand(
-    "focusPulse.deepWorkToggle",
-    async () => {
-      const state = await toggleDeepWork(context);
-      setDeepWorkState(state);
-    },
-  );
-  context.subscriptions.push(commandDeepWorkToggle);
-
-  const commandPomodoroToggle = vscode.commands.registerCommand(
-    "focusPulse.pomodoroToggle",
-     () => {
-      togglePomodoro(context);
-     },
-  );
-  context.subscriptions.push(commandPomodoroToggle);
-
-  const commandResetData = vscode.commands.registerCommand(
-    "focusPulse.resetData",
-    async () => {
-      const answer = await vscode.window.showWarningMessage(
-        "Esto borrará el histórico de días, racha y XP calculada. ¿Seguro?",
-        "Sí, resetear",
-        "Cancelar",
-      );
-      if (answer !== "Sí, resetear") {
-        return;
-      }
-
-      resetFocusStats();
-      await clearHistory();
-      await updateAll(context);
-
-      vscode.window.showInformationMessage(
-        "Focus Pulse: histórico y XP reseteados.",
-      );
-    },
-  );
-  context.subscriptions.push(commandResetData);
+  }, 2000);
 }
 
 export function deactivate() {
-  // nada especial
+  // Limpiar recursos del asistente
+  const assistantService = AssistantService.getInstance();
+  assistantService.destroy();
+  console.log("Focus Pulse desactivado - recursos liberados");
 }
