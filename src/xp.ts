@@ -1,13 +1,10 @@
 import type { HistoryDay } from "./storage";
 import type { DeepWorkState } from "./deepWork";
+import type { XpState } from "./state/StateTypes";
 import * as vscode from "vscode";
 
-export interface XpState {
-  totalXp: number;
-  level: number;
-  xpInLevel: number;
-  xpToNext: number;
-}
+// Re-export XpState for backward compatibility
+export type { XpState };
 
 export interface PomodoroStats {
   today: number;

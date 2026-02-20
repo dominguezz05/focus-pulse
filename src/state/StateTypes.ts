@@ -41,8 +41,8 @@ export interface XpState {
   level: number;
   xpInLevel: number;
   xpToNext: number;
-  lastXpGain: number;
-  lastXpSource: string;
+  lastXpGain?: number; // Optional - not actively used
+  lastXpSource?: string; // Optional - not actively used
 }
 
 export interface DeepWorkState {

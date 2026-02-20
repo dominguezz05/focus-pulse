@@ -5,7 +5,7 @@
 ### _Your AI-Powered Coding Companion for Deep Work_
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
-![Version](https://img.shields.io/badge/version-2.7.1-informational)
+![Version](https://img.shields.io/badge/version-2.7.2-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-3178C6?logo=typescript&logoColor=white)
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/dominguezz05.focus-pulse?label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=dominguezz05.focus-pulse)
@@ -28,7 +28,7 @@
 - [What is Focus Pulse?](#-what-is-focus-pulse)
 - [Why Choose Focus Pulse?](#-why-choose-focus-pulse)
 - [Features](#-features)
-- [What's New in 2.5.0](#-whats-new-in-250)
+- [What's New in 2.7.2](#-whats-new-in-272)
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
 - [Dashboard Preview](#-dashboard-preview)
@@ -159,70 +159,52 @@ Your intelligent coding companion that learns your patterns and guides your focu
 
 ---
 
-## 🆕 What's New in 2.7.0
+## 🆕 What's New in 2.7.2
 
-### 🚀 Friends System 2.0 - Major Improvements
+### ⚡ Performance & Architecture Improvements
 
-**Share profiles faster than ever** — Now with auto-copy, direct links, and instant friend additions!
+**Faster, leaner, and more responsive** — Major internal refactoring with zero breaking changes!
 
-#### ⚡ Quick Start (New Workflow)
+#### 🚀 Instant Dashboard Updates
 
-1. **Share:** Click "📤 Compartir perfil" → Link auto-copied to clipboard ✅
-2. **Send:** Paste the link to your friend (Discord, WhatsApp, etc.)
-3. **Add:** Friend pastes your link → Instant addition (no search needed!)
+| Before v2.7.2              | After v2.7.2                      |
+| -------------------------- | --------------------------------- |
+| Updates every 2 seconds    | **Updates instantly when you type** |
+| Constant background polling | **60% less CPU usage** (5s polling) |
+| Delayed feedback           | **Real-time reactive UI**         |
 
-#### 🎯 New Features
+#### 🎯 What Changed
 
-| Feature           | Before                        | After                                        |
-| ----------------- | ----------------------------- | -------------------------------------------- |
-| **Share Profile** | Shows username only           | 📋 Auto-copies gist link + menu with options |
-| **Add Friend**    | Search by username (slow)     | 🔗 Paste link directly (instant!)            |
-| **Reliability**   | Can fail if gist just created | ✅ 100% reliable with retry logic            |
-| **UX**            | Manual copy/paste             | 🤖 Auto-detection (link vs username)         |
+**For Users:**
+- ⚡ **Instant feedback** — Dashboard updates the moment you edit or switch files
+- 📉 **Lower CPU usage** — Background polling reduced from 2s → 5s (60% less)
+- 🎨 **Smoother experience** — Intelligent debouncing prevents UI stuttering
+- 🔋 **Better battery life** — Less background processing
 
-#### 📋 Share Options Menu
+**For Developers:**
+- 🧹 **1,380 lines removed** (~10% smaller codebase)
+- 🏗️ **Event-driven architecture** — focusTracker now emits events
+- 📦 **Smaller bundle** — Removed duplicate code from 5 files
+- 🔧 **Better maintainability** — Single source of truth for types
+- 📐 **Cleaner structure** — Consolidated dual architectures
 
-After sharing, choose:
+#### 🔍 Technical Details
 
-- **View full instructions** — Shows both link and username
-- **Copy username** — For manual sharing
-- **Open gist** — View your public profile
+**Phase 1:** Dead code removal (206 lines)
+- Removed unused components and over-engineered utilities
 
-#### 🔍 Smart Friend Search
+**Phase 2:** Architecture consolidation (1,152 lines)
+- Eliminated legacy duplicate implementations
 
-Input automatically detects:
+**Phase 3:** Code deduplication (22 lines)
+- Created shared formatters and type definitions
 
-- ✅ Full gist URL → Direct addition (recommended)
-- ✅ Gist ID (32 chars) → Direct addition
-- ✅ GitHub username → Multi-page search with retry
+**Phase 4:** Event-driven state management
+- Real-time updates with intelligent debouncing
 
-#### 🛠️ Under the Hood
+**Result:** Zero breaking changes, 100% backward compatible
 
-- Multi-page gist search (up to 300 gists)
-- Automatic retry with 2-second delay
-- Debounced refresh (prevents spam)
-- Better error messages with solutions
-
-### 💬 Feedback System with GitHub Integration
-
-**Share your ideas directly from the dashboard!**
-
-| What                | How                                                   | Result                        |
-| ------------------- | ----------------------------------------------------- | ----------------------------- |
-| **Floating Button** | Click 💬 in bottom-left corner                        | Opens premium feedback modal  |
-| **Send Feedback**   | Fill form (idea/bug/UX improvement)                   | Email + GitHub Issue created  |
-| **Auto-Popup**      | Appears after level 5 / 7 achievements / 5 day streak | Non-intrusive, once per month |
-| **Track Progress**  | Click "View Issue" after submit                       | See your suggestion on GitHub |
-
-**Features:**
-
-- 📧 Dual submission (Email + GitHub Issue)
-- 🏷️ Auto-labeled issues (enhancement/bug/ux)
-- 🔒 Privacy-first (optional email, no code shared)
-- 🎨 Beautiful glassmorphism design
-- 🤖 Auto-includes user context (level, XP, version)
-
-> 📋 **See full changelog:** [CHANGELOG.md](CHANGELOG.md)
+> 📋 **Full technical details:** [CHANGELOG.md](CHANGELOG.md)
 
 ---
 

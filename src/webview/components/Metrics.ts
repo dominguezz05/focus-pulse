@@ -1,4 +1,5 @@
 import { DashboardData, DashboardComponent } from '../types';
+import { formatTimeShort } from '../../utils/formatters';
 
 export class MetricsComponent implements DashboardComponent {
   private container: any;
@@ -86,7 +87,7 @@ export class MetricsComponent implements DashboardComponent {
     } else {
       const totalMs = history7.reduce((a, h) => a + h.totalTimeMs, 0);
       const avgScore = history7.reduce((a, h) => a + h.avgScore, 0) / history7.length;
-      if (last7TimeEl) last7TimeEl.textContent = this.formatMs(totalMs);
+      if (last7TimeEl) last7TimeEl.textContent = formatTimeShort(totalMs);
       if (last7ScoreEl) last7ScoreEl.textContent = String(Math.round(avgScore));
     }
 
@@ -127,13 +128,6 @@ export class MetricsComponent implements DashboardComponent {
         }
       });
     }
-  }
-
-  private formatMs(ms: number): string {
-    const m = Math.floor(ms / 60000);
-    const s = Math.floor((ms % 60000) / 1000);
-    if (m === 0) return s + 's';
-    return m + 'm ' + s + 's';
   }
 
   destroy(): void {

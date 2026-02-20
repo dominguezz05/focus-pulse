@@ -78,6 +78,9 @@ export interface HistoryDay {
   avgScore: number;
 }
 
+// Import shared types from central location
+import type { XpState } from "../state/StateTypes";
+
 export interface Achievement {
   id: string;
   title: string;
@@ -85,12 +88,8 @@ export interface Achievement {
   unlocked?: boolean;
 }
 
-export interface XpState {
-  totalXp: number;
-  level: number;
-  xpInLevel: number;
-  xpToNext: number;
-}
+// Re-export for convenience
+export type { XpState };
 
 export interface PomodoroStats {
   today: number;

@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import { getMinMinutesForScore, getScoreWeights } from "./config";
+import { getEventBus } from "./events";
+import { FOCUS_EVENTS } from "./events/EventTypes";
 
 export interface FocusStats {
   uri: string;
@@ -97,13 +99,31 @@ export function handleEditorChange(
     editor.document.fileName.split(/[\\/]/).pop() || editor.document.fileName;
   const stats = getOrCreateStats(uri, fileName);
 
+  const previousUri = currentUri;
+  const previousFileName = previousUri ? statsByDoc.get(previousUri)?.fileName : undefined;
+
   if (currentUri && currentUri !== uri) {
     stats.switches += 1;
+
+    // Emit file switch event
+    getEventBus().emit(FOCUS_EVENTS.FILE_SWITCH_OCCURRED, {
+      fromFile: previousFileName || 'unknown',
+      toFile: fileName,
+      switchCount: stats.switches,
+      timestamp: now
+    });
   }
 
   currentUri = uri;
   stats.lastActivatedAt = now;
   lastSwitchTime = now;
+
+  // Emit focus changed event
+  getEventBus().emit(FOCUS_EVENTS.FILE_FOCUS_CHANGED, {
+    fileName: fileName,
+    previousFile: previousFileName,
+    timestamp: now
+  });
 }
 
 export function handleTextDocumentChange(
@@ -124,6 +144,14 @@ export function handleTextDocumentChange(
     stats.added += added;
     stats.deleted += removed;
   }
+
+  // Emit event for file edit
+  getEventBus().emit(FOCUS_EVENTS.FILE_EDIT_OCCURRED, {
+    fileName: stats.fileName,
+    editsCount: stats.edits,
+    textDelta: { added: stats.added, deleted: stats.deleted },
+    timestamp: Date.now()
+  });
 }
 
 export function getCurrentStats(): FocusStats | undefined {

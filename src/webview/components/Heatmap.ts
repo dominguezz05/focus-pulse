@@ -1,4 +1,5 @@
 import { DashboardData, DashboardComponent } from '../types';
+import { formatTimeShort } from '../../utils/formatters';
 
 export class HeatmapComponent implements DashboardComponent {
   private container: any;
@@ -57,7 +58,7 @@ export class HeatmapComponent implements DashboardComponent {
       cell.title = 
         day.date + 
         '\n' + 
-        'Tiempo: ' + this.formatMs(day.totalTimeMs) + 
+        'Tiempo: ' + formatTimeShort(day.totalTimeMs) + 
         '\nScore medio: ' + Math.round(day.avgScore);
 
       row.appendChild(cell);
@@ -68,13 +69,6 @@ export class HeatmapComponent implements DashboardComponent {
 
   private clearChildren(el: any): void {
     while (el.firstChild) el.removeChild(el.firstChild);
-  }
-
-  private formatMs(ms: number): string {
-    const m = Math.floor(ms / 60000);
-    const s = Math.floor((ms % 60000) / 1000);
-    if (m === 0) return s + 's';
-    return m + 'm ' + s + 's';
   }
 
   destroy(): void {

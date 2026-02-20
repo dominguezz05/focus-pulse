@@ -1,3 +1,14 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(npm run compile:*)",
+      "Bash(echo:*)",
+      "Bash(git rm:*)",
+      "Bash(git mv:*)",
+      "Bash(git add:*)"
+    ]
+  },
   "spinnerTipsEnabled": false
 }
